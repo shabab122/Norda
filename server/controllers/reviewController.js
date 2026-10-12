@@ -1,3 +1,4 @@
+const { withOperationLock } = require("../services/operationLock");
 const Order = require("../models/Order");
 const Product = require("../models/Product");
 const Review = require("../models/Review");
@@ -35,7 +36,8 @@ const createReview = async (req, res, next) => {
       });
     }
 
-    const review = await Review.findOneAndUpdate(
+    const review = await withOperationLock("rating:" + product._id, async () => {
+      const saved = await Review.findOneAndUpdate(
       { product: product._id, user: req.user._id },
       {
         rating,
@@ -44,7 +46,9 @@ const createReview = async (req, res, next) => {
       },
       { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true }
     );
-    await recalcProductRating(product._id);
+      await recalcProductRating(product._id);
+      return saved;
+    });
     res.status(201).json(review);
   } catch (error) {
     next(error);
@@ -71,8 +75,10 @@ const deleteReview = async (req, res, next) => {
       return res.status(403).json({ message: "Not authorized" });
     }
     const productId = review.product;
-    await review.deleteOne();
-    await recalcProductRating(productId);
+    await withOperationLock("rating:" + productId, async () => {
+      await review.deleteOne();
+      await recalcProductRating(productId);
+    });
     res.json({ message: "Review deleted" });
   } catch (error) {
     next(error);

@@ -1,6 +1,7 @@
 let brandsCache = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   if (!requireAdmin()) return;
   renderAdminShell("brands");
   document.getElementById("new-brand-btn").addEventListener("click", () => openBrandModal());
@@ -34,12 +35,13 @@ function openBrandModal(brand = null) {
   document.getElementById("brand-description").value = brand?.description || "";
   document.getElementById("brand-logo").value = brand?.logo || "";
   document.getElementById("brand-active").checked = brand ? brand.isActive : true;
-  document.getElementById("brand-modal").classList.remove("hidden");
+  document.getElementById("modal-alert").innerHTML = "";
+  openDialog("brand-modal");
   document.getElementById("brand-name").focus();
 }
 
 function closeBrandModal() {
-  document.getElementById("brand-modal").classList.add("hidden");
+  closeDialog("brand-modal");
 }
 
 async function saveBrand(event) {
@@ -51,6 +53,7 @@ async function saveBrand(event) {
     const payload = { name: document.getElementById("brand-name").value.trim(), description: document.getElementById("brand-description").value.trim(), logo: document.getElementById("brand-logo").value.trim(), isActive: document.getElementById("brand-active").checked };
     if (id) await Api.put("/brands/" + id, payload);
     else await Api.post("/brands", payload);
+    modal.dataset.busy = "false";
     closeBrandModal();
     showAdminAlert("Brand saved.", "success");
     await loadBrands();
@@ -68,7 +71,7 @@ async function deleteBrand(id) {
 }
 
 function showAdminAlert(message, type) {
-  const box = document.getElementById("alert-box");
+  const box = document.getElementById(!document.getElementById("brand-modal").classList.contains("hidden") ? "modal-alert" : "alert-box");
   box.innerHTML = `<div class="alert alert-${type}">${escapeHtml(message)}</div>`;
-  setTimeout(() => { box.innerHTML = ""; }, 3500);
+
 }

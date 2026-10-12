@@ -95,3 +95,15 @@ Keeping payment separate from fulfillment prevents a failed charge from appearin
 The recommended v2 topology is one Express origin serving both `client/` and `/api`. It simplifies cookies and CORS. If the static client is hosted separately, set `window.NORDA_API_URL`, allow the exact client origin in `CLIENT_URL`, use HTTPS, review cookie `SameSite` policy and test credentials end to end.
 
 For production, replace local `server/uploads` with durable object storage and a malware/image-processing pipeline. Run the API behind TLS, use a managed MongoDB replica set, centralize logs and metrics, and keep secrets in the deployment platform rather than files.
+
+## Version 2.1 reliability changes
+
+`OperationLock` documents coordinate work across API processes. Cart/checkout operations share `cart:<user>`; payment capture and cancellation share `order:<order>`. Locks have owner tokens, a renewable lease and expiry cleanup.
+
+`databaseUnit` selects native transactions when MongoDB reports a replica set/sharded topology. Standalone local MongoDB uses reverse-order compensations. These cover handled errors; a replica set is still necessary for atomic process-crash recovery.
+
+Checkout keys are unique per customer through a partial index. Successful replay returns the original order/invoice. Order creation clears the cart last. Historical catalog references survive product archive actions.
+
+`review` is an explicit order/invoice payment state. A late validated payment can have `isPaid:true` (funds validated) while cancellation and restored inventory stay intact; `paymentStatus:review` prevents fulfillment and tells operators to resolve the payment. Gateway risk review has `isPaid:false`.
+
+No external gateway call runs inside a MongoDB transaction. Test model adapters live under `test-support/` and are never imported by application composition.

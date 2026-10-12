@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader();
   renderFooter();
   const params = new URLSearchParams(window.location.search);
@@ -33,8 +34,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     },
     cancelled: {
       kicker: "Checkout cancelled",
-      title: "No payment was collected.",
-      copy: "The order remains visible as unpaid so the store can review and cancel it safely.",
+      title: "Checkout was not completed.",
+      copy: "Check the saved order for the latest payment status. The store can review this attempt before cancelling the order.",
       className: "cancelled",
     },
     failed: {
@@ -42,6 +43,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       title: "We could not confirm payment.",
       copy: "No successful payment was recorded. The unpaid order remains visible for review.",
       className: "failed",
+    },
+    review: {
+      kicker: "Store review needed",
+      title: "This payment needs a closer look.",
+      copy: "A payment update was recorded, but the store needs to resolve it before taking further action. Check your order for the latest status.",
+      className: "warning",
     },
     pending: {
       kicker: "Payment pending",
@@ -69,8 +76,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${orderSummary}
       <div class="result-actions">
         <a class="btn btn-primary" href="orders.html">View my orders</a>
-        <a class="btn btn-outline" href="products.html">Continue shopping</a>
+        ${["pending", "unknown"].includes(verifiedStatus) ? `<button class="btn btn-outline" type="button" id="refresh-payment">Check again</button>` : `<a class="btn btn-outline" href="products.html">Continue shopping</a>`}
       </div>
     </section>
   `;
+  document.getElementById("refresh-payment")?.addEventListener("click", () => window.location.reload());
 });

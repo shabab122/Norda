@@ -41,6 +41,7 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     address: addressSchema,
+    tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

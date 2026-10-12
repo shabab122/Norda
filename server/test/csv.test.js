@@ -24,3 +24,8 @@ test("rowsToCsv emits stable headers and CRLF rows", () => {
     '"Order ID","Total"\r\n"NOR-1","120"'
   );
 });
+
+test("CSV formula protection includes leading spaces and control characters", () => {
+  assert.equal(escapeCsvCell("\t=1+1"), '"\'\t=1+1"');
+  assert.equal(escapeCsvCell("  +100"), '"\'  +100"');
+});

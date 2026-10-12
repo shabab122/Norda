@@ -143,10 +143,11 @@ const verifyPaymentForOrder = (result, payment) => {
   const sameAmount = Math.abs(Number(result.amount) - Number(payment.amount)) < 0.01;
   const sourceCurrency = result.currency_type || result.currency;
   const sameCurrency = sourceCurrency === payment.currency;
-  const riskLevel = Number(result.risk_level || 0);
+  const parsedRisk = Number(result.risk_level ?? 0);
+  const riskLevel = Number.isFinite(parsedRisk) ? parsedRisk : -1;
 
   return {
-    valid: validStatus && sameTransaction && sameAmount && sameCurrency && riskLevel !== 1,
+    valid: validStatus && sameTransaction && sameAmount && sameCurrency && riskLevel === 0,
     validStatus,
     sameTransaction,
     sameAmount,

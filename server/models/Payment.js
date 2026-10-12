@@ -7,6 +7,7 @@ const paymentSchema = new mongoose.Schema(
     gateway: { type: String, enum: ["sslcommerz"], default: "sslcommerz" },
     transactionId: { type: String, required: true, unique: true, index: true },
     sessionKey: { type: String, default: "" },
+    checkoutUrl: { type: String, default: "" },
     validationId: { type: String, default: "" },
     bankTransactionId: { type: String, default: "" },
     cardType: { type: String, default: "" },

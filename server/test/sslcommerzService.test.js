@@ -71,3 +71,9 @@ test("ensureGatewayUrl only accepts HTTPS SSLCOMMERZ hosts", () => {
   assert.throws(() => ensureGatewayUrl("https://evilsslcommerz.com/pay"), /unsafe/);
   assert.throws(() => ensureGatewayUrl("https://sslcommerz.com.example.org/pay"), /unsafe/);
 });
+
+test("Payment validation rejects unknown or malformed gateway risk levels", () => {
+  for (const risk_level of [2, "invalid"]) {
+    assert.equal(verifyPaymentForOrder({ status: "VALID", tran_id: "NOR-ABC123", amount: 2590, currency: "BDT", risk_level }, payment).valid, false);
+  }
+});

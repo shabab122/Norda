@@ -1,6 +1,7 @@
 let invoicesPage = 1;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   if (!requireAdmin()) return;
   renderAdminShell("invoices");
   document.getElementById("payment-filter").addEventListener("change", () => { invoicesPage = 1; loadInvoices(); });

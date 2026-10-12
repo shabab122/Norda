@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <meta name="theme-color" content="#214c3b" />
   <title>Manage Products — Norda Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css" />
@@ -16,16 +18,18 @@
         <div><span class="eyebrow">Catalog</span><h1>Products</h1><p>Publish products with managed categories, brands, pricing and stock.</p></div>
         <div class="admin-topbar-actions"><span id="admin-topbar-user"></span><button class="btn btn-primary btn-sm" id="new-product-btn">+ New product</button></div>
       </div>
-      <div id="alert-box"></div>
+      <div id="alert-box" aria-live="polite"></div>
+      <form class="admin-filters" id="product-search-form"><label class="sr-only" for="product-search">Search products</label><input type="search" id="product-search" placeholder="Search products…" maxlength="80" /><select id="category-filter" aria-label="Filter by category"><option value="">All categories</option></select><select id="brand-filter" aria-label="Filter by brand"><option value="">All brands</option></select><select id="archive-filter" aria-label="Product visibility"><option value="false">Active products</option><option value="true">Archived products</option><option value="all">All products</option></select><button type="submit" class="btn btn-outline btn-sm">Search</button></form>
       <div id="products-root" class="admin-panel">
         <span class="spinner">Loading products…</span>
       </div>
     </main>
   </div>
 
-  <div class="modal-overlay hidden" id="product-modal">
+  <div class="modal-overlay hidden" id="product-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-box">
       <h2 id="modal-title">New product</h2>
+      <div id="modal-alert" aria-live="polite"></div>
       <form id="product-form">
         <input type="hidden" id="product-id" />
         <div class="field">
@@ -53,17 +57,18 @@
           <input type="number" id="product-stock" min="0" required />
         </div>
         <div class="field">
-          <label for="product-image-file">Product image</label>
-          <input type="file" id="product-image-file" accept="image/*" />
-          <input type="hidden" id="product-image-url" />
+          <label for="product-image-file">Product gallery</label>
+          <input type="file" id="product-image-file" accept="image/jpeg,image/png,image/webp,image/gif" multiple />
+          <small class="field-help">Up to 6 images. JPG, PNG, WebP or GIF · 5 MB each. The first image is the cover.</small><div class="image-editor" id="product-images"></div>
         </div>
         <div class="field">
           <label for="product-description">Description</label>
           <textarea id="product-description" rows="3"></textarea>
         </div>
         <div class="field">
-          <label><input type="checkbox" id="product-featured" style="width:auto;display:inline-block;margin-right:8px;" />Feature this product on the homepage</label>
+          <label class="check-field"><input type="checkbox" id="product-featured" />Feature this product on the homepage</label>
         </div>
+        <label class="check-field"><input type="checkbox" id="product-active" checked />Visible in the storefront</label>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline btn-sm" id="cancel-product-btn">Cancel</button>
           <button type="submit" class="btn btn-primary btn-sm" id="save-product-btn">Save</button>

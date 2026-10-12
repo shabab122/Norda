@@ -1,6 +1,5 @@
-// When Express serves the storefront, use the current origin. Live Server
-// development falls back to the API on localhost:5000.
-const separateDevelopmentClient =
-  window.location.protocol === "file:" || ["3000", "5173", "5500", "8080"].includes(window.location.port);
-const API_BASE_URL =
-  window.NORDA_API_URL || (separateDevelopmentClient ? "http://localhost:5000/api" : "/api");
+// Express serves the website and API together by default.
+// A separate local development client uses the same hostname for cookies.
+const separateDevelopmentClient = window.location.protocol === "file:" || ["3000", "5173", "5500", "8080"].includes(window.location.port);
+const developmentHost = window.location.hostname || "localhost";
+const API_BASE_URL = window.NORDA_API_URL || (separateDevelopmentClient ? "http://" + developmentHost + ":5000/api" : "/api");

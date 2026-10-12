@@ -8,8 +8,11 @@ const nextOrderStates = {
 let ordersPage = 1;
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   if (!requireAdmin()) return;
   renderAdminShell("orders");
+  const initialPayment = new URLSearchParams(window.location.search).get("paymentStatus");
+  if (["pending", "paid", "failed", "cancelled", "review"].includes(initialPayment)) document.getElementById("payment-filter").value = initialPayment;
   document.getElementById("status-filter").addEventListener("change", () => { ordersPage = 1; loadOrders(); });
   document.getElementById("payment-filter").addEventListener("change", () => { ordersPage = 1; loadOrders(); });
   document.getElementById("export-orders-btn").addEventListener("click", exportOrders);
@@ -46,14 +49,14 @@ function adminPagination(page, pages, total) {
 
 function orderRow(order) {
   const next = (nextOrderStates[order.status] || []).filter(
-    (status) => order.paymentMethod !== "sslcommerz" || order.isPaid || status === "cancelled"
+    (status) => status === "cancelled" ? !order.isPaid && order.paymentStatus !== "review" : order.paymentMethod !== "sslcommerz" || order.paymentStatus === "paid"
   );
   return `<tr>
     <td><strong>#${order._id.slice(-8).toUpperCase()}</strong><small>${formatDate(order.createdAt, true)}</small><a class="text-link" href="../invoice.html?orderId=${encodeURIComponent(order._id)}">Invoice</a></td>
     <td>${escapeHtml(order.user?.name || "Deleted user")}<small>${escapeHtml(order.user?.email || "")}</small></td>
     <td><strong>${money(order.totalAmount)}</strong><small>${order.items.reduce((count, item) => count + item.quantity, 0)} item(s)</small></td>
-    <td><span class="status-pill payment-${order.paymentStatus}">${escapeHtml(paymentLabel(order.paymentStatus))}</span><small>${order.paymentMethod === "sslcommerz" ? "SSLCOMMERZ" : "Cash on delivery"}</small>${order.paymentMethod === "cod" && !order.isPaid && order.status !== "cancelled" ? `<button class="text-link button-link" data-cod-paid="${order._id}">Mark COD paid</button>` : ""}</td>
-    <td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span>${order.cancelReason ? `<small>${escapeHtml(order.cancelReason)}</small>` : ""}</td>
+    <td><span class="status-pill payment-${order.paymentStatus}">${escapeHtml(paymentLabel(order.paymentStatus))}</span><small>${order.paymentMethod === "sslcommerz" ? "SSLCOMMERZ" : "Cash on delivery"}</small>${order.paymentMethod === "cod" && !order.isPaid && order.status !== "cancelled" && order.paymentStatus !== "review" ? `<button class="text-link button-link" data-cod-paid="${order._id}">Mark COD paid</button>` : ""}</td>
+    <td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span>${order.cancelReason ? `<small>${escapeHtml(order.cancelReason)}</small>` : ""}${order.paymentReviewReason ? `<small class="danger-text">${escapeHtml(order.paymentReviewReason)}</small>` : ""}</td>
     <td>${next.length ? `<select data-transition="${order._id}" data-current="${order.status}" aria-label="Update order ${order._id}"><option value="">Choose action…</option>${next.map((status) => `<option value="${status}">${status === "cancelled" ? "Cancel & restore stock" : "Mark " + status}</option>`).join("")}</select>` : `<span class="muted">No further action</span>`}</td>
   </tr>`;
 }

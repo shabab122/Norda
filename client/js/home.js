@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader("home");
   renderFooter();
+  document.querySelectorAll("[data-icon]").forEach((element) => { element.innerHTML = icon(element.dataset.icon); });
 
   await Promise.all([loadCategories(), loadBrands(), loadHomeProducts(), loadStoreConfig()]);
 });
@@ -9,7 +11,7 @@ async function loadStoreConfig() {
   try {
     const store = await Api.get("/store/config");
     document.getElementById("free-delivery-threshold").textContent =
-      money(store.freeShippingThreshold) + "+";
+      "Free delivery from " + money(store.freeShippingThreshold);
   } catch {
     // The static default remains visible if configuration cannot be loaded.
   }
@@ -24,9 +26,9 @@ async function loadCategories() {
       .map(
         (category, index) => `
           <a class="category-card category-tone-${(index % 5) + 1}" href="products.html?category=${encodeURIComponent(category._id)}">
-            <span class="category-number">0${index + 1}</span>
+            <img class="category-visual" src="${escapeHtml(resolveImage(category.image || categoryVisual(category.name)))}" alt="" loading="lazy" />
             <strong>${escapeHtml(category.name)}</strong>
-            <span aria-hidden="true">↗</span>
+            <span class="category-arrow" aria-hidden="true">↗</span>
           </a>
         `
       )
@@ -71,4 +73,10 @@ async function loadGrid(elementId, path) {
   } catch {
     element.innerHTML = `<div class="empty-state">Products could not be loaded.</div>`;
   }
+}
+
+function categoryVisual(name) {
+  const value = name.toLowerCase();
+  const image = value.includes("electronic") ? "headphones" : value.includes("fashion") ? "jacket" : value.includes("kitchen") || value.includes("home") ? "kettle" : value.includes("sport") ? "dumbbells" : value.includes("book") ? "clean-code" : "collection";
+  return "/assets/products/" + image + ".svg";
 }

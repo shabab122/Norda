@@ -1,27 +1,31 @@
-# Norda v2 — Testing and Release Guide
+# NORDA 2.1 testing and acceptance
 
-## Automated checks
-
-From `server/`:
+## Automated verification
 
 ```bash
-npm install
-npm test
+cd server
+npm ci
+npm run verify
 ```
 
-The unit suite covers calculation and free-delivery thresholds, shipping validation, allowed order transitions, CSV quoting/formula protection, SSLCOMMERZ result matching and safe gateway hosts, and shared validation helpers.
+Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-Syntax-check all JavaScript:
+The real database test is intentionally skipped without an explicit test URI:
 
 ```bash
-find . ../client -type f -name '*.js' -not -path '*/node_modules/*' -print0 \
-  | xargs -0 -n1 node --check
+NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27017' npm run test:integration
 ```
+
+It creates a new random `norda_test_*` database and removes only that new database. Check standalone local MongoDB and a replica set separately. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
+
+## Current verification limits
+
+Real MongoDB, public gateway acceptance and browser/device QA were not available in the build environment. Follow the acceptance matrix below in the target environment. Use a replica set for public-store transactional integrity.
 
 ## Clean local environment
 
 1. Start a dedicated non-production MongoDB database.
-2. Copy `server/.env.example` to `server/.env`.
+2. Run `npm run setup` from `server/`, or copy `.env.example` to `.env` manually.
 3. Generate a new JWT secret and choose a seed admin password of 12 or more characters.
 4. Keep `SSLCOMMERZ_IS_LIVE=false`.
 5. Run `npm run seed`, then `npm run dev`.
@@ -106,13 +110,25 @@ Do not test live payment credentials from a developer machine. Rotate sandbox cr
 
 ## Branch and release procedure
 
-1. Work only on `feature/v2-complete-commerce-flow` for this revision.
+1. Apply this ZIP on a new branch such as `improve/norda-ui-reliability`. Preserve the existing environment and uploads.
 2. Review `git diff --check`, dependency lockfile, tests and this checklist.
-3. Push the feature branch and open a pull request; do not push the revision directly to `main`.
+3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
 6. Tag the accepted merge (for example `v2.0.0`) and update `CHANGELOG.md`.
 
-## Current test boundary
+## Additional 2.1 acceptance
 
-The repository’s automated suite is deterministic and does not require MongoDB or gateway credentials. Database concurrency, browser end-to-end behavior and real SSLCOMMERZ callbacks must be run in an integration environment before production release.
+- Retry the same checkout key after an interrupted response: one order/invoice and one stock decrement.
+- Trigger an isolated persistence failure on each checkout write: no orphan order/invoice, empty cart or missed stock compensation.
+- Send a success callback after admin cancellation: payment review, cancelled fulfillment and unchanged restored stock.
+- Repeated success followed by failure/cancel notifications cannot downgrade validated payment.
+- Foreign-origin gateway form callback reaches validation; a disallowed storefront API Origin is rejected.
+- Edit a six-image product without removing images; reorder, remove and add new uploads.
+- More than 100 products remain reachable through admin pagination/search.
+- Archived items remain visible as unavailable in carts and historical product details.
+- Password changes reject an incorrect current password; old JWTs stop working after a valid change/logout.
+- Sign-out actions remain reachable at 360px and in mobile admin navigation.
+- Names and addresses containing quotes render intact in input values.
+- Verify modal focus/escape, roving product tabs, empty/error states and A4 invoice printing.
+
