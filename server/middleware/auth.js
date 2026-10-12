@@ -16,18 +16,17 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ message: "Not authorized, no token provided" });
   }
 
+  let decoded;
+  try { decoded = jwt.verify(token, process.env.JWT_SECRET); }
+  catch { return res.status(401).json({ message: "Not authorized, invalid or expired token" }); }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id);
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized, user no longer exists" });
-    }
+    if (!user || (decoded.version || 0) !== (user.tokenVersion || 0)) return res.status(401).json({ message: "Your session has expired. Please sign in again." });
     req.user = user;
     req.auth = { id: user._id.toString(), email: user.email, role: user.role };
     next();
-  } catch (error) {
-    return res.status(401).json({ message: "Not authorized, invalid or expired token" });
-  }
+  } catch (error) { next(error); }
+
 };
 
 // Restricts a route to admins only. Must be used after `protect`.

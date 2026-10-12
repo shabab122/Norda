@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   if (!requireAdmin()) return;
   renderAdminShell("dashboard");
   document.getElementById("export-orders-btn").addEventListener("click", exportOrders);
@@ -11,13 +12,14 @@ async function loadDashboard() {
     const summary = await Api.get("/admin/dashboard-summary");
     const statuses = ["pending", "processing", "shipped", "delivered", "cancelled"];
     root.innerHTML = `
+      ${summary.reviewPayments ? `<div class="alert alert-warning"><strong>${summary.reviewPayments} payment(s) need review.</strong> <a href="orders.html?paymentStatus=review">Open affected orders</a></div>` : ""}
       <div class="stat-grid">
         ${statCard("Revenue", money(summary.totalRevenue), "Paid, non-cancelled orders", "accent")}
         ${statCard("Orders", summary.totalOrders, `${summary.pendingOrders} awaiting action`)}
         ${statCard("Customers", summary.totalUsers, "Registered shoppers")}
         ${statCard("Products", summary.totalProducts, `${summary.totalCategories} categories · ${summary.totalBrands} brands`)}
         ${statCard("Invoices", summary.totalInvoices, "One per order")}
-        ${statCard("Failed payments", summary.failedPayments, "Needs review", summary.failedPayments ? "warning" : "")}
+        ${statCard("Payment exceptions", summary.failedPayments + (summary.reviewPayments || 0), `${summary.failedPayments} incomplete · ${summary.reviewPayments || 0} need review`, summary.failedPayments || summary.reviewPayments ? "warning" : "")}
       </div>
       <div class="admin-dashboard-grid">
         <section class="admin-panel">

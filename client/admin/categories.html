@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <meta name="theme-color" content="#214c3b" />
   <title>Manage Categories — Norda Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css" />
@@ -16,16 +18,17 @@
         <div><span class="eyebrow">Catalog</span><h1>Categories</h1><p>Organize products into clear storefront collections.</p></div>
         <div class="admin-topbar-actions"><span id="admin-topbar-user"></span><button class="btn btn-primary btn-sm" id="new-category-btn">+ New category</button></div>
       </div>
-      <div id="alert-box"></div>
+      <div id="alert-box" aria-live="polite"></div>
       <div id="categories-root" class="admin-panel">
         <span class="spinner">Loading categories…</span>
       </div>
     </main>
   </div>
 
-  <div class="modal-overlay hidden" id="category-modal">
+  <div class="modal-overlay hidden" id="category-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-box">
       <h2 id="modal-title">New category</h2>
+      <div id="modal-alert" aria-live="polite"></div>
       <form id="category-form">
         <input type="hidden" id="category-id" />
         <div class="field">

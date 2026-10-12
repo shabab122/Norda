@@ -1,4 +1,6 @@
-# Norda v2 — Project Requirements
+> Version 2.1.0 update: the original requirements below remain the baseline. Checkout replay/locking, transactions where available, payment review, multi-image administration, product archiving and session invalidation are added in `UPDATE_REPORT.md`. The uploaded v2 source was already merged into main; older prepared-branch references below describe its delivery history.
+
+# Norda — Project Requirements
 
 ## 1. Document control
 

@@ -5,7 +5,7 @@ const app = require("./app");
 const connectDB = require("./config/db");
 
 const validateEnvironment = () => {
-  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32) {
+  if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 || process.env.JWT_SECRET.startsWith("replace_")) {
     throw new Error("JWT_SECRET must be configured with at least 32 characters");
   }
   if (!process.env.MONGO_URI) {
@@ -20,6 +20,7 @@ const startServer = async () => {
   validateEnvironment();
   await connectDB();
   const port = Number(process.env.PORT) || 5000;
+  if ([3000, 3002].includes(port)) throw new Error("Ports 3000 and 3002 are reserved for GitStack/Gitea. Use PORT=5000 for Norda.");
   const server = app.listen(port, () => {
     console.log("Norda API running on http://localhost:" + port);
   });

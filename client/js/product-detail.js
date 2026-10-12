@@ -1,6 +1,7 @@
 let activeProductId = "";
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader();
   renderFooter();
   activeProductId = new URLSearchParams(window.location.search).get("id") || "";
@@ -29,7 +30,7 @@ function renderProduct(product) {
     product.discountPrice > 0 && Number(product.discountPrice) < Number(product.price);
   const price = discounted ? product.discountPrice : product.price;
   const brand = product.brandRef?.name || product.brand || "Norda selection";
-  const images = (product.images || []).map(resolveImage).filter(Boolean);
+  const images = (product.images?.length ? product.images : ["/assets/products/collection.svg"]).map(resolveImage).filter(Boolean);
   const mainVisual = images.length
     ? `<img id="main-product-image" src="${escapeHtml(images[0])}" alt="${escapeHtml(product.name)}" />`
     : `<div class="pd-fallback"><span>${escapeHtml(product.name)}</span></div>`;
@@ -93,11 +94,11 @@ function renderProduct(product) {
 
     <section class="product-information" id="reviews">
       <div class="tabs" role="tablist" aria-label="Product information">
-        <button class="tab-btn active" type="button" data-tab="details" role="tab">Details</button>
-        <button class="tab-btn" type="button" data-tab="reviews" role="tab">Reviews</button>
-        <button class="tab-btn" type="button" data-tab="write-review" role="tab">Write a review</button>
+        <button class="tab-btn active" type="button" data-tab="details" role="tab" id="tab-control-details" aria-controls="tab-details" aria-selected="true" tabindex="0">Details</button>
+        <button class="tab-btn" type="button" data-tab="reviews" role="tab" id="tab-control-reviews" aria-controls="tab-reviews" aria-selected="false" tabindex="-1">Reviews</button>
+        <button class="tab-btn" type="button" data-tab="write-review" role="tab" id="tab-control-write-review" aria-controls="tab-write-review" aria-selected="false" tabindex="-1">Write a review</button>
       </div>
-      <div class="tab-panel active" id="tab-details" role="tabpanel">
+      <div class="tab-panel active" id="tab-details" role="tabpanel" aria-labelledby="tab-control-details">
         <h2>Product information</h2>
         <p>${escapeHtml(product.description || "No additional product information is available.")}</p>
         <dl class="detail-list">
@@ -106,10 +107,10 @@ function renderProduct(product) {
           <div><dt>Stock</dt><dd>${product.stock} unit${product.stock === 1 ? "" : "s"}</dd></div>
         </dl>
       </div>
-      <div class="tab-panel" id="tab-reviews" role="tabpanel">
+      <div class="tab-panel" id="tab-reviews" role="tabpanel" aria-labelledby="tab-control-reviews" hidden>
         <div id="review-list"><span class="spinner">Loading reviews…</span></div>
       </div>
-      <div class="tab-panel" id="tab-write-review" role="tabpanel">
+      <div class="tab-panel" id="tab-write-review" role="tabpanel" aria-labelledby="tab-control-write-review" hidden>
         ${
           Api.isLoggedIn()
             ? `
@@ -154,17 +155,26 @@ function bindProductInteractions(product) {
     });
   });
 
-  document.querySelectorAll(".tab-btn").forEach((button) => {
-    button.addEventListener("click", () => {
-      document.querySelectorAll(".tab-btn").forEach((item) => item.classList.remove("active"));
-      document.querySelectorAll(".tab-panel").forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      document.getElementById("tab-" + button.dataset.tab).classList.add("active");
+  const tabs = [...document.querySelectorAll(".tab-btn")];
+  const selectTab = (button, focus = false) => {
+    tabs.forEach((tab) => { const active = tab === button; tab.classList.toggle("active", active); tab.setAttribute("aria-selected", String(active)); tab.tabIndex = active ? 0 : -1; });
+    document.querySelectorAll(".tab-panel").forEach((panel) => { const active = panel.id === button.getAttribute("aria-controls"); panel.classList.toggle("active", active); panel.hidden = !active; });
+    if (focus) button.focus();
+  };
+  tabs.forEach((button, index) => {
+    button.addEventListener("click", () => selectTab(button));
+    button.addEventListener("keydown", (event) => {
+      const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
+      if (next !== null) { event.preventDefault(); selectTab(tabs[next], true); }
     });
   });
+  if (["#reviews", "#write-review"].includes(window.location.hash)) selectTab(tabs[window.location.hash === "#reviews" ? 1 : 2]);
 
   document.getElementById("add-to-cart-btn")?.addEventListener("click", async () => {
     if (!requireLogin()) return;
+    const button = document.getElementById("add-to-cart-btn");
+    if (button.disabled) return;
+    button.disabled = true;
     const alert = document.getElementById("pd-alert");
     const quantity = Number(document.getElementById("qty-input").value);
     try {
@@ -173,12 +183,15 @@ function bindProductInteractions(product) {
       refreshCartBadge();
     } catch (error) {
       alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
-    }
+    } finally { button.disabled = product.stock === 0; }
   });
 
   document.getElementById("review-form")?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const alert = document.getElementById("review-form-alert");
+    const button = event.currentTarget.querySelector('button[type="submit"]');
+    if (button.disabled) return;
+    button.disabled = true;
     try {
       await Api.post("/reviews", {
         productId: product._id,
@@ -188,9 +201,10 @@ function bindProductInteractions(product) {
       alert.innerHTML = `<div class="alert alert-success">Your review has been saved.</div>`;
       document.getElementById("review-comment").value = "";
       await loadReviews(product._id);
+      toast("Your review has been saved.");
     } catch (error) {
       alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
-    }
+    } finally { button.disabled = false; }
   });
 }
 
@@ -210,11 +224,18 @@ async function loadReviews(productId) {
                 </div>
                 <p>${escapeHtml(review.comment || "No written comment.")}</p>
                 <time datetime="${review.createdAt}">${formatDate(review.createdAt)}</time>
+                ${Api.isAdmin() || review.user?._id === Api.getUser()?._id ? `<button type="button" class="remove-link" data-delete-review="${escapeHtml(review._id)}">Delete review</button>` : ""}
               </article>
             `
           )
           .join("")
       : `<div class="empty-state compact"><h2>No reviews yet</h2><p>Delivered customers can be the first to review this item.</p></div>`;
+    list.querySelectorAll("[data-delete-review]").forEach((button) => button.addEventListener("click", async () => {
+      if (!confirm("Delete this review?")) return;
+      button.disabled = true;
+      try { await Api.del("/reviews/" + button.dataset.deleteReview); await loadReviews(productId); toast("Review deleted."); }
+      catch (error) { button.disabled = false; toast(error.message, "error"); }
+    }));
   } catch {
     list.innerHTML = `<p>Reviews could not be loaded.</p>`;
   }

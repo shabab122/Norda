@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader("orders");
   renderFooter();
   if (!requireLogin()) return;
@@ -41,6 +42,7 @@ function renderOrder(order) {
           <span class="status-pill payment-${escapeHtml(order.paymentStatus)}">${escapeHtml(paymentLabel(order.paymentStatus))}</span>
         </div>
       </header>
+      ${order.status !== "cancelled" ? `<div class="order-progress" aria-label="Order progress">${["pending", "processing", "shipped", "delivered"].map((status, index) => `<span class="${index <= ["pending", "processing", "shipped", "delivered"].indexOf(order.status) ? "complete" : ""}">${status === "pending" ? "Order received" : status}</span>`).join("")}</div>` : ""}
       <div class="order-body">
         <div class="order-products">
           ${order.items
@@ -53,7 +55,7 @@ function renderOrder(order) {
                   <div>
                     <a href="product-detail.html?id=${encodeURIComponent(item.product)}"><strong>${escapeHtml(item.name)}</strong></a>
                     <small>Quantity ${item.quantity} · ${money(item.price)} each</small>
-                    ${order.status === "delivered" ? `<a class="text-link" href="product-detail.html?id=${encodeURIComponent(item.product)}#reviews">Write a review</a>` : ""}
+                    ${order.status === "delivered" ? `<a class="text-link" href="product-detail.html?id=${encodeURIComponent(item.product)}#write-review">Write a review</a>` : ""}
                   </div>
                   <strong>${money(item.price * item.quantity)}</strong>
                 </div>`
@@ -69,6 +71,7 @@ function renderOrder(order) {
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>
+      ${order.paymentStatus === "review" ? `<p class="order-note"><strong>Payment needs review.</strong> The store will need to check this payment before taking further action.</p>` : ""}
       ${order.status === "cancelled" && order.cancelReason ? `<p class="order-note"><strong>Cancellation note:</strong> ${escapeHtml(order.cancelReason)}</p>` : ""}
     </article>`;
 }

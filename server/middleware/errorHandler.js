@@ -4,7 +4,6 @@ const notFound = (req, res, next) => {
 
 // eslint-disable-next-line no-unused-vars
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
   let statusCode = err.statusCode || (res.statusCode && res.statusCode !== 200 ? res.statusCode : 500);
   let message = err.message || "Server Error";
 
@@ -25,6 +24,7 @@ const errorHandler = (err, req, res, next) => {
     message = err.code === "LIMIT_FILE_SIZE" ? "Image must be 5 MB or smaller" : err.message;
   }
 
+  if (statusCode >= 500) console.error(err);
   res.status(statusCode).json({
     message: statusCode >= 500 && process.env.NODE_ENV === "production" ? "Server Error" : message,
   });

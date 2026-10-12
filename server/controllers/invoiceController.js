@@ -1,3 +1,4 @@
+const { pagination } = require("../utils/validation");
 const Invoice = require("../models/Invoice");
 
 const canView = (invoice, user) => {
@@ -19,8 +20,7 @@ const getMyInvoices = async (req, res, next) => {
 
 const getInvoices = async (req, res, next) => {
   try {
-    const page = Math.max(Number(req.query.page) || 1, 1);
-    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const { page, limit } = pagination(req.query);
     const filter = req.query.paymentStatus ? { paymentStatus: req.query.paymentStatus } : {};
     const [invoices, total] = await Promise.all([
       Invoice.find(filter)

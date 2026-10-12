@@ -1,8 +1,8 @@
+const { pagination } = require("../utils/validation");
 const Order = require("../models/Order");
 const { syncInvoicePayment } = require("../services/invoiceService");
 const {
-  canTransitionOrder,
-  cancelOrderAndRestoreStock,
+  updateOrderWorkflow,
   createOrderFromCart,
 } = require("../services/orderService");
 
@@ -17,8 +17,9 @@ const createOrder = async (req, res, next) => {
       user: req.user,
       shippingAddress: req.body.shippingAddress,
       paymentMethod: "cod",
+      checkoutKey: req.body.checkoutKey,
     });
-    res.status(201).json({
+    res.status(result.replayed ? 200 : 201).json({
       ...result.order.toObject(),
       invoiceNumber: result.invoice.invoiceNumber,
     });
@@ -56,8 +57,7 @@ const getAllOrders = async (req, res, next) => {
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
     if (req.query.paymentStatus) filter.paymentStatus = req.query.paymentStatus;
-    const page = Math.max(Number(req.query.page) || 1, 1);
-    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+    const { page, limit } = pagination(req.query);
     const [orders, total] = await Promise.all([
       Order.find(filter)
         .populate("user", "name email")
@@ -73,52 +73,8 @@ const getAllOrders = async (req, res, next) => {
 };
 
 const updateOrderStatus = async (req, res, next) => {
-  try {
-    const order = await Order.findById(req.params.id);
-    if (!order) return res.status(404).json({ message: "Order not found" });
-
-    const requestedStatus = req.body.status || order.status;
-    if (!canTransitionOrder(order.status, requestedStatus)) {
-      return res.status(409).json({
-        message: "Order cannot move from " + order.status + " to " + requestedStatus,
-      });
-    }
-
-    if (requestedStatus === "cancelled" && order.status !== "cancelled") {
-      return res.json(await cancelOrderAndRestoreStock(order, req.body.cancelReason));
-    }
-
-    if (
-      order.paymentMethod === "sslcommerz" &&
-      !order.isPaid &&
-      ["processing", "shipped", "delivered"].includes(requestedStatus)
-    ) {
-      return res.status(409).json({
-        message: "An online order cannot be fulfilled until payment is validated",
-      });
-    }
-
-    if (req.body.isPaid === false && order.isPaid) {
-      return res.status(409).json({ message: "A paid order cannot be marked unpaid" });
-    }
-    if (req.body.isPaid === true && order.paymentMethod !== "cod") {
-      return res.status(409).json({
-        message: "Online payments can only be marked paid by validated gateway callbacks",
-      });
-    }
-
-    order.status = requestedStatus;
-    if (req.body.isPaid === true || (requestedStatus === "delivered" && order.paymentMethod === "cod")) {
-      order.isPaid = true;
-      order.paymentStatus = "paid";
-      order.paidAt = order.paidAt || new Date();
-    }
-    await order.save();
-    await syncInvoicePayment(order);
-    res.json(order);
-  } catch (error) {
-    next(error);
-  }
+  try { res.json(await updateOrderWorkflow(req.params.id, req.body)); }
+  catch (error) { next(error); }
 };
 
 module.exports = { createOrder, getAllOrders, getMyOrders, getOrder, updateOrderStatus };

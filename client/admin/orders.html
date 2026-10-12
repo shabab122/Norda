@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <meta name="theme-color" content="#214c3b" />
   <title>Manage Orders — Norda Admin</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../css/style.css" />
@@ -18,10 +20,10 @@
       </div>
       <div class="admin-filters">
         <select id="status-filter" aria-label="Filter by order status"><option value="">All order states</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select>
-        <select id="payment-filter" aria-label="Filter by payment status"><option value="">All payment states</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select>
+        <select id="payment-filter" aria-label="Filter by payment status"><option value="">All payment states</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="review">Needs review</option></select>
         <label>CSV from <input id="date-from" type="date" /></label><label>to <input id="date-to" type="date" /></label>
       </div>
-      <div id="alert-box"></div>
+      <div id="alert-box" aria-live="polite"></div>
       <div id="orders-root" class="admin-panel">
         <span class="spinner">Loading orders…</span>
       </div>

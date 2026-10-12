@@ -1,6 +1,6 @@
 const protectSpreadsheetCell = (value) => {
   const cell = value === null || value === undefined ? "" : String(value);
-  return /^[=+\-@]/.test(cell) ? "'" + cell : cell;
+  return /^[\s\uFEFF]*[=+\-@]/.test(cell) ? "'" + cell : cell;
 };
 
 const escapeCsvCell = (value) => {
