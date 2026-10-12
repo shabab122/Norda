@@ -25,6 +25,7 @@ const seed = async () => {
     });
     console.log("Admin account created for " + adminEmail);
   } else {
+    if (existingAdmin.role !== "admin") throw new Error("ADMIN_EMAIL belongs to a customer. Choose a different ADMIN_EMAIL; the customer role was not changed.");
     console.log("Admin account already exists; skipped.");
   }
 
@@ -61,6 +62,7 @@ const seed = async () => {
     brands[name] = brand;
   }
 
+  const imageNames = ["headphones", "watch", "jacket", "shoes", "cookware", "kettle", "yoga", "dumbbells", "clean-code", "mystery"];
   const products = [
     {
       name: "Wireless Bluetooth Headphones",
@@ -164,14 +166,14 @@ const seed = async () => {
     },
   ];
 
-  for (const item of products) {
+  for (const [index, item] of products.entries()) {
+    const imageUrl = "/assets/products/" + imageNames[index] + ".svg";
     const existing = await Product.findOne({ name: item.name });
     if (existing) {
-      if (!existing.brandRef) {
-        existing.brandRef = brands[item.brand]._id;
-        existing.brand = item.brand;
-        await existing.save();
-      }
+      let changed = false;
+      if (!existing.brandRef) { existing.brandRef = brands[item.brand]._id; existing.brand = item.brand; changed = true; }
+      if (!existing.images.length) { existing.images = [imageUrl]; changed = true; }
+      if (changed) await existing.save();
       continue;
     }
     await Product.create({
@@ -184,7 +186,7 @@ const seed = async () => {
       category: categories[item.category]._id,
       brand: item.brand,
       brandRef: brands[item.brand]._id,
-      images: [],
+      images: [imageUrl],
       isFeatured: item.isFeatured,
     });
   }

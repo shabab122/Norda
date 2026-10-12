@@ -2,6 +2,23 @@
 
 All notable project changes are recorded here.
 
+## [2.1.0] — 2026-10-12
+
+### Improved
+
+- Storefront/admin design, navigation, cards, responsive forms and accessible dialogs/tabs
+- Cookie session restoration, current-password verification and JWT invalidation
+- Product administration pagination/search, six-image editor and archive/restore behavior
+- Effective-price filtering/sorting and unavailable cart-item recovery
+- Database-coordinated checkout replay/concurrency and ordered rollback; native transactions on replica sets
+- Order/payment/invoice consistency, cross-origin gateway callbacks and visible risk/late-payment review
+- HTML attribute escaping, CSV formula protection, request parsing/sanitization order and clean source packaging
+- Illustrated sample products, setup/run instructions and regression coverage
+
+### Verification
+
+Automated checks pass locally; real database integration is opt-in. Real SSLCOMMERZ acceptance and browser/device QA remain environment checks, detailed in the update report.
+
 ## [2.0.0] — 2026-09-07
 
 ### Added

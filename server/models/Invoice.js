@@ -32,7 +32,7 @@ const invoiceSchema = new mongoose.Schema(
     currency: { type: String, default: "BDT", uppercase: true },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "cancelled"],
+      enum: ["pending", "paid", "failed", "cancelled", "review"],
       default: "pending",
     },
     issuedAt: { type: Date, default: Date.now },

@@ -13,8 +13,13 @@ const state = {
 const names = { categories: new Map(), brands: new Map() };
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader("products");
   renderFooter();
+  document.getElementById("filter-toggle").addEventListener("click", (event) => {
+    const open = document.getElementById("catalog-filters").classList.toggle("open");
+    event.currentTarget.setAttribute("aria-expanded", String(open));
+  });
 
   const params = new URLSearchParams(window.location.search);
   for (const key of ["category", "brand", "keyword", "featured", "minPrice", "maxPrice", "sort"]) {
@@ -133,7 +138,9 @@ function buildQuery() {
   return query;
 }
 
+let catalogRequest = 0;
 async function loadProducts() {
+  const request = ++catalogRequest;
   const grid = document.getElementById("product-grid");
   const resultCount = document.getElementById("result-count");
   grid.innerHTML = Array.from({ length: 8 }, () => `<div class="product-skeleton"></div>`).join("");
@@ -142,6 +149,7 @@ async function loadProducts() {
 
   try {
     const data = await Api.get("/products?" + query.toString());
+    if (request !== catalogRequest) return;
     resultCount.textContent = data.total + " product" + (data.total === 1 ? "" : "s");
     grid.innerHTML = data.products.length
       ? data.products.map(productCardHtml).join("")
@@ -149,6 +157,7 @@ async function loadProducts() {
     renderActiveFilters();
     renderPagination(data.page, data.pages);
   } catch (error) {
+    if (request !== catalogRequest) return;
     resultCount.textContent = "Products unavailable";
     grid.innerHTML = `<div class="empty-state"><h2>We could not load the catalog</h2><p>${escapeHtml(error.message)}</p></div>`;
   }

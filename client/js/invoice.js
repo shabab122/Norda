@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader("orders");
   renderFooter();
   if (!requireLogin()) return;

@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader("profile");
   renderFooter();
   if (!requireLogin()) return;
@@ -42,6 +43,12 @@ async function loadProfile() {
             <div class="field"><label for="profile-phone">Phone</label><input id="profile-phone" type="tel" maxlength="20" value="${escapeHtml(address.phone || "")}" /></div>
             <div class="field field-wide"><label for="profile-country">Country</label><input id="profile-country" type="text" maxlength="60" value="${escapeHtml(address.country || "Bangladesh")}" /></div>
           </div>
+          <details class="profile-security"><summary>Change password</summary>
+            <p class="field-help">Changing your password signs out other sessions.</p>
+            <div class="field"><label for="current-password">Current password</label><input type="password" id="current-password" autocomplete="current-password" /></div>
+            <div class="field"><label for="new-password">New password</label><input type="password" id="new-password" minlength="8" maxlength="72" autocomplete="new-password" /></div>
+            <div class="field"><label for="confirm-password">Confirm new password</label><input type="password" id="confirm-password" autocomplete="new-password" /></div>
+          </details>
           <button class="btn btn-primary" type="submit" id="save-profile">Save profile</button>
         </form>
       </div>
@@ -60,7 +67,12 @@ async function saveProfile(event) {
   button.disabled = true;
   button.textContent = "Saving…";
   try {
+    const password = document.getElementById("new-password").value;
+    const currentPassword = document.getElementById("current-password").value;
+    if (password && (password !== document.getElementById("confirm-password").value || !currentPassword)) throw new Error("Provide your current password and make sure the new passwords match.");
+    if (password && new TextEncoder().encode(password).length > 72) throw new Error("The new password must fit within 72 UTF-8 bytes.");
     const updated = await Api.put("/auth/profile", {
+      ...(password ? { password, currentPassword } : {}),
       name: document.getElementById("profile-name").value.trim(),
       address: {
         line1: document.getElementById("profile-line1").value.trim(),
@@ -73,6 +85,7 @@ async function saveProfile(event) {
       },
     });
     Api.setSession(updated);
+    for (const id of ["current-password", "new-password", "confirm-password"]) document.getElementById(id).value = "";
     alert.innerHTML = `<div class="alert alert-success">Profile saved.</div>`;
   } catch (error) {
     alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;

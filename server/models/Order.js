@@ -37,10 +37,12 @@ const orderSchema = new mongoose.Schema(
     isPaid: { type: Boolean, default: false },
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "cancelled"],
+      enum: ["pending", "paid", "failed", "cancelled", "review"],
       default: "pending",
     },
     transactionId: { type: String, default: "", index: true },
+    checkoutKey: { type: String, maxlength: 80 },
+    paymentReviewReason: { type: String, default: "", maxlength: 500 },
     paidAt: Date,
     stockRestored: { type: Boolean, default: false },
     cancelledAt: Date,
@@ -51,5 +53,6 @@ const orderSchema = new mongoose.Schema(
 
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1, paymentStatus: 1, createdAt: -1 });
+orderSchema.index({ user: 1, checkoutKey: 1 }, { unique: true, partialFilterExpression: { checkoutKey: { $type: "string" } } });
 
 module.exports = mongoose.model("Order", orderSchema);

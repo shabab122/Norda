@@ -1,6 +1,7 @@
 let categoriesCache = [];
 
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   if (!requireAdmin()) return;
   renderAdminShell("categories");
   document.getElementById("new-category-btn").addEventListener("click", () => openModal());
@@ -30,23 +31,30 @@ function openModal(category = null) {
   document.getElementById("category-id").value = category?._id || "";
   document.getElementById("category-name").value = category?.name || "";
   document.getElementById("category-image").value = category?.image || "";
-  document.getElementById("category-modal").classList.remove("hidden");
+  document.getElementById("modal-alert").innerHTML = "";
+  openDialog("category-modal");
   document.getElementById("category-name").focus();
 }
 
-function closeModal() { document.getElementById("category-modal").classList.add("hidden"); }
+function closeModal() { closeDialog("category-modal"); }
 
 async function saveCategory(event) {
   event.preventDefault();
+  const button = event.currentTarget.querySelector('button[type="submit"]');
+  if (button.disabled) return;
+  button.disabled = true;
+  const modal = document.getElementById("category-modal"); modal.dataset.busy = "true";
   const id = document.getElementById("category-id").value;
   const payload = { name: document.getElementById("category-name").value.trim(), image: document.getElementById("category-image").value.trim() };
   try {
     if (id) await Api.put("/categories/" + id, payload);
     else await Api.post("/categories", payload);
+    modal.dataset.busy = "false";
     closeModal();
     showTopAlert("Category saved.", "success");
     await loadCategories();
   } catch (error) { showTopAlert(error.message, "error"); }
+  finally { button.disabled = false; modal.dataset.busy = "false"; }
 }
 
 async function deleteCategory(id) {
@@ -56,7 +64,7 @@ async function deleteCategory(id) {
 }
 
 function showTopAlert(message, type) {
-  const box = document.getElementById("alert-box");
+  const box = document.getElementById(!document.getElementById("category-modal").classList.contains("hidden") ? "modal-alert" : "alert-box");
   box.innerHTML = `<div class="alert alert-${type}">${escapeHtml(message)}</div>`;
-  setTimeout(() => { box.innerHTML = ""; }, 3500);
+
 }

@@ -4,7 +4,7 @@ function productCardHtml(product) {
   const displayedPrice = discounted ? product.discountPrice : product.price;
   const category = product.category?.name || "Everyday";
   const brand = product.brandRef?.name || product.brand || "Norda selection";
-  const imageUrl = product.images?.length ? resolveImage(product.images[0]) : "";
+  const imageUrl = resolveImage(product.images?.[0] || "/assets/products/collection.svg");
   const initials = product.name
     .split(/\s+/)
     .slice(0, 2)
@@ -42,6 +42,7 @@ function productCardHtml(product) {
           <span class="rating">${product.ratingCount ? "★ " + Number(product.ratingAverage).toFixed(1) + " (" + product.ratingCount + ")" : "New arrival"}</span>
           ${stock}
         </div>
+        <div class="product-footer"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">View details ↗</a><button type="button" data-quick-cart="${escapeHtml(product._id)}" ${product.stock === 0 ? "disabled" : ""}>${product.stock === 0 ? "Sold out" : "+ Add to cart"}</button></div>
       </div>
     </article>
   `;

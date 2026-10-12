@@ -4,6 +4,12 @@ const { rowsToCsv } = require("../utils/csv");
 
 const orderReportCsv = async (req, res, next) => {
   try {
+    for (const field of ["from", "to"]) {
+      if (req.query[field] && (!/^\d{4}-\d{2}-\d{2}$/.test(req.query[field]) || !Number.isFinite(Date.parse(req.query[field])) || new Date(req.query[field]).toISOString().slice(0, 10) !== req.query[field])) {
+        return res.status(400).json({ message: "Please provide valid report dates" });
+      }
+    }
+    if (req.query.from && req.query.to && req.query.from > req.query.to) return res.status(400).json({ message: "The start date must be before the end date" });
     const filter = {};
     if (req.query.status) filter.status = req.query.status;
     if (req.query.paymentStatus) filter.paymentStatus = req.query.paymentStatus;

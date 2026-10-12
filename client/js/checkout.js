@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready;
   renderHeader();
   renderFooter();
   if (!requireLogin()) return;
@@ -12,9 +13,14 @@ async function loadCheckout() {
       Api.get("/cart"),
       Api.get("/auth/profile"),
       Api.get("/payments/config"),
-      Api.get("/store/config"),
+      getStoreConfig(),
     ]);
-    const items = (cart.items || []).filter((item) => item.product);
+    const items = cart.items || [];
+    if (items.some((item) => item.unavailable || !item.product || item.quantity > item.product.stock)) {
+      root.innerHTML = `<div class="empty-state"><h2>Your cart needs a quick review</h2><p>An item or quantity is no longer available. Your selection has been kept.</p><a class="btn btn-primary" href="cart.html">Review cart</a></div>`;
+      return;
+    }
+    checkoutSignature = JSON.stringify(items.map((item) => [item.product._id, item.quantity, item.price]));
     if (!items.length) {
       root.innerHTML = `<div class="empty-state spacious"><h2>Your cart is empty</h2><p>Add at least one product before checkout.</p><a class="btn btn-primary" href="products.html">Browse products</a></div>`;
       return;
@@ -64,14 +70,14 @@ async function loadCheckout() {
           </section>
 
           <section class="checkout-card">
-            <div class="checkout-card-head"><span>02</span><div><h2>Payment method</h2><p>Your invoice is created before payment begins.</p></div></div>
+            <div class="checkout-card-head"><span>02</span><div><h2>Payment method</h2><p>Choose the way you would like to pay.</p></div></div>
             <div class="payment-options">
               <label class="payment-option ${paymentConfig.sslcommerzEnabled ? "selected" : "disabled"}">
                 <input type="radio" name="payment-method" value="sslcommerz" ${paymentConfig.sslcommerzEnabled ? "checked" : "disabled"} />
-                <span class="payment-copy"><strong>Pay online with SSLCOMMERZ</strong><small>Cards, mobile banking and internet banking · ${escapeHtml(paymentConfig.environment)} environment</small></span>
+                <span class="payment-copy"><strong>Pay online with SSLCOMMERZ</strong><small>Cards, mobile banking and internet banking</small></span>
                 <span class="secure-chip">Secure</span>
               </label>
-              ${!paymentConfig.sslcommerzEnabled ? `<p class="gateway-note">Online payment is disabled until sandbox credentials are added to the server environment.</p>` : ""}
+              ${!paymentConfig.sslcommerzEnabled ? `<p class="gateway-note">Online payment is currently unavailable. Cash on delivery is available below.</p>` : ""}
               <label class="payment-option ${paymentConfig.sslcommerzEnabled ? "" : "selected"}">
                 <input type="radio" name="payment-method" value="cod" ${paymentConfig.sslcommerzEnabled ? "" : "checked"} />
                 <span class="payment-copy"><strong>Cash on delivery</strong><small>Pay when the order reaches you</small></span>
@@ -138,6 +144,7 @@ function bindCheckoutForm() {
   document.getElementById("checkout-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = document.getElementById("place-order-btn");
+    if (button.disabled) return;
     const alert = document.getElementById("checkout-alert");
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
     button.disabled = true;
@@ -148,14 +155,18 @@ function bindCheckoutForm() {
       if (paymentMethod === "sslcommerz") {
         const result = await Api.post("/payments/sslcommerz/initiate", {
           shippingAddress: shippingPayload(),
+          checkoutKey: checkoutKey(paymentMethod),
         });
-        window.location.assign(result.checkoutUrl);
+        clearCheckoutKey();
+        window.location.assign(result.alreadyPaid ? "orders.html" : result.checkoutUrl);
         return;
       }
       const order = await Api.post("/orders", {
         shippingAddress: shippingPayload(),
         paymentMethod: "cod",
+        checkoutKey: checkoutKey(paymentMethod),
       });
+      clearCheckoutKey();
       const query = new URLSearchParams({
         placed: order._id,
         invoice: order.invoiceNumber || "",
@@ -163,7 +174,11 @@ function bindCheckoutForm() {
       window.location.href = "orders.html?" + query.toString();
     } catch (error) {
       if (error.orderId) {
-        alert.innerHTML = `<div class="alert alert-error"><strong>Your order was saved, but payment could not start.</strong><br />You can see the unpaid order in <a href="orders.html">My Orders</a>. No payment was collected.</div>`;
+        clearCheckoutKey();
+        alert.innerHTML = `<div class="alert alert-warning"><strong>Your order is saved.</strong><p>${escapeHtml(error.message)}</p><p><a href="orders.html">View your order and payment status</a> before starting another checkout.</p></div>`;
+        button.textContent = "Order saved — check My Orders";
+        alert.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
       } else {
         alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
       }
@@ -173,3 +188,17 @@ function bindCheckoutForm() {
     }
   });
 }
+
+let checkoutSignature = "";
+let memoryCheckout;
+function checkoutKey(method) {
+  let saved = memoryCheckout;
+  try { saved ||= JSON.parse(sessionStorage.getItem("norda_checkout") || "null"); } catch { /* Optional cache. */ }
+  if (!saved || saved.signature !== checkoutSignature || saved.method !== method) {
+    saved = { key: window.crypto?.randomUUID ? window.crypto.randomUUID() : "norda-" + Date.now() + "-" + Math.random().toString(36).slice(2), signature: checkoutSignature, method };
+  }
+  memoryCheckout = saved;
+  try { sessionStorage.setItem("norda_checkout", JSON.stringify(saved)); } catch { /* The in-page key still prevents duplicate submissions. */ }
+  return saved.key;
+}
+function clearCheckoutKey() { memoryCheckout = null; try { sessionStorage.removeItem("norda_checkout"); } catch {} }

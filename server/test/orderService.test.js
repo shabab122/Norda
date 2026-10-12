@@ -59,3 +59,7 @@ test("order transitions only move forward or cancel before shipment", () => {
   assert.equal(canTransitionOrder("delivered", "processing"), false);
   assert.equal(canTransitionOrder("pending", "pending"), true);
 });
+
+test("Totals reject non-finite and unsafe order amounts", () => {
+  assert.throws(() => calculateTotals([{ price: 1e300, quantity: 10 }]), /supported range/);
+});

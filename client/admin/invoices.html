@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg" />
+  <meta name="theme-color" content="#214c3b" />
   <title>Invoices — Norda Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -15,7 +17,7 @@
     <main class="admin-main">
       <div class="admin-topbar">
         <div><span class="eyebrow">Billing</span><h1>Invoices</h1><p>Every order has one immutable pricing snapshot.</p></div>
-        <div class="admin-topbar-actions"><span id="admin-topbar-user"></span><select id="payment-filter" aria-label="Filter invoices by payment"><option value="">All payment states</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div>
+        <div class="admin-topbar-actions"><span id="admin-topbar-user"></span><select id="payment-filter" aria-label="Filter invoices by payment"><option value="">All payment states</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="review">Needs review</option></select></div>
       </div>
       <div class="admin-panel" id="invoices-root"><span class="spinner">Loading invoices…</span></div>
     </main>
