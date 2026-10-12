@@ -94,6 +94,3 @@ git push -u origin feature/v2-complete-commerce-flow
 
 Open a pull request into `main` only after the acceptance checklist in `docs/TESTING_GUIDE.md` passes in the target environment. Do not place secrets, runtime uploads, `node_modules` or local `.env` files in version control.
 
-## Known production follow-ups
-
-The project is a complete v2 application baseline, not a claim of production certification. Before a public launch, add gateway sandbox/live integration tests, cloud object storage, backup/restore drills, monitoring, transactional email/SMS, a refund workflow, accessibility testing with assistive technology, and a deployment-specific privacy/returns policy.
