@@ -1,0 +1,110 @@
+{
+  "generatedOn": "2026-10-15",
+  "method": "Built-in image_gen tool, one generation call per product; 24 distinct prompts.",
+  "use": "AI-generated illustrative demonstration catalog photos. These are fictional unbranded products and are not photographs of certified real inventory.",
+  "output": {
+    "format": "WebP",
+    "width": 800,
+    "height": 800,
+    "quality": 88,
+    "processing": "Downscaled and WebP encoded with Pillow; image content was not otherwise edited."
+  },
+  "assets": [
+    {
+      "file": "headphones.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium pair of wireless over-ear headphones in matte forest green, tactile padded ear cushions and brushed metal headband details, no logo. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "watch.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One modern smartwatch with round dark face and a warm grey silicone strap, shown with strap curved elegantly, blank abstract watch face without text. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "jacket.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One medium blue denim jacket, laid naturally upright with sleeves slightly out, realistic stitching and silver buttons, no person or mannequin. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "shoes.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One pair of neutral women's running shoes in ivory and soft taupe, breathable knit, natural rubber sole, arranged in a pleasing three-quarter view. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "cookware.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: A compact set of black nonstick cookware: one skillet, one saucepan and one casserole with fitted glass lids, dark handles, arranged clearly. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "kettle.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium matte ivory electric kettle with oak-colour handle and brushed stainless accents, removable base underneath, no brand. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "yoga.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One sage green yoga mat, mostly rolled with a small section elegantly unrolled and a simple cotton carrying strap, tactile non-slip surface. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "dumbbells.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One pair of compact adjustable dumbbells in charcoal metal and black rubber, resting in their small cradles, realistic weight plates, absolutely no numbers or writing. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "clean-code.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One thick plain forest-green programming hardcover book standing at a slight three-quarter angle, completely blank cover and spine, cream page edges. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "mystery.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One plain midnight navy mystery novel hardcover book lying slightly open with a matching closed book underneath, completely blank covers and spines, cream page edges. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "serum.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One amber glass skincare serum dropper bottle with a black pipette cap and a small blank ivory label, premium cosmetic packaging, believable glass. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "cleanser.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium ivory gentle skincare cleanser pump bottle, simple elegant form with a matte sage pump and completely blank cream label. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "backpack.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium commuter backpack in muted olive woven fabric, padded straps and front zip pocket, simple modern structure, no logo. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "suitcase.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium cabin suitcase in warm sand colour, ribbed hard shell, four spinner wheels, telescopic handle neatly raised, no logo. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "chair.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One comfortable upholstered accent chair in warm oatmeal textured fabric, curved back, natural oak legs, contemporary Scandinavian design. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "lamp.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One sculptural desk lamp in matte terracotta with a rounded dome shade and slender arched stem on a circular base, warm soft light. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "notebook.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium sage-green dotted journal notebook with a black elastic band, lying slightly open to show a faint dotted cream paper page, accompanied by a simple brass pen, no writing. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "organizer.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One minimal natural oak desk organizer with several compartments holding two plain pencils, a pen and blank cream memo cards, tidy and useful. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "blocks.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One set of tactile wooden children's building blocks in natural beech and muted sage, terracotta and mustard colours, simple cubes cylinders arches triangular roofs arranged neatly as a small playful structure. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "board-game.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One generic family board game set: a cream folding board with a simple colourful geometric path, small solid wooden pawns, two dice and a plain closed teal rectangular box; no words, numbers or recognizable branded game design. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "coffee.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One unbranded premium matte brown kraft coffee bag with blank ivory label, beside a small neat pile of roasted coffee beans, packaging folded and sealed at the top. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "tea.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One premium forest-green loose-leaf tea pouch with a completely blank ivory label beside a small ceramic cup of amber tea and a few dry tea leaves, understated elegant arrangement. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "planter.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One rounded ivory ceramic plant pot holding a lush small healthy monstera houseplant with several naturally shaped split green leaves, visible full foliage and complete pot. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    },
+    {
+      "file": "garden-tools.webp",
+      "prompt": "Use case: product-mockup. Asset type: square e-commerce product photograph for NORDA. Subject: One set of three small gardening hand tools: steel trowel, hand fork and cultivator with natural wooden handles, laid out neatly together, clean new tools. Style: photorealistic professional studio product photography, physically believable materials and fine detail, softly lit. Scene: warm off-white seamless studio background with gentle contact shadows. Composition: the complete product fully visible, centred, generous breathing room on every side, occupy 65–75 percent of frame, three-quarter front view. No people, no logos, no writing, no watermark, no border, no props outside the described product. Output a single polished square image."
+    }
+  ]
+}

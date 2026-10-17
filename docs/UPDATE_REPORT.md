@@ -1,47 +1,41 @@
-# NORDA 2.1.0 update report
+# NORDA 2.2.0 update report
 
-This revision develops the features already present in the uploaded v2 project. It retains the existing HTML/CSS/JavaScript frontend and Express/Mongoose backend.
+This release completes the selected catalog, cart/login, dependency and native-database work on the existing HTML/CSS/JavaScript and Node/Express/MongoDB application.
 
-## User-visible changes
+## Catalog and storefront
 
-- Redesigned storefront and admin workspace with consistent spacing, wider desktop layouts, mobile filters and visible sign-out actions.
-- Homepage/category/product imagery, sample product illustrations and shared price/delivery information.
-- Quick cart actions, unavailable-item notices, guarded quantity controls and clearer checkout feedback.
-- Product management search, category/brand/visibility filters, pagination and six-image gallery editing.
-- Product archive/restore keeps order links and delivered-purchase reviews usable.
-- Password-change UI, session restoration, keyboard dialogs/tabs and review deletion for authorized users.
-- Order progress and visible payment-review states across orders, invoices, results and admin summaries.
+- 24 demonstration products across 12 categories, with descriptions, BDT prices, normal/discount price examples, managed brands, featured items, low-stock items and one sold-out item.
+- 24 distinct realistic AI-generated photos, optimized to 800×800 WebP; together approximately 1.1 MiB. Prompts/provenance: `client/assets/products/photos/AI_ASSETS.json`.
+- Category tiles use matching photography and a six-column desktop grid; existing responsive layouts remain.
+- `npm run seed:catalog` imports missing records without changing administrator accounts, existing product IDs, prices, stock, order history or custom uploads. Only missing/known starter illustration images are refreshed.
 
-## Backend changes
+## Cart and account flow
 
-- Shared MongoDB operation locks serialize cart/checkout and order/payment/cancellation operations across processes.
-- Checkout keys replay a recorded order rather than create another purchase.
-- Replica sets use transactions; local standalone MongoDB has compensating writes for handled failures.
-- Partial stock-reservation failures restore prior increments/decrements. Cart clearing is the last checkout write.
-- Paid-state updates are monotonic. Late validated payment after cancellation retains cancellation/restored inventory and records a payment review.
-- Gateway callbacks are allowed to reach the validation controller despite their external Origin; storefront API CORS rules remain in place.
-- Catalog sorting uses effective discounted prices. Admin stock edits detect an inventory change since the form was opened.
-- Request bodies are parsed before sanitization. Sensitive API responses are not cached. HTML attribute and CSV cell escaping are strengthened.
-- Distribution secrets and Git metadata are omitted. Fresh environment setup generates unique credentials without overwriting an existing `.env`.
+- A visitor can select a product and quantity before signing in. One selection is kept in session storage for up to 15 minutes and applied once after successful login or registration.
+- Switching between login and registration preserves the safe return destination. A selected item takes the customer to the cart with success/unavailability feedback.
+- Cart writes are queued within a page; stale reads cannot overwrite newer results. Repeated mutation controls are guarded, and queued work stops if the account changes.
+- Database-backed cart persistence, repricing, stock checks, unavailable-item removal, totals, COD orders and invoices are covered by regression/native tests.
 
-## Verification result
+## Dependencies and uploads
 
-The final `npm run verify` result: 86 JavaScript syntax checks passed; 53 automated tests passed, 0 failed, and 1 real MongoDB integration test was skipped. See `VERIFICATION_RESULTS.md`. Tests include HTTP journeys with a model adapter and injected persistence failures; the adapter is strictly test-only.
+- Express 4.22.3, Mongoose 8.24.5 and Multer 2.4.0 are locked in the release.
+- Vulnerable transitive dependencies were updated. Nodemon was removed; `npm run dev` uses Node's built-in watcher. Node.js 22+ is required.
+- `npm ci` succeeds. Release `npm audit`: 0 vulnerabilities including development dependencies; JSON report included.
+- Uploads enforce one file per request, file/field/part limits, image checks and HTTP 400 validation errors. The existing multi-image editor uploads each photo separately.
 
-Coverage includes registration/login, roles/ownership, catalog, cart, checkout replay, rollback, COD transitions, cancellation/restock, invoice synchronization, delivered-purchase reviews, media signatures, payment callbacks/review, password changes, session invalidation, HTML escaping and asset references.
+## Real MongoDB verification
 
-## Verification boundaries
+MongoDB 7.0.45 ran in isolated test databases, once as standalone and once as a single-member replica set. Both passed: 13 reported tests each, 0 failures, 0 skips. The replica-set run explicitly asserted transactions were enabled; standalone asserted the compensation path.
 
-- A real MongoDB service was not available in the build environment. The native database integration test is included and skipped unless `NORDA_TEST_MONGO_URI` is configured.
-- No live gateway credentials or public callback host were used. Gateway requests in automated tests are controlled fixtures, not evidence of successful real payment processing.
-- Browser automation was unavailable. Responsive, keyboard and print rules were implemented, but actual browser/device visual acceptance is still required.
-- Standalone MongoDB compensations cannot guarantee atomic crash recovery. A replica set is required for public-store transactional integrity.
-- Local uploads remain local filesystem storage. Gateway refunds, automatic reservation expiry and full returns remain future phases.
+Native HTTP tests cover seed migration/re-seeding, all 24 photo URLs and categories, authentication/cookies/roles, multi-category carts, server prices, checkout/invoice/replay, cancellation/restock, archived-item recovery, concurrent final-unit purchases, same-cart concurrency and injected invoice-write rollback. GitHub Actions includes both topologies.
 
-## Data compatibility
+## Applying the ZIP
 
-Existing collections and order item snapshots are retained. New fields default safely: product archive state, JWT token version, checkout key and payment review reason. Existing invoice numbers are not changed. New invoice numbers use a longer order suffix. An existing database URI and upload directory must be preserved while applying the ZIP.
+Preserve your existing `.env`, `MONGO_URI` and `server/uploads`. Follow `RUN_COMMANDS.md`, particularly `npm ci` and **`npm run seed:catalog`**. A source ZIP cannot add records to your laptop's database until you run the import. Existing custom data is retained, so your database may contain more than the 24 provided samples.
 
-## Scope for the next phase
+## Remaining acceptance boundaries
 
-See `FUTURE_DEVELOPMENT.md`. This update does not claim a complete public-store production certification.
+- Browser/device visual, keyboard and invoice-print acceptance must still be checked on your laptop. Frontend logic was checked in JavaScript VM tests and assets/routes over HTTP; no browser automation result is claimed.
+- SSLCOMMERZ regression tests use controlled responses. Public sandbox payment/callback/IPN acceptance requires your credentials and callback host and was not performed.
+- Standalone MongoDB compensates handled errors but cannot provide atomic recovery from a process crash during rollback. Use a replica set for a public store.
+- The catalog is illustrative demonstration inventory with fictional brands and AI imagery. Review actual product details before selling. Returns/refunds, password recovery, variants and deployment work remain in `FUTURE_DEVELOPMENT.md`.

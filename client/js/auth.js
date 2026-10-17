@@ -3,6 +3,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderHeader();
   renderFooter();
 
+  const requestedNext = new URLSearchParams(window.location.search).get("next");
+  if (requestedNext) {
+    const next = safeNext(requestedNext);
+    document.querySelectorAll('.form-foot a').forEach((link) => {
+      const page = link.getAttribute("href");
+      if (page === "login.html" || page === "register.html") link.href = page + "?next=" + encodeURIComponent(next);
+    });
+  }
+
   const loginForm = document.getElementById("login-form");
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
@@ -18,7 +27,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         Api.setSession(user, { replaceToken: true });
         const params = new URLSearchParams(window.location.search);
         const next = safeNext(params.get("next"));
-        window.location.href = user.role === "admin" ? "admin/dashboard.html" : next;
+        const cartSelected = await finishCartIntent();
+        window.location.href = cartSelected ? "cart.html" : user.role === "admin" && !params.get("next") ? "admin/dashboard.html" : next;
       } catch (err) {
         showAlert(err.message, "error");
         button.disabled = false;
@@ -40,7 +50,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const user = await Api.post("/auth/register", { name, email, password });
         Api.setSession(user, { replaceToken: true });
-        const next = safeNext(new URLSearchParams(window.location.search).get("next"));
+        const next = await finishCartIntent() ? "cart.html" : safeNext(new URLSearchParams(window.location.search).get("next"));
         showAlert("Account created. Taking you to Norda…", "success");
         setTimeout(() => (window.location.href = next), 700);
       } catch (err) {

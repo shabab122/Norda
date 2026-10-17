@@ -28,13 +28,14 @@ const fileFilter = (req, file, cb) => {
     allowedMimeTypes.has(file.mimetype) &&
     allowedExtensions.has(path.extname(file.originalname).toLowerCase());
   if (ok) return cb(null, true);
-  cb(new Error("Only image files (jpeg, jpg, png, webp, gif) are allowed"));
+  const error = new Error("Only image files (jpeg, jpg, png, webp, gif) are allowed");
+  error.statusCode = 400; cb(error);
 };
 
 const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2, parts: 3, fieldNameSize: 80, fieldSize: 4096 },
 });
 
 module.exports = upload;

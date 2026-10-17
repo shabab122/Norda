@@ -49,3 +49,93 @@ test("Local development clients keep the same cookie hostname", () => {
   vm.runInContext(read("js/config.js"), scope);
   assert.equal(vm.runInContext("API_BASE_URL", scope), "http://127.0.0.1:5000/api");
 });
+
+function cartScope() {
+  const scope = context(); const saved = new Map(); const writes = []; let user = null;
+  scope.document.body = { dataset: {} };
+  scope.sessionStorage = { getItem: (key) => saved.get(key) || null, setItem: (key, value) => saved.set(key, value), removeItem: (key) => saved.delete(key) };
+  scope.Api = { ready: Promise.resolve(), getUser: () => user, isLoggedIn: () => !!user,
+    setSession: (value) => { user = value; }, post: async (url, body) => { writes.push({ url, ...body }); return {}; } };
+  vm.runInContext(read("js/layout.js"), scope);
+  return { scope, saved, writes, setUser: (value) => { user = value; } };
+}
+
+test("A guest's selected quantity survives sign-in and is added exactly once", async () => {
+  const { scope, saved, writes, setUser } = cartScope();
+  const id = "1234567890abcdef12345678";
+  assert.equal(await scope.addProductToCart(id, 4), false);
+  assert.match(scope.window.location.href, /^login\.html\?next=product-detail/);
+  assert.equal(writes.length, 0);
+  setUser({ _id: "customer-one" });
+  assert.equal(await scope.finishCartIntent(), true);
+  assert.equal(await scope.finishCartIntent(), false);
+  assert.deepEqual(writes, [{ url: "/cart", productId: id, quantity: 4 }]);
+  assert.equal(JSON.parse(saved.get("norda_cart_notice")).type, "success");
+});
+
+test("Expired, malformed and invalid guest selections never reach the cart API", async () => {
+  const { scope, saved, writes, setUser } = cartScope(); setUser({ _id: "customer-one" });
+  for (const intent of [null, { productId: "bad", quantity: 1, createdAt: Date.now() },
+    { productId: "1234567890abcdef12345678", quantity: 1.5, createdAt: Date.now() },
+    { productId: "1234567890abcdef12345678", quantity: 1, createdAt: Date.now() - 16 * 60 * 1000 },
+    { productId: "1234567890abcdef12345678", quantity: 1, createdAt: Date.now() + 60000 }]) {
+    saved.set("norda_pending_cart", JSON.stringify(intent)); assert.equal(await scope.finishCartIntent(), false);
+    assert.equal(saved.has("norda_pending_cart"), false);
+  }
+  await assert.rejects(scope.addProductToCart("1234567890abcdef12345678", 0), /whole-number/);
+  assert.equal(writes.length, 0);
+});
+
+test("Cart writes serialize and a failed request does not poison later changes", async () => {
+  const { scope, setUser } = cartScope(); setUser({ _id: "customer-one" });
+  const events = []; let release;
+  const gate = new Promise((resolve) => { release = resolve; });
+  const first = scope.enqueueCartWrite(async () => { events.push("first-start"); await gate; events.push("first-end"); throw new Error("rejected"); });
+  const firstRejected = assert.rejects(first, /rejected/);
+  const second = scope.enqueueCartWrite(async () => { events.push("second"); return 2; });
+  await Promise.resolve(); assert.deepEqual(events, ["first-start"]);
+  release(); await firstRejected; assert.equal(await second, 2);
+  assert.deepEqual(events, ["first-start", "first-end", "second"]);
+});
+
+test("Queued cart changes stop if the signed-in account changes", async () => {
+  const { scope, setUser } = cartScope(); setUser({ _id: "customer-one" });
+  let release; const gate = new Promise((resolve) => { release = resolve; });
+  const first = scope.enqueueCartWrite(() => gate); await Promise.resolve();
+  const second = scope.enqueueCartWrite(() => { throw new Error("must not execute"); });
+  const rejected = assert.rejects(second, /account changed/);
+  setUser({ _id: "customer-two" }); release(); await first; await rejected;
+});
+
+test("Failed sign-in cart completion reports the error and never retries the item automatically", async () => {
+  const { scope, saved, setUser } = cartScope(); setUser({ _id: "customer-one" }); let attempts = 0;
+  scope.Api.post = async () => { attempts++; throw new Error("This product is sold out."); };
+  scope.rememberCartIntent("1234567890abcdef12345678", 1);
+  assert.equal(await scope.finishCartIntent(), true); assert.equal(await scope.finishCartIntent(), false);
+  assert.equal(attempts, 1); const notice = JSON.parse(saved.get("norda_cart_notice"));
+  assert.equal(notice.type, "warning"); assert.match(notice.message, /sold out/);
+});
+
+for (const mode of ["login", "register"]) {
+  test(`${mode} keeps the selected product, quantity and safe return destination`, async () => {
+    const { scope, writes } = cartScope(); let ready; let submit;
+    scope.window.location.search = "?next=" + encodeURIComponent("product-detail.html?id=1234567890abcdef12345678");
+    scope.document.addEventListener = (event, callback) => { if (event === "DOMContentLoaded") ready = callback; };
+    const link = { getAttribute: () => mode === "login" ? "register.html" : "login.html" };
+    scope.document.querySelectorAll = () => [link];
+    const button = { disabled: false }; const form = { addEventListener: (event, callback) => { submit = callback; } };
+    const fields = { [`${mode}-form`]: form, name: { value: "Test customer" }, email: { value: "customer@norda.example" }, password: { value: "TestPassword123" } };
+    scope.document.getElementById = (id) => fields[id] || null;
+    scope.renderHeader = () => {}; scope.renderFooter = () => {}; scope.setTimeout = (callback) => callback();
+    const write = scope.Api.post;
+    scope.Api.post = async (url, body) => url.startsWith("/auth/") ? { _id: "customer-one", role: "customer" } : write(url, body);
+    scope.rememberCartIntent("1234567890abcdef12345678", 2);
+    vm.runInContext(read("js/auth.js"), scope); await ready();
+    assert.match(link.href, /next=product-detail/);
+    assert.equal(scope.safeNext("https://untrusted.example"), "index.html");
+    assert.equal(scope.safeNext("//untrusted.example"), "index.html");
+    await submit({ preventDefault() {}, currentTarget: { querySelector: () => button } });
+    assert.equal(scope.window.location.href, "cart.html");
+    assert.deepEqual(writes, [{ url: "/cart", productId: "1234567890abcdef12345678", quantity: 2 }]);
+  });
+}

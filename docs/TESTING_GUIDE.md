@@ -1,4 +1,4 @@
-# NORDA 2.1 testing and acceptance
+# NORDA 2.2 testing and acceptance
 
 ## Automated verification
 
@@ -10,17 +10,17 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The real database test is intentionally skipped without an explicit test URI:
+The two real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
-NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27017' npm run test:integration
+NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
 ```
 
-It creates a new random `norda_test_*` database and removes only that new database. Check standalone local MongoDB and a replica set separately. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
+Each entry point creates a new random `norda_test_*` database and removes only that new database. Set `NORDA_EXPECT_TRANSACTIONS=1` when testing a replica set. Both topologies run in CI. Native HTTP checks cover the 24-product seed, asset serving, cookie login, multi-category cart, real totals, one invoice, cancellation, final-unit races, same-cart replay, injected invoice failure and upload validation. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
 
 ## Current verification limits
 
-Real MongoDB, public gateway acceptance and browser/device QA were not available in the build environment. Follow the acceptance matrix below in the target environment. Use a replica set for public-store transactional integrity.
+Native MongoDB 7.0.45 checks passed in this release on standalone and replica-set paths. Public gateway acceptance and browser/device visual QA remain target-environment checks. Follow the acceptance matrix below on your laptop and deployment. Use a replica set for public-store transactional integrity.
 
 ## Clean local environment
 
@@ -115,7 +115,17 @@ Do not test live payment credentials from a developer machine. Rotate sandbox cr
 3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
-6. Tag the accepted merge (for example `v2.0.0`) and update `CHANGELOG.md`.
+6. Tag the accepted merge (for example `v2.2.0`) and update `CHANGELOG.md`.
+
+## Additional 2.2 acceptance
+
+- Run the catalog import twice: unchanged merchant stock/prices and custom photos; no duplicated sample products.
+- Browse all 12 categories, category/brand filters, price sorting and pagination. Check the sold-out organizer and low-stock products.
+- Signed out, select a product with quantity 2. Continue from login to registration, finish authentication, and confirm exactly 2 are in the cart.
+- Reload, sign out and sign back in: the database-backed cart remains. A consumed login selection is not added again.
+- Increase/decrease quantity, type a quantity, remove, clear, and recover an archived/unavailable item. Verify the badge and summary.
+- Place a COD order containing products from several categories; check totals, invoice, emptied cart and one stock decrement.
+- Repeat the checkout key, cancel twice, and test two customers attempting the final unit. The native integration tests automate these scenarios.
 
 ## Additional 2.1 acceptance
 

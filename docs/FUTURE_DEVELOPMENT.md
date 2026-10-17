@@ -1,8 +1,15 @@
 # Future NORDA development
 
+## Completed in 2.2.0
+
+- 24-product, 12-category catalog with original AI photos and a repeatable import.
+- Login/registration cart-selection continuity and guarded/queued cart changes.
+- Dependency upgrades with zero vulnerabilities in the release audit.
+- Real MongoDB standalone and replica-set checks for checkout, stock, invoice, cancellation, replay/concurrency and handled-failure rollback; CI includes both topologies.
+
 ## Release acceptance first
 
-Run real MongoDB integration on the intended topology, the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix, and browser/device/keyboard/print checks. Resolve any environment-specific issues before accepting live payments.
+Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/device/keyboard/print checks. Repeat the included MongoDB tests against an isolated instance matching your deployment configuration. Resolve environment-specific issues before accepting live payments.
 
 ## Phase 1 — account and checkout recovery
 
@@ -10,7 +17,7 @@ Run real MongoDB integration on the intended topology, the public SSLCOMMERZ san
 - Multiple delivery addresses and recipient details
 - Payment retry on an existing eligible order
 - Reservation expiry and safe automatic stock release
-- Stronger session/device management and dependency auditing
+- Stronger session/device management and ongoing dependency auditing
 
 ## Phase 2 — order operations
 

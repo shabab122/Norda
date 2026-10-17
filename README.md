@@ -2,13 +2,18 @@
 
 A full-stack e-commerce application for Bangladesh, built with HTML, CSS, browser JavaScript, Node.js, Express and MongoDB. Customers browse the catalog, keep a stock-aware cart, check out using cash on delivery or SSLCOMMERZ, follow orders, print invoices and review delivered purchases. Administrators manage the catalog, media, orders, invoices and reports.
 
-**Current version: 2.1.0 — UI and commerce reliability update.**
+**Current version: 2.2.0 — AI catalog, cart/login continuity and verified MongoDB commerce.**
 
 ## What's improved
 
+- 24 products across 12 categories, each with its own realistic AI-generated 800×800 WebP photo, BDT price, description, brand and stock.
+- A repeatable catalog import that preserves existing prices, stock, uploads, product IDs and orders.
+- A visitor's selected product/quantity carries through login or registration and is added once; queued cart writes prevent conflicting page actions.
+- Updated Express, Mongoose, Multer and vulnerable transitive packages; removed the unused development watcher dependency. The release audit reports zero vulnerabilities.
+- Native MongoDB 7.0.45 checks passed on both standalone and replica-set transaction paths, including real HTTP login, cart, checkout, invoice, cancellation, stock races and rollback.
 - A consistent storefront and operations workspace: warm neutral surfaces, forest-green accents, clearer typography, responsive product cards and visible mobile account actions.
 - Multi-image product editing with cover selection, reordering and removal; searchable, paginated administration.
-- Discount-aware price sorting, honest delivery information and illustrated sample catalog images.
+- Discount-aware price sorting, honest delivery information and consistent product photography.
 - Safe cart rendering for unavailable products, server-side stock/price checks and guarded form submissions.
 - Checkout request replay protection and MongoDB-backed operation locks across API processes.
 - Transactional order/invoice/stock/profile/cart writes on a MongoDB replica set; compensating writes for standalone local MongoDB.
@@ -25,11 +30,11 @@ A full-stack e-commerce application for Bangladesh, built with HTML, CSS, browse
 | Database | MongoDB, Mongoose |
 | Authentication | Bcrypt and signed JWT in an HTTP-only cookie |
 | Payments | Cash on delivery and SSLCOMMERZ hosted checkout |
-| Images | Validated local uploads and included sample SVG illustrations |
+| Images | Validated local uploads, 24 AI product WebPs and fallback illustrations |
 
 ## Run locally
 
-Install Node.js 18+ and run MongoDB. This update was checked with Node.js 24.
+Install Node.js 22+ and run MongoDB. This update was checked with Node.js 24. Development watching uses Node's built-in watcher.
 
 ```bash
 cd server
@@ -49,7 +54,9 @@ Open **http://localhost:5000**. Express serves both the website and `/api`.
 
 NORDA defaults to port **5000**. Ports **3000** and **3002** are rejected at startup because they are reserved for GitStack/Gitea. NORDA uses its own MongoDB database; it does not use GitStack's PostgreSQL/Gitea services.
 
-**Existing installations:** retain your current `.env`, `MONGO_URI` and `server/uploads` when applying the update. The new-install template uses `norda_db`; an existing database URI is not automatically migrated or changed. The seed script preserves existing products and only fills missing sample brand links/images.
+**Existing installations:** retain your current `.env`, `MONGO_URI` and `server/uploads` when applying the update. After `npm ci`, run **`npm run seed:catalog`** from `server/` to add the new catalog to your existing database. This command does not change the admin account, existing prices, purchased stock, custom photos or orders. It replaces only missing/known starter illustration images. The new-install template uses `norda_db`; your existing URI is preserved.
+
+The catalog is demonstration data: brands, prices and quantities are illustrative, and photos are AI-generated. One organizer is intentionally sold out; several products have low stock so you can check these states. See [catalog and shopping guide](docs/CATALOG_GUIDE.md) before replacing the samples with saleable inventory.
 
 ## Payments
 
@@ -101,6 +108,8 @@ server/uploads/         Local runtime uploads, excluded from source distribution
 
 - [Run and update commands](RUN_COMMANDS.md)
 - [Update report and verification boundaries](docs/UPDATE_REPORT.md)
+- [Catalog import and manual shopping checklist](docs/CATALOG_GUIDE.md)
+- [Verification results](docs/VERIFICATION_RESULTS.md)
 - [Requirements](docs/PROJECT_REQUIREMENTS.md)
 - [Architecture](docs/ARCHITECTURE.md)
 - [API reference](docs/API_REFERENCE.md)

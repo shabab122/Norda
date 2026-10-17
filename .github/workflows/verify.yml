@@ -17,3 +17,53 @@ jobs:
           cache-dependency-path: server/package-lock.json
       - run: npm ci
       - run: npm run verify
+      - run: npm audit --audit-level=moderate
+  database:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - topology: standalone
+            transactions: '0'
+          - topology: replica
+            transactions: '1'
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: Start isolated MongoDB 7
+        env:
+          TOPOLOGY: ${{ matrix.topology }}
+        run: |
+          mongo_args=()
+          if [ "$TOPOLOGY" = replica ]; then mongo_args+=(--replSet nordaTest); fi
+          docker run -d --name norda-test-mongo -p 127.0.0.1:27018:27018 mongo:7.0 --port 27018 --bind_ip_all "${mongo_args[@]}"
+          ready=0
+          for attempt in {1..45}; do
+            if docker exec norda-test-mongo mongosh --quiet --port 27018 --eval 'quit(db.adminCommand({ping:1}).ok ? 0 : 1)'; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+          if [ "$TOPOLOGY" = replica ]; then
+            docker exec norda-test-mongo mongosh --quiet --port 27018 --eval 'rs.initiate({_id:"nordaTest",members:[{_id:0,host:"127.0.0.1:27018"}]})'
+          fi
+          ready=0
+          for attempt in {1..45}; do
+            if docker exec norda-test-mongo mongosh --quiet --port 27018 --eval 'quit(db.hello().isWritablePrimary ? 0 : 1)'; then ready=1; break; fi
+            sleep 1
+          done
+          test "$ready" = 1
+      - name: Verify real persistence and inventory transactions
+        run: npm run test:integration
+        env:
+          NORDA_TEST_MONGO_URI: mongodb://127.0.0.1:27018
+          NORDA_EXPECT_TRANSACTIONS: ${{ matrix.transactions }}
+      - if: always()
+        run: docker rm -f norda-test-mongo || true
