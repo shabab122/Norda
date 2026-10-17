@@ -8,10 +8,14 @@ const {
   sslcommerzSuccess,
 } = require("../controllers/paymentController");
 const { protect } = require("../middleware/auth");
+const demo = require("../controllers/demoPaymentController");
 
 const router = express.Router();
 
 router.get("/config", getPaymentConfig);
+router.post("/demo/initiate", protect, demo.initiate);
+router.get("/demo/:orderId", protect, demo.getSession);
+router.post("/demo/:orderId/complete", protect, demo.complete);
 router.post("/sslcommerz/initiate", protect, initiateSslcommerz);
 router.post("/sslcommerz/success", sslcommerzSuccess);
 router.post("/sslcommerz/fail", sslcommerzFail);

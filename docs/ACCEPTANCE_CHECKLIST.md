@@ -1,0 +1,82 @@
+# NORDA 2.4 acceptance checklist
+
+## Recorded status
+
+| Area | Current evidence | Remaining action |
+|---|---|---|
+| Customer browse/login/cart/COD/order/invoice | Automated real HTTP + MongoDB pass on both topologies | Repeat the visible journey on your laptop |
+| Admin inventory/delivery/cancellation/restock/reviews | Automated real HTTP + MongoDB pass on both topologies | Repeat with your existing admin account |
+| Different customer identities and private data | Frontend VM + real HTTP ownership checks pass | Verify two browser profiles show the right name/email/data |
+| Desktop/mobile layout, keyboard and print | Responsive/print rules and static/VM checks are present | Actual browser/device acceptance pending |
+| Gateway success/failure/cancel/IPN state handling | Controlled provider responses + real MongoDB pass | Public SSLCOMMERZ sandbox acceptance pending |
+| Configuration and credentials | Read-only preflight; no credential/seed changes; additive demo fields need no migration | Retain your working `.env` and uploads |
+
+## Before starting
+
+Keep your current `server/.env` exactly as configured. Your working local MongoDB is exposed at `127.0.0.1:27018/norda_db`; use the same URI. Keep NORDA on port 5000. Applying this update does not require setup or reseeding.
+
+```bash
+cd server
+npm ci
+npm run acceptance:preflight
+npm run verify
+npm run dev
+```
+
+Open http://localhost:5000. Use your existing admin login; no shared demo password is supplied. For a genuinely fresh database with no admin, `npm run seed` can initialize the account using your own private `ADMIN_EMAIL`/`ADMIN_PASSWORD`. Do not change working credentials to apply this update.
+
+## Local demo payment journey
+
+1. Run development with your working `.env`; merchant credentials and a public callback URL are not required. Verify `/api/payments/config` reports `demoEnabled: true`. A production environment or `PAYMENT_DEMO_ENABLED=false` disables it.
+2. Add products, sign in and checkout using **Mobile Banking / bKash — DEMO**. On the demo page choose successful payment. Confirm a processing DEMO order, paid DEMO invoice, cleared cart and one stock decrement; real revenue stays unchanged.
+3. Repeat with **Card / Bank — DEMO**. Check the selected category, order total, result, invoice and DEMO labels.
+4. For each category, start a separate demo and choose failed payment; repeat with cancel. Both orders must be cancelled, stock restored once, and payment/invoice statuses must match the outcome. No real money moves.
+5. Leave a pending demo, return to My Orders and use Resume or cancel demo. Existing items are reserved until you finish/cancel or an admin cancels; automatic expiry is not implemented.
+6. Refresh after completion; do not create another order/invoice or repeat stock updates. Another customer must not access/finish this demo. Browser/mobile/keyboard/print checks still need the visible inspection below.
+
+## Customer browser journey
+
+1. Signed out, verify Home/Shop and Sign in/Create account are visible. Browse products/categories, search, sort and open a product.
+2. Select quantity 2 and Add to cart. Sign in or follow Create account. Confirm the selection arrives once in the cart.
+3. For a normal login without a shopping return URL, confirm the customer dashboard opens. It must show the correct name/email and Customer account label.
+4. Add products from several categories, increase/decrease/type quantity, remove, clear, re-add and reload. Confirm totals, badge and stock errors.
+5. Complete an order with cash on delivery. Check the order, invoice, shipping address and cleared cart. Try the same checkout key only in the isolated automated test; never create duplicate real orders to test a retry.
+6. Sign out and use a second browser profile/customer. Its dashboard, cart, orders and invoices must belong to that account. Return to the first account and confirm its history remains.
+7. In two tabs of the same browser profile, sign out/switch accounts. The other tab should refresh and show the current account rather than the old identity. Use separate browser profiles for simultaneous independent accounts because cookies are shared within one browser profile.
+8. Change your display name in Profile and confirm the header/profile refresh. Existing password changes still require the current password; no password reset is performed by this update.
+
+## Admin browser journey
+
+1. Sign in using your existing administrator account. Confirm the Admin workspace label and existing overview.
+2. Edit a test product's price/stock and open it in the storefront. Save an unrelated description edit without losing stock.
+3. Process a test COD order through processing → shipped → delivered. Confirm order and invoice become paid. Leave a review from its purchasing customer.
+4. Place a separate unpaid test order, cancel it and check exact stock restoration. Repeat cancellation and confirm stock does not increase again.
+5. Verify customers cannot open management APIs or another customer's order/invoice. Automated native tests already cover these restrictions.
+
+## Desktop/mobile/keyboard/print
+
+Check Chrome/Chromium and Firefox at 360, 768, 1024 and 1440 pixels; also check your actual phone if available.
+
+- No horizontal page overflow; header account identity/sign-out, mobile menu and catalog filters stay reachable.
+- Dashboard cards become two columns, then account sections stack; long names/emails wrap or truncate without hiding actions.
+- Keyboard Tab reaches the skip link, navigation, forms, cart and checkout; focus remains visible. Test Enter/Space and Escape in dialogs.
+- Labels and errors remain readable at 200% zoom. Sold-out/error/empty states remain understandable.
+- Print an invoice with a few rows and a long one. Confirm A4 output, repeated table heading, legible totals, page breaks and hidden site navigation.
+- Refresh protected pages and use Back after sign-out; no stale private account view should remain.
+
+These browser checks are not marked passed by the build because a supported browser controller was unavailable.
+
+## Public SSLCOMMERZ sandbox acceptance
+
+Requires your own sandbox merchant credentials and a public reachable callback host. Keep credentials private in the server environment; do not put them in commits, screenshots or the frontend. Use the same values you already configured. This ZIP does not provide or rotate them.
+
+1. On your sandbox test host, run `npm run acceptance:preflight`. Confirm sandbox mode, credential presence and your public HTTPS callback/client URL format. A URL-format pass does not establish internet reachability.
+2. Confirm `/api/payments/config` shows online payment enabled and sandbox. Configure the merchant's IPN listener to the existing `/api/payments/sslcommerz/ipn` route on your public API host.
+3. Complete an actual hosted sandbox success. Record order ID, transaction ID, invoice number, amount and resulting paid/processing state. Never record the store password or tokens.
+4. Complete separate failure and customer-cancel cases. Confirm unpaid status and matching invoice state. Administratively cancel eligible unpaid orders and verify one stock restoration.
+5. Replay success/IPN for the same test transaction. Confirm one order/invoice, one stock decrement and stable paid state.
+6. Replay failure/cancel after a successful validation. Confirm it remains paid. Exercise tampered amount/transaction/currency only on isolated test fixtures; it must not be accepted as paid.
+7. Confirm a valid late payment after admin cancellation appears as payment review without re-consuming inventory; resolve it through your store's payment support process.
+8. Save the observed results against the matrix before enabling live payments.
+
+Official integration reference: https://developer.sslcommerz.com/doc/v4/ . This release checks application behaviour with controlled responses and has not completed these public-provider steps.

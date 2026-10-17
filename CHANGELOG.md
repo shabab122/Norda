@@ -2,6 +2,47 @@
 
 All notable project changes are recorded here.
 
+## [2.4.0] — 2026-10-17
+
+### Added
+
+- Local, explicitly labeled Mobile Banking/bKash and Card/Bank simulation, with authenticated success/failure/cancel actions, server-owned totals and My Orders resume links.
+- Demo-only payment/order markers, production disable guard, revenue exclusion, printable DEMO invoice notice and customer/admin labels.
+- Failure/cancel stock release, immutable terminal outcomes, repeated request protection, transactional/compensating rollback and interrupted-init recovery.
+
+### Fixed
+
+- Development checkout no longer depends on merchant configuration for the requested local demo. The separate real SSLCOMMERZ option retains its configuration and validation requirements.
+- Real provider callbacks cannot edit demo payments; demo endpoints cannot pay real orders or another customer's order.
+- Featured Picks and Recently Added no longer share product IDs or cover images; missing/error states stay honest without duplicate padding.
+
+### Verification
+
+- See `docs/VERIFICATION_RESULTS.md` for the final automated/native results and remaining browser/public-provider checks. All 24 existing product photos were retained after subject/uniqueness inspection.
+- Dependencies, existing seed data, uploads, authentication credentials and working MongoDB URI are preserved.
+
+## [2.3.0] — 2026-10-17
+
+### Added
+
+- Personal customer dashboard with visible identity, own order counts/recent orders, invoice links, cart quantity and delivery details.
+- Different guest/customer/admin navigation and normal authentication destinations, while preserving shopping return URLs and pending cart selections.
+- Read-only environment/database acceptance preflight without credential disclosure or configuration changes.
+- Native complete COD/admin delivery/review, two-customer isolation, controlled payment-notification matrix and preflight tests.
+
+### Fixed
+
+- Refresh stale account identity when another tab changes accounts or the browser restores a cached page.
+- Refresh the header/profile identity after a profile-name change.
+- Recent-order links can target the correct order after loading; invoice print styles allow long tables to continue across pages.
+
+### Verification and scope
+
+- 93 JavaScript files passed syntax checks; 74 default tests passed, 0 failed, 2 native entry points skipped without a test URI.
+- Native MongoDB 7.0.45: 17 reported tests passed on standalone and 17 on a single-member replica set, with no failures/skips.
+- No dependency changes; release audit remains at 0 vulnerabilities. Existing credentials, seed/catalog, images, backend business services/models/routes and existing admin operations are preserved.
+- Public SSLCOMMERZ sandbox acceptance and actual browser/device/keyboard/print acceptance remain pending; see the acceptance checklist.
+
 ## [2.2.0] — 2026-10-15
 
 ### Added

@@ -57,22 +57,37 @@ async function loadBrands() {
 }
 
 async function loadHomeProducts() {
-  await Promise.all([
-    loadGrid("featured-grid", "/products?featured=true&limit=8"),
-    loadGrid("new-grid", "/products?sort=newest&limit=8"),
+  const results = await Promise.allSettled([
+    Api.get("/products?featured=true&limit=24"),
+    Api.get("/products?sort=newest&limit=100"),
   ]);
+  const ids = new Set();
+  const covers = new Set();
+  for (const [index, elementId] of ["featured-grid", "new-grid"].entries()) {
+    const element = document.getElementById(elementId);
+    const result = results[index];
+    if (result.status !== "fulfilled") {
+      element.innerHTML = `<div class="empty-state">Products could not be loaded.</div>`;
+      continue;
+    }
+    const products = distinctHomeProducts(result.value.products || [], ids, covers);
+    element.innerHTML = products.length ? products.map(productCardHtml).join("")
+      : `<div class="empty-state">${index ? "More new arrivals will appear here soon." : "No featured products are available yet."}</div>`;
+  }
 }
 
-async function loadGrid(elementId, path) {
-  const element = document.getElementById(elementId);
-  try {
-    const data = await Api.get(path);
-    element.innerHTML = data.products.length
-      ? data.products.map(productCardHtml).join("")
-      : `<div class="empty-state">No products are available yet.</div>`;
-  } catch {
-    element.innerHTML = `<div class="empty-state">Products could not be loaded.</div>`;
+function distinctHomeProducts(products, ids, covers, limit = 8) {
+  const selected = [];
+  for (const product of products) {
+    const id = String(product._id);
+    const cover = product.images?.[0] || "";
+    if (ids.has(id) || (cover && covers.has(cover))) continue;
+    ids.add(id);
+    if (cover) covers.add(cover);
+    selected.push(product);
+    if (selected.length === limit) break;
   }
+  return selected;
 }
 
 function categoryVisual(name) {

@@ -24,11 +24,11 @@ test("HTTP regression journeys using an isolated, fault-injectable model adapter
     return { status: response.status, data, cookie: response.headers.get("set-cookie")?.split(";")[0], location: response.headers.get("location"), headers: response.headers };
   };
   try {
-    await t.test("All 17 pages and their local assets are served", async () => {
+    await t.test("All 19 pages and their local assets are served", async () => {
       const pages = [];
       const collect = async (dir, prefix = "") => { for (const entry of await fs.readdir(dir, { withFileTypes: true })) { if (entry.isDirectory()) await collect(path.join(dir, entry.name), prefix + entry.name + "/"); else if (entry.name.endsWith(".html")) pages.push("/" + prefix + entry.name); } };
       await collect(path.join(__dirname, "../../client"));
-      assert.equal(pages.length, 17);
+      assert.equal(pages.length, 19);
       for (const page of pages) { const response = await request(page); assert.equal(response.status, 200, page); assert.match(response.data, /<!DOCTYPE html>/i); }
       assert.equal((await request("/assets/products/headphones.svg")).status, 200);
       assert.equal((await request("/api/health")).status, 200);

@@ -81,3 +81,13 @@ input[type=checkbox],input[type=radio]{accent-color:var(--brand)} .field{margin-
 .trust-grid strong span{display:inline;color:inherit;font-size:inherit}.checkout-steps{display:flex;gap:22px;margin-top:20px;font-size:.72rem;color:var(--ink-soft)}.checkout-steps .active,.checkout-steps .complete{color:var(--brand);font-weight:600}
 
 .skip-link{position:fixed;left:18px;top:10px;z-index:300;padding:10px 16px;border-radius:7px;background:var(--brand);color:#fff;transform:translateY(-160%);font-size:.8rem}.skip-link:focus{transform:none}
+
+/* Clear account identity across the storefront. */
+.account-link{display:flex;align-items:center;gap:9px;min-width:0;padding:5px 0}.account-avatar{display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border-radius:50%;background:#e7eee1;color:var(--brand);font:600 .77rem var(--font-head)}.account-link-copy{display:grid;gap:1px;min-width:0;max-width:125px}.account-link-copy strong{font-size:.74rem;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.account-link-copy small{color:var(--ink-soft);font-size:.6rem;line-height:1.5;white-space:nowrap}.account-link-admin .account-avatar{background:#f4e6d6;color:#82502c}.account-link:hover .account-link-copy strong{color:var(--brand);text-decoration:underline}
+body[data-account-changing="true"] main,body[data-account-changing="true"] #site-header,body[data-account-changing="true"] .admin-main{visibility:hidden}
+@media(min-width:901px) and (max-width:1180px){.account-link-copy{display:none}.header-actions.has-account{gap:12px}}
+@media(max-width:680px){.header-actions.has-account{flex:1 0 100%;justify-content:flex-end;padding-top:6px;gap:16px}.has-account .account-link{margin-right:auto}.account-link-copy{max-width:140px}.account-link-copy strong{font-size:.74rem}.account-link-copy small{font-size:.59rem}.has-account .logout-button{min-height:36px}.has-account .cart-link{min-height:36px}}
+@media(max-width:360px){.header-actions.has-account{gap:12px}.account-link-copy{max-width:106px}.account-link{gap:7px}.account-avatar{width:30px;height:30px}}
+@media print{.invoice-sheet{break-inside:auto;overflow:visible}.invoice-table thead{display:table-header-group}.invoice-table tr,.invoice-header,.invoice-meta,.invoice-addresses,.invoice-totals{break-inside:avoid}.invoice-table td:first-child{overflow-wrap:anywhere}}
+
+.demo-notice { padding: 14px 16px; border: 1px solid #e8d391; background: #fff9e9; color: #6a541c; border-radius: 10px; font-size: .82rem; line-height: 1.65; }

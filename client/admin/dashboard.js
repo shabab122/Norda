@@ -14,7 +14,7 @@ async function loadDashboard() {
     root.innerHTML = `
       ${summary.reviewPayments ? `<div class="alert alert-warning"><strong>${summary.reviewPayments} payment(s) need review.</strong> <a href="orders.html?paymentStatus=review">Open affected orders</a></div>` : ""}
       <div class="stat-grid">
-        ${statCard("Revenue", money(summary.totalRevenue), "Paid, non-cancelled orders", "accent")}
+        ${statCard("Revenue", money(summary.totalRevenue), "Paid orders, excluding demos", "accent")}
         ${statCard("Orders", summary.totalOrders, `${summary.pendingOrders} awaiting action`)}
         ${statCard("Customers", summary.totalUsers, "Registered shoppers")}
         ${statCard("Products", summary.totalProducts, `${summary.totalCategories} categories · ${summary.totalBrands} brands`)}
@@ -33,7 +33,7 @@ async function loadDashboard() {
       </div>
       <section class="admin-panel admin-section-gap">
         <div class="panel-heading"><div><span class="eyebrow">Latest activity</span><h2>Recent orders</h2></div><a href="orders.html" class="text-link">View all →</a></div>
-        ${summary.recentOrders.length ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>${summary.recentOrders.map((order) => `<tr><td><strong>#${order._id.slice(-8).toUpperCase()}</strong></td><td>${escapeHtml(order.user?.name || "Deleted user")}</td><td>${formatDate(order.createdAt)}</td><td>${money(order.totalAmount)}</td><td><span class="status-pill payment-${order.paymentStatus}">${escapeHtml(paymentLabel(order.paymentStatus))}</span></td><td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span></td></tr>`).join("")}</tbody></table></div>` : `<p>No orders yet.</p>`}
+        ${summary.recentOrders.length ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead><tbody>${summary.recentOrders.map((order) => `<tr><td><strong>#${order._id.slice(-8).toUpperCase()}</strong></td><td>${escapeHtml(order.user?.name || "Deleted user")}</td><td>${formatDate(order.createdAt)}</td><td>${money(order.totalAmount)}</td><td><span class="status-pill payment-${order.paymentStatus}">${escapeHtml(paymentLabel(order.paymentStatus))}</span>${order.paymentMethod === "demo" ? "<small>DEMO</small>" : ""}</td><td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span></td></tr>`).join("")}</tbody></table></div>` : `<p>No orders yet.</p>`}
       </section>`;
   } catch (error) {
     root.innerHTML = `<div class="empty-state"><h2>Dashboard unavailable</h2><p>${escapeHtml(error.message)}</p></div>`;

@@ -26,9 +26,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const user = await Api.post("/auth/login", { email, password });
         Api.setSession(user, { replaceToken: true });
         const params = new URLSearchParams(window.location.search);
-        const next = safeNext(params.get("next"));
+        const next = params.get("next") ? safeNext(params.get("next")) : accountHome(user);
         const cartSelected = await finishCartIntent();
-        window.location.href = cartSelected ? "cart.html" : user.role === "admin" && !params.get("next") ? "admin/dashboard.html" : next;
+        window.location.href = cartSelected ? "cart.html" : next;
       } catch (err) {
         showAlert(err.message, "error");
         button.disabled = false;
@@ -50,7 +50,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const user = await Api.post("/auth/register", { name, email, password });
         Api.setSession(user, { replaceToken: true });
-        const next = await finishCartIntent() ? "cart.html" : safeNext(new URLSearchParams(window.location.search).get("next"));
+        const requested = new URLSearchParams(window.location.search).get("next");
+        const next = await finishCartIntent() ? "cart.html" : requested ? safeNext(requested) : accountHome(user);
         showAlert("Account created. Taking you to Norda…", "success");
         setTimeout(() => (window.location.href = next), 700);
       } catch (err) {

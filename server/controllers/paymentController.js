@@ -7,6 +7,7 @@ const { syncInvoicePayment } = require("../services/invoiceService");
 const { querySession, withDatabaseUnit, writeOptions } = require("../services/databaseUnit");
 const { withOperationLock } = require("../services/operationLock");
 const gateway = require("../services/sslcommerzService");
+const { demoEnabled } = require("../services/demoPaymentService");
 
 const createTransactionId = () => "NOR" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(8).toString("hex").toUpperCase();
 const resultUrl = (status, orderId) => {
@@ -16,7 +17,7 @@ const resultUrl = (status, orderId) => {
   if (orderId) url.searchParams.set("orderId", orderId.toString());
   return url.toString();
 };
-const getPaymentConfig = (req, res) => res.json({ sslcommerzEnabled: gateway.isConfigured(), environment: gateway.isLive() ? "live" : "sandbox" });
+const getPaymentConfig = (req, res) => res.json({ sslcommerzEnabled: gateway.isConfigured(), environment: gateway.isLive() ? "live" : "sandbox", demoEnabled: demoEnabled(), demoChannels: ["mobile_banking", "card_bank"] });
 
 const initiateSslcommerz = async (req, res, next) => {
   if (!gateway.isConfigured()) return res.status(503).json({ message: "Online payment is currently unavailable. Please choose cash on delivery." });
@@ -83,7 +84,7 @@ const orderFields = (order) => ({
 const markPaymentUnsuccessful = async (transactionId, outcome, reason) => {
   if (typeof transactionId !== "string" || transactionId.length > 100) return null;
   const reference = await Payment.findOne({ transactionId });
-  if (!reference) return null;
+  if (!reference || reference.gateway === "demo") return null;
   return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async (unit) => {
     const { session, compensate } = unit;
     const payment = await querySession(Payment.findOne({ transactionId }), session);
@@ -117,7 +118,7 @@ const validateAndCapture = async (transactionId, validationId) => {
     return { ok: false, reason: "Invalid payment notification" };
   }
   const reference = await Payment.findOne({ transactionId });
-  if (!reference) return { ok: false, reason: "Payment record not found" };
+  if (!reference || reference.gateway === "demo") return { ok: false, reason: "Payment record not found" };
   const gatewayResult = await gateway.validatePayment(validationId);
   return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async (unit) => {
     const { session, compensate } = unit;

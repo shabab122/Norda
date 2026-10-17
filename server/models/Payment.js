@@ -4,7 +4,8 @@ const paymentSchema = new mongoose.Schema(
   {
     order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true, index: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    gateway: { type: String, enum: ["sslcommerz"], default: "sslcommerz" },
+    gateway: { type: String, enum: ["sslcommerz", "demo"], default: "sslcommerz" },
+    channel: { type: String, enum: ["", "mobile_banking", "card_bank"], default: "" },
     transactionId: { type: String, required: true, unique: true, index: true },
     sessionKey: { type: String, default: "" },
     checkoutUrl: { type: String, default: "" },
