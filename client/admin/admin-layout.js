@@ -4,7 +4,7 @@ function renderAdminShell(activePage) {
   const user = Api.getUser();
 
   document.getElementById("admin-sidebar").innerHTML = `
-    <a href="../index.html" class="logo admin-logo">norda<span>.</span><small>Admin</small></a>
+    ${brandLogoHtml("../", "admin-logo", "Admin")}
     <nav aria-label="Admin navigation">
       <span class="admin-nav-label">Workspace</span>
       <a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">${icon("grid")} Overview</a>

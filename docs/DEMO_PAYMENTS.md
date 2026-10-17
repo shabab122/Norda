@@ -1,4 +1,4 @@
-# NORDA 2.4 demo payment guide
+# NORDA 2.4.1 simulated payment guide
 
 The checkout now provides a local simulator for **Mobile Banking/bKash** and **Card/Bank**. This is a NORDA demonstration, separate from the real SSLCOMMERZ hosted checkout. No money is transferred, and the simulator never requests a card number, account password, PIN or OTP.
 
@@ -21,15 +21,15 @@ Open http://localhost:5000. Add products, sign in and checkout. Select either de
 | Action | Payment / invoice | Order | Stock |
 |---|---|---|---|
 | Start or resume demo | Initiated / pending | Pending | Reserved once |
-| Simulate success | Paid / paid, clearly DEMO | Processing | Reservation retained |
+| Simulate success | Paid / paid, clearly simulated | Processing | Reservation retained |
 | Simulate failure | Failed / failed | Cancelled | Restored once |
 | Cancel demo | Cancelled / cancelled | Cancelled | Restored once |
 | Repeat the same outcome | Original state | Original state | No extra change |
 | Change a finished outcome | Rejected with 409 | Original state | No extra change |
 
-All demo orders/invoices are marked in customer and admin views, including printed invoices and order CSVs. Simulated payments are excluded from the administrator's revenue total. The simulator uses the configured development database's inventory; use a separate development database for demonstrations alongside a real store.
+All simulated orders/invoices include a compact no-charge note in customer and admin views, including printed invoices and order CSVs. Simulated payments are excluded from the administrator's revenue total. The simulator uses the configured development database's inventory; use a separate development database for demonstrations alongside a real store.
 
-Leaving the page does not cancel a reservation automatically. My Orders offers **Resume or cancel demo** until completion/cancellation. An administrator can also cancel an unpaid demo. Automatic reservation expiry is future work. If initiation was interrupted after creating an order, the customer can resume from My Orders; a new cart is not consumed.
+Leaving the page does not cancel a reservation automatically. My Orders offers **Resume or cancel payment** until completion/cancellation. An administrator can also cancel an unpaid demo. Automatic reservation expiry is future work. If initiation was interrupted after creating an order, the customer can resume from My Orders; a new cart is not consumed.
 
 ## API boundaries
 
@@ -49,3 +49,5 @@ The screenshot's disabled provider choice came from the existing `isConfigured()
 Real SSLCOMMERZ uses the existing `/sslcommerz/*` endpoints, server validation and configured merchant account. Its option appears only when configuration checks pass. That flag does not prove the provider accepts the credentials or can reach the callbacks. A successful local simulation does not establish real SSLCOMMERZ or bKash connectivity. Public provider acceptance still uses `ACCEPTANCE_CHECKLIST.md`.
 
 Official provider reference: https://developer.sslcommerz.com/doc/v4/ . Local demo behavior is implemented and tested by this project, rather than supplied by the provider.
+
+Version 2.4.1 uses clean payment headings and removes repeated Demo badges. The payment environment and invoice still disclose that no real money was transferred. See `BRANDING.md` for the logo and styling changes.

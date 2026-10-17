@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2/2.3 to 2.4
+## Update from 2.2/2.3/2.4/2.4.1 to 2.4.2
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway credentials exactly as they are. This update requires no database migration or reseeding.
 
@@ -20,7 +20,7 @@ Open **http://localhost:5000**. Standard customer login/signup now opens `/dashb
 
 The preflight is read only. It shows the selected database host/port and record counts, with all secrets hidden. Your current local database was exposed at `127.0.0.1:27018/norda_db`; keep that working URI in your own `.env`. NORDA stays on port 5000 and leaves GitStack/Gitea ports 3000/3002 alone.
 
-For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the DEMO invoice. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
+For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
 
@@ -69,7 +69,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/norda-demo-payments
+git switch -c fix/norda-logo-transparency
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 git rm --ignore-unmatch server/.envy
 cd server
@@ -90,8 +90,8 @@ After review:
 cd /path/to/your/existing/Norda-repository
 git status
 git add .
-git commit -m "feat: add mobile and card demo payments and distinct home collections"
-git push -u origin feat/norda-demo-payments
+git commit -m "fix: remove logo and favicon backgrounds"
+git push -u origin fix/norda-logo-transparency
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

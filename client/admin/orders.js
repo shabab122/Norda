@@ -56,7 +56,7 @@ function orderRow(order) {
     <td>${escapeHtml(order.user?.name || "Deleted user")}<small>${escapeHtml(order.user?.email || "")}</small></td>
     <td><strong>${money(order.totalAmount)}</strong><small>${order.items.reduce((count, item) => count + item.quantity, 0)} item(s)</small></td>
     <td><span class="status-pill payment-${order.paymentStatus}">${escapeHtml(paymentLabel(order.paymentStatus))}</span><small>${escapeHtml(paymentMethodLabel(order))}</small>${order.paymentMethod === "cod" && !order.isPaid && order.status !== "cancelled" && order.paymentStatus !== "review" ? `<button class="text-link button-link" data-cod-paid="${order._id}">Mark COD paid</button>` : ""}</td>
-    <td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span>${order.cancelReason ? `<small>${escapeHtml(order.cancelReason)}</small>` : ""}${order.paymentReviewReason ? `<small class="danger-text">${escapeHtml(order.paymentReviewReason)}</small>` : ""}</td>
+    <td><span class="status-pill status-${order.status}">${escapeHtml(order.status)}</span>${order.cancelReason ? `<small>${escapeHtml(paymentNote(order.cancelReason))}</small>` : ""}${order.paymentReviewReason ? `<small class="danger-text">${escapeHtml(order.paymentReviewReason)}</small>` : ""}</td>
     <td>${next.length ? `<select data-transition="${order._id}" data-current="${order.status}" aria-label="Update order ${order._id}"><option value="">Choose action…</option>${next.map((status) => `<option value="${status}">${status === "cancelled" ? "Cancel & restore stock" : "Mark " + status}</option>`).join("")}</select>` : `<span class="muted">No further action</span>`}</td>
   </tr>`;
 }

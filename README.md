@@ -2,12 +2,18 @@
 
 A full-stack e-commerce application for Bangladesh, built with HTML, CSS, browser JavaScript, Node.js, Express and MongoDB. Customers browse the catalog, keep a stock-aware cart, check out using cash on delivery, a local demo simulator or configured SSLCOMMERZ, follow orders, print invoices and review delivered purchases. Administrators manage the catalog, media, orders, invoices and reports.
 
-**Current version: 2.4.0 — mobile/card demo payments and distinct homepage selections.**
+**Current version: 2.4.2 — transparent Norda logo and tab icon.**
 
 ## What's improved
 
-- Self-contained **Mobile Banking/bKash** and **Card/Bank** demo choices, with explicit success, failure and cancellation outcomes. No merchant credentials, public callback server or payment secrets are required for this local simulator.
-- Demo orders/invoices are labeled throughout customer/admin views, and simulated payments are excluded from revenue. Failed/cancelled demos release stock exactly once; interrupted initiation can resume from My Orders.
+- Transparent logo/tab icon backgrounds across the storefront and admin workspace; the existing AI artwork is preserved.
+
+- A new AI-generated N symbol, consistent Norda wordmark and matching tab icon across the storefront, payment page, invoice and administration.
+- Fixed invoice logo typography and improved wrapping for long invoice numbers, emails and mobile layouts.
+- Removed repeated Demo headings/badges from customer pages. Payment simulation remains clear through compact test-environment/no-charge notes; payment behavior and credentials are preserved.
+
+- Self-contained **Mobile Banking/bKash** and **Card/Bank** test choices, with explicit success, failure and cancellation outcomes. No merchant credentials, public callback server or payment secrets are required for this local simulator.
+- Simulated orders/invoices are labeled throughout customer/admin views, and simulated payments are excluded from revenue. Failed/cancelled demos release stock exactly once; interrupted initiation can resume from My Orders.
 - Featured Picks and Recently Added exclude shared product IDs and cover photos while preserving arrival order. All 24 existing product photos were checked for unique files, image contents and correct subjects.
 
 - Distinct visitor, customer and administrator experiences. Customers land on `dashboard.html` after a normal sign-in/sign-up; administrators retain their existing workspace.
@@ -75,7 +81,7 @@ The catalog is demonstration data: brands, prices and quantities are illustrativ
 
 See [the demo payment guide](docs/DEMO_PAYMENTS.md) for the new local simulator and its outcome/state table.
 
-For the requested demo, keep your existing `.env` and run the development server. With `NODE_ENV=development` (or unset), checkout shows **Mobile Banking/bKash — DEMO** and **Card/Bank — DEMO**. They open `demo-payment.html`; choose a simulated outcome, then inspect My Orders and its invoice. No real financial information is collected. Both demo and COD use the existing cart and server-calculated totals.
+For the requested demo, keep your existing `.env` and run the development server. With `NODE_ENV=development` (or unset), checkout shows **Mobile Banking/bKash** and **Card/Bank**. They open `demo-payment.html`; choose a simulated outcome, then inspect My Orders and its invoice. No real financial information is collected. Both demo and COD use the existing cart and server-calculated totals.
 
 Demo is enabled by default outside production, unless `PAYMENT_DEMO_ENABLED=false`. It is always disabled when `NODE_ENV=production`, even if that flag is true. Keep a demo store separate from real inventory: successful simulations reserve/decrement actual catalog stock in the configured development database. Failure/cancellation restores it; abandoned sessions can be resumed/cancelled from My Orders or by an administrator. Automatic reservation expiry remains future work.
 

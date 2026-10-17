@@ -1,6 +1,6 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.4.0",
+  "version": "2.4.2",
   "description": "Norda commerce API with catalog, checkout, invoicing, payments and reporting",
   "main": "server.js",
   "type": "commonjs",

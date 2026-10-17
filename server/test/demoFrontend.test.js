@@ -27,7 +27,7 @@ test("Checkout renders distinct demo options without merchant configuration and 
   await scope.loadCheckout();
   const html = get("checkout-root").innerHTML;
   assert.match(html, /value="demo_mobile_banking" checked/); assert.match(html, /value="demo_card_bank"/); assert.match(html, /value="cod"/);
-  assert.match(html, /No money is transferred/); assert.doesNotMatch(html, /value="sslcommerz"|Online payment is currently unavailable/);
+  assert.match(html, /no money is transferred/i); assert.doesNotMatch(html, /value="sslcommerz"|Online payment is currently unavailable/);
 });
 for (const method of ["demo_mobile_banking", "demo_card_bank", "sslcommerz", "cod"]) {
   test("Checkout submits the correct endpoint and retry key for " + method, async () => {
@@ -48,7 +48,7 @@ test("Demo pages do not collect payment secrets and label both channels and comp
   for (const channel of ["mobile_banking", "card_bank"]) {
     const session = { channel, orderId: "1234567890abcdef12345678", invoiceNumber: '<Invoice "test">', amount: 770, currency: "BDT", status: "initiated", orderStatus: "pending" };
     const html = scope.demoPaymentHtml(session);
-    assert.match(html, /Simulation only|PAYMENT DEMO/); assert.doesNotMatch(html, /<(input|textarea|form)\b/);
+    assert.match(html, /Test environment/); assert.match(html, /payment is simulated/); assert.doesNotMatch(html.replace(/<[^>]*>/g, " "), /\bdemo\b/i); assert.doesNotMatch(html, /<(input|textarea|form)\b/);
     for (const outcome of ["success", "failure", "cancel"]) assert.match(html, new RegExp('data-demo-outcome="' + outcome + '"'));
     assert.match(html, /&lt;Invoice &quot;test&quot;&gt;/);
     assert.doesNotMatch(scope.demoPaymentHtml({ ...session, status: "paid" }), /data-demo-outcome/);

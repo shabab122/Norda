@@ -26,14 +26,13 @@ function renderInvoice(invoice) {
       <button type="button" class="btn btn-primary btn-sm" id="print-invoice">Print or save PDF</button>
     </div>
     <article class="invoice-sheet">
-      ${invoice.order?.paymentMethod === "demo" ? `<p class="demo-notice"><strong>DEMO INVOICE — SIMULATED PAYMENT</strong><br>No real money was transferred. This is a demonstration order.</p>` : ""}
       <header class="invoice-header">
-        <a href="index.html" class="logo">NOR<span>DA</span></a>
+        ${brandLogoHtml()}
         <div><span>Invoice</span><h1>${escapeHtml(invoice.invoiceNumber)}</h1></div>
       </header>
       <div class="invoice-meta">
         <div><span>Issued</span><strong>${formatDate(invoice.issuedAt)}</strong></div>
-        <div><span>Payment</span><strong class="status-pill payment-${invoice.paymentStatus}">${escapeHtml(paymentLabel(invoice.paymentStatus))}</strong></div>
+        <div><span>Payment</span><strong class="status-pill payment-${escapeHtml(invoice.paymentStatus)}">${escapeHtml(paymentLabel(invoice.paymentStatus))}</strong>${invoice.order?.paymentMethod === "demo" ? `<small class="payment-context">Simulated payment · No real charge</small>` : ""}</div>
         <div><span>Order status</span><strong>${escapeHtml(invoice.order?.status || "pending")}</strong></div>
       </div>
       <div class="invoice-addresses">
@@ -69,7 +68,7 @@ function renderInvoice(invoice) {
       </div>
       <footer class="invoice-foot">
         <p>Thank you for shopping with Norda.</p>
-        <span>This invoice was generated from the recorded order and payment state.</span>
+        <span>${invoice.order?.paymentMethod === "demo" ? "Payment was simulated; no money was transferred." : "This invoice was generated from the recorded order and payment state."}</span>
       </footer>
     </article>
   `;

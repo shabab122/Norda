@@ -1,0 +1,46 @@
+/* Shared identity. Explicit wordmark styling prevents invoice-label leakage. */
+.logo.brand-logo { display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px; flex-shrink: 0; white-space: nowrap; line-height: 1; text-decoration: none; color: var(--ink); }
+.brand-logo .brand-mark { display: block; width: 37px; height: 41px; flex: 0 0 37px; object-fit: contain; }
+.brand-logo .brand-name { display: block; margin: 0; font-family: var(--font-head); font-size: 1.95rem; line-height: 1.1; font-weight: 700; letter-spacing: -.065em; text-transform: none; color: inherit; }
+.brand-logo .brand-name::after { content: "."; color: var(--accent); }
+.brand-logo .brand-caption { align-self: end; margin: 0 0 5px 3px; font: 500 .6rem var(--font-body); letter-spacing: .07em; text-transform: uppercase; }
+.footer-brand .brand-logo { margin-bottom: 18px; }
+.admin-sidebar .brand-logo { align-items: center; gap: 8px; }
+.admin-sidebar .brand-mark { background: transparent; border-radius: 0; padding: 0; }
+.admin-sidebar .brand-name { font-size: 1.8rem; }
+.admin-sidebar .brand-caption { font-size: .55rem; margin-left: 0; }
+
+.payment-context { display: block; margin: 0; color: var(--ink-soft); font-size: .74rem; font-weight: 400; line-height: 1.65; letter-spacing: normal; text-transform: none; }
+.payment-context strong { font-weight: 600; color: var(--ink); }
+.payment-options > .payment-context { padding: 0 5px 5px; }
+.order-summary > .payment-context { margin: 10px 0 16px; text-align: left; }
+.invoice-meta .payment-context { font-size: .65rem; }
+.payment-session-tag { padding: 7px 11px; border: 1px solid var(--border); border-radius: 20px; color: var(--ink-soft); font-size: .7rem; font-weight: 600; letter-spacing: .03em; white-space: nowrap; }
+.demo-gateway > .payment-session-note { margin: 22px 32px 0; padding: 0 0 18px; border-bottom: 1px solid var(--border); }
+
+.invoice-header { align-items: center; flex-wrap: wrap; gap: 20px; }
+.invoice-header > div { flex: 1 1 240px; min-width: 0; }
+.invoice-header .brand-logo { flex: 0 0 auto; }
+.invoice-header .brand-name { font-size: 1.9rem; }
+.invoice-header h1 { line-height: 1.45; }
+.invoice-addresses p, .invoice-addresses strong { overflow-wrap: anywhere; }
+.invoice-meta > div { min-width: 0; }
+
+@media (max-width: 680px) {
+  .brand-logo .brand-mark { width: 32px; height: 36px; flex-basis: 32px; }
+  .brand-logo .brand-name { font-size: 1.75rem; }
+  .demo-gateway > .payment-session-note { margin: 18px 22px 0; }
+  .demo-gateway-head { flex-wrap: wrap; gap: 12px; }
+  .invoice-header > div { flex-basis: 180px; }
+  .payment-session-tag { font-size: .65rem; }
+}
+@media (max-width: 420px) {
+  .invoice-header > div { flex-basis: 100%; text-align: left; }
+}
+@media print {
+  .invoice-header .brand-logo { color: #203e31; }
+  .invoice-header .brand-mark { width: 32px; height: 36px; flex-basis: 32px; }
+  .invoice-header .brand-name { font-size: 23pt; }
+  .invoice-meta .payment-context { color: #444; font-size: 8pt; }
+  .invoice-foot span { color: #444; }
+}
