@@ -1,4 +1,8 @@
-# Norda v2 — Visual Asset Notes
+# Norda — Visual Asset Notes
+
+## Version 2.2 product photography
+
+`client/assets/products/photos/` contains 24 distinct AI-generated photorealistic product images. Each is an optimized 800×800 WebP; their combined size is 1,160,128 bytes. They use warm neutral studio backgrounds and unbranded products. `AI_ASSETS.json` in that directory records every final prompt, generation method, processing and demonstration-use disclosure. These illustrate products and are not photographs of verified merchant stock.
 
 ## Storefront hero
 
@@ -14,4 +18,4 @@ The three supplied project sketches are preserved under `docs/reference/` with d
 
 ## Version 2.1 sample catalog
 
-`client/assets/products/*.svg` contains original code-authored product illustrations for the sample seed catalog and fallback images. They are demo visuals; upload actual store photographs through product management for a real catalog. Existing non-empty product images are preserved by seeding. `favicon.svg` is a code-authored Norda mark.
+`client/assets/products/*.svg` contains earlier code-authored illustrations, retained as fallbacks and for compatibility. Version 2.2 replaces missing/known starter art during import but preserves custom merchant images. Upload actual store photographs through product management for a real catalog. `favicon.svg` is a code-authored Norda mark.

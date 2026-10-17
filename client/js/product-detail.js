@@ -171,14 +171,13 @@ function bindProductInteractions(product) {
   if (["#reviews", "#write-review"].includes(window.location.hash)) selectTab(tabs[window.location.hash === "#reviews" ? 1 : 2]);
 
   document.getElementById("add-to-cart-btn")?.addEventListener("click", async () => {
-    if (!requireLogin()) return;
     const button = document.getElementById("add-to-cart-btn");
     if (button.disabled) return;
     button.disabled = true;
     const alert = document.getElementById("pd-alert");
     const quantity = Number(document.getElementById("qty-input").value);
     try {
-      await Api.post("/cart", { productId: product._id, quantity });
+      if (!await addProductToCart(product._id, quantity)) return;
       alert.innerHTML = `<div class="alert alert-success">Added to cart. <a href="cart.html">View cart</a></div>`;
       refreshCartBadge();
     } catch (error) {

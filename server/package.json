@@ -1,21 +1,22 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Norda commerce API with catalog, checkout, invoicing, payments and reporting",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
+    "dev": "node --watch server.js",
     "seed": "node seed/seed.js",
     "test": "node --test",
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
-    "test:integration": "node --test test/mongoIntegration.test.js",
-    "setup": "node scripts/setup-env.js"
+    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js",
+    "setup": "node scripts/setup-env.js",
+    "seed:catalog": "node seed/seed.js --catalog-only"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "keywords": [
     "ecommerce",
@@ -30,16 +31,13 @@
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
+    "express": "^4.22.3",
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^7.4.0",
     "helmet": "^7.1.0",
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.5.0",
-    "multer": "^1.4.5-lts.1"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.4"
+    "mongoose": "^8.24.5",
+    "multer": "^2.4.0"
   }
 }

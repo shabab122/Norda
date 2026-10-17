@@ -159,6 +159,45 @@ function requireAdmin() {
   return false;
 }
 
+// A visitor may choose an item before signing in. Keep one short-lived intent,
+// not a guest cart; apply it once after successful login/registration.
+function rememberCartIntent(productId, quantity) {
+  try { sessionStorage.setItem("norda_pending_cart", JSON.stringify({ productId, quantity, createdAt: Date.now() })); } catch { /* Sign in and add again if browser storage is disabled. */ }
+}
+function takeCartIntent() {
+  try {
+    const value = JSON.parse(sessionStorage.getItem("norda_pending_cart") || "null");
+    sessionStorage.removeItem("norda_pending_cart");
+    if (!value || !/^[a-f0-9]{24}$/i.test(value.productId) || !Number.isSafeInteger(value.quantity) || value.quantity < 1 || !Number.isFinite(value.createdAt) || Date.now() - value.createdAt < 0 || Date.now() - value.createdAt > 15 * 60 * 1000) return null;
+    return value;
+  } catch { return null; }
+}
+let cartWriteQueue = Promise.resolve();
+function enqueueCartWrite(work) {
+  const userId = Api.getUser()?._id;
+  const next = cartWriteQueue.then(() => {
+    if (!userId || userId !== Api.getUser()?._id) throw new Error("Your account changed. Please refresh before updating your cart.");
+    return work();
+  });
+  cartWriteQueue = next.catch(() => {});
+  return next;
+}
+async function addProductToCart(productId, quantity = 1) {
+  if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error("Choose a positive whole-number quantity.");
+  if (!Api.isLoggedIn()) { rememberCartIntent(productId, quantity); requireLogin(); return false; }
+  await enqueueCartWrite(() => Api.post("/cart", { productId, quantity }));
+  return true;
+}
+async function finishCartIntent() {
+  const pending = takeCartIntent();
+  if (!pending) return false;
+  let message = "Your selected product was added to your cart."; let type = "success";
+  try { await addProductToCart(pending.productId, pending.quantity); }
+  catch (error) { message = error.message + " Review your cart before adding the item again."; type = "warning"; }
+  try { sessionStorage.setItem("norda_cart_notice", JSON.stringify({ message, type })); } catch { /* Optional feedback. */ }
+  return true;
+}
+
 function money(value) {
   const amount = Number(value);
   return "৳" + (Number.isFinite(amount) ? amount : 0).toLocaleString("en-BD", {
@@ -241,9 +280,8 @@ window.addEventListener("norda:session-expired", () => {
 });
 document.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-quick-cart]"); if (!button || button.disabled) return;
-  if (!requireLogin()) return;
   const label = button.innerHTML; button.disabled = true; button.textContent = "Adding…";
-  try { await Api.post("/cart", { productId: button.dataset.quickCart, quantity: 1 }); toast("Added to your cart"); refreshCartBadge(); }
+  try { if (await addProductToCart(button.dataset.quickCart, 1)) { toast("Added to your cart"); refreshCartBadge(); } }
   catch (error) { toast(error.message, "error"); }
   finally { button.disabled = false; button.innerHTML = label; }
 });
