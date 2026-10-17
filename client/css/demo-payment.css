@@ -1,0 +1,31 @@
+.demo-gateway { width: min(100%, 980px); margin: 0 auto; background: #fff; border: 1px solid #dce5de; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 65px #214c3b0b; }
+.demo-gateway-head { padding: 24px 32px; display: flex; align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #e6ece7; }
+.demo-tag { padding: 7px 11px; border-radius: 20px; background: #fff1ce; color: #705311; font-size: .7rem; font-weight: 800; letter-spacing: .1em; }
+.demo-gateway > .demo-notice { margin: 24px 32px 0; }
+.demo-gateway-grid { display: grid; grid-template-columns: 1.35fr 1fr; }
+.demo-main { padding: 32px; }
+.demo-main h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); line-height: 1.2; margin: 10px 0; }
+.demo-main > p { color: #627269; line-height: 1.65; }
+.demo-method { padding: 20px 16px; margin: 26px 0; border-radius: 14px; display: flex; align-items: center; gap: 14px; }
+.demo-mobile { background: #fff0f5; color: #9e2056; }
+.demo-card { background: #edf3fa; color: #294a74; }
+.demo-method-symbol { font-size: 2.2rem; line-height: 1; }
+.demo-method strong, .demo-method span:not(.demo-method-symbol) { display: block; }
+.demo-method div span { font-size: .78rem; margin-top: 5px; }
+.demo-outcomes { display: grid; gap: 12px; margin: 24px 0 14px; }
+.demo-cancel { justify-self: center; padding: 10px 16px; color: #6d5149; text-decoration: underline; }
+.demo-order { padding: 32px; margin: 32px 32px 32px 0; border-radius: 16px; background: #f5f8f4; }
+.demo-order h2 { font-size: 2rem; margin: 8px 0 24px; overflow-wrap: anywhere; }
+.demo-order dl { margin: 0; }
+.demo-order dl div { padding: 12px 0; border-bottom: 1px solid #dfe7de; }
+.demo-order dt { font-size: .76rem; color: #68796e; }
+.demo-order dd { margin: 4px 0 0; font-size: .88rem; font-weight: 600; overflow-wrap: anywhere; }
+.demo-order p { font-size: .8rem; line-height: 1.7; margin: 22px 0; color: #627269; }
+.demo-gateway button:disabled { opacity: .6; cursor: wait; }
+@media (max-width: 700px) {
+  .demo-gateway-grid { grid-template-columns: 1fr; }
+  .demo-gateway-head, .demo-main { padding: 22px; }
+  .demo-gateway > .demo-notice { margin: 22px 22px 0; }
+  .demo-order { margin: 0 22px 22px; padding: 22px; }
+  .demo-tag { font-size: .6rem; }
+}

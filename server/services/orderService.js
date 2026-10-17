@@ -45,8 +45,9 @@ const normalizeCheckoutKey = (value) => {
   return value;
 };
 
-const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey }) => {
-  if (!["cod", "sslcommerz"].includes(paymentMethod)) throw httpError(400, "Unsupported payment method");
+const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "" }) => {
+  if (!["cod", "sslcommerz", "demo"].includes(paymentMethod)) throw httpError(400, "Unsupported payment method");
+  if (paymentMethod === "demo" && !["mobile_banking", "card_bank"].includes(paymentChannel)) throw httpError(400, "Choose a demo payment channel");
   const address = normalizeShippingAddress(shippingAddress);
   const key = normalizeCheckoutKey(checkoutKey);
   return withOperationLock("cart:" + user._id, () => withDatabaseUnit(async (unit) => {
@@ -54,7 +55,7 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     if (key) {
       const existing = await querySession(Order.findOne({ user: user._id, checkoutKey: key }), session);
       if (existing) {
-        if (existing.paymentMethod !== paymentMethod) throw httpError(409, "This checkout was already created with a different payment method");
+        if (existing.paymentMethod !== paymentMethod || (paymentMethod === "demo" && existing.paymentChannel !== paymentChannel)) throw httpError(409, "This checkout was already created with a different payment method");
         const invoice = await querySession(Invoice.findOne({ order: existing._id }), session);
         if (!invoice) throw httpError(409, "This order needs store review before checkout can be repeated");
         return { order: existing, invoice, replayed: true };
@@ -84,7 +85,7 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     }
     const order = await insertDocument(Order, {
       user: user._id, items, shippingAddress: address, ...totals, currency: store.currency,
-      paymentMethod, paymentStatus: "pending", ...(key ? { checkoutKey: key } : {}),
+      paymentMethod, paymentChannel, paymentStatus: "pending", ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
     const invoice = await createInvoiceForOrder(order, session);
@@ -153,7 +154,7 @@ const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () =>
     if (body.isPaid === true) throw httpError(409, "A cancelled order cannot receive a cash-payment confirmation");
     return cancelInUnit(order, body.cancelReason, unit);
   }
-  if (order.paymentMethod === "sslcommerz" && order.paymentStatus !== "paid" && ["processing", "shipped", "delivered"].includes(requestedStatus)) {
+  if (order.paymentMethod !== "cod" && order.paymentStatus !== "paid" && ["processing", "shipped", "delivered"].includes(requestedStatus)) {
     throw httpError(409, "Online payment must be validated before fulfillment");
   }
   if (body.isPaid === false && order.isPaid) throw httpError(409, "A paid order cannot be marked unpaid");
@@ -173,4 +174,4 @@ const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () =>
   return updated;
 }));
 
-module.exports = { calculateTotals, canTransitionOrder, cancelOrderAndRestoreStock, createOrderFromCart, normalizeCheckoutKey, normalizeShippingAddress, updateOrderWorkflow };
+module.exports = { cancelInUnit, calculateTotals, canTransitionOrder, cancelOrderAndRestoreStock, createOrderFromCart, normalizeCheckoutKey, normalizeShippingAddress, updateOrderWorkflow };

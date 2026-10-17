@@ -1,4 +1,6 @@
-# NORDA 2.2 testing and acceptance
+# NORDA 2.3 testing and acceptance
+
+Current results: 93 syntax checks, 74 default test passes (2 native entry-point skips), and 17 passes on each real MongoDB topology. See `ACCEPTANCE_CHECKLIST.md` for evidence and pending browser/public-payment checks. The customer dashboard consumes existing owner-scoped APIs; no account schema or credential migration is needed.
 
 ## Automated verification
 
@@ -115,7 +117,7 @@ Do not test live payment credentials from a developer machine. Rotate sandbox cr
 3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
-6. Tag the accepted merge (for example `v2.2.0`) and update `CHANGELOG.md`.
+6. Tag the accepted merge (for example `v2.3.0`) and update `CHANGELOG.md`.
 
 ## Additional 2.2 acceptance
 

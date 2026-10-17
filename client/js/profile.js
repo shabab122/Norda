@@ -14,9 +14,10 @@ async function loadProfile() {
     root.innerHTML = `
       <div class="profile-layout">
         <aside class="profile-summary">
-          <span class="avatar">${escapeHtml(profile.name.charAt(0).toUpperCase())}</span>
-          <h2>${escapeHtml(profile.name)}</h2>
+          <span class="avatar" id="profile-summary-avatar">${escapeHtml(accountInitials(profile.name))}</span>
+          <h2 id="profile-summary-name">${escapeHtml(profile.name)}</h2>
           <p>${escapeHtml(profile.email)}</p>
+          <a href="${accountHome(profile)}" class="text-link">Back to my dashboard →</a>
           <a href="orders.html" class="text-link">View orders & invoices →</a>
         </aside>
         <form id="profile-form" class="checkout-card">
@@ -85,6 +86,9 @@ async function saveProfile(event) {
       },
     });
     Api.setSession(updated);
+    renderHeader("profile");
+    document.getElementById("profile-summary-name").textContent = updated.name;
+    document.getElementById("profile-summary-avatar").textContent = accountInitials(updated.name);
     for (const id of ["current-password", "new-password", "confirm-password"]) document.getElementById(id).value = "";
     alert.innerHTML = `<div class="alert alert-success">Profile saved.</div>`;
   } catch (error) {

@@ -8,10 +8,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const root = document.getElementById("payment-result");
   let verifiedStatus = "unknown";
   let orderSummary = "";
+  let isDemo = false;
 
   if (orderId && Api.isLoggedIn()) {
     try {
       const order = await Api.get("/orders/" + encodeURIComponent(orderId));
+      isDemo = order.paymentMethod === "demo";
       verifiedStatus = order.paymentStatus === "paid" ? "success" : order.paymentStatus;
       orderSummary = `
         <div class="result-order">
@@ -67,6 +69,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     className: "warning",
   };
 
+  if (isDemo && content) {
+    result.kicker = "Demo payment · " + result.kicker;
+    result.title = verifiedStatus === "success" ? "Demo payment successful." : result.title;
+    result.copy = verifiedStatus === "success"
+      ? "The simulated payment is recorded on your demo order and invoice. No real money was transferred."
+      : ["failed", "cancelled"].includes(verifiedStatus)
+        ? "No money was charged. This demo order was cancelled and its items are available again."
+        : "This is a demo payment. No real money is transferred. Check My Orders for its latest status.";
+  }
   root.innerHTML = `
     <section class="result-card ${result.className}">
       <span class="result-mark" aria-hidden="true">${verifiedStatus === "success" ? "✓" : verifiedStatus === "cancelled" ? "—" : "!"}</span>

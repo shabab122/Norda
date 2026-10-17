@@ -15,6 +15,7 @@ test("Real MongoDB HTTP: catalog, authentication, cart, checkout, inventory and 
   const User = require("../models/User"); const Cart = require("../models/Cart");
   const Order = require("../models/Order"); const Invoice = require("../models/Invoice");
   const Brand = require("../models/Brand"); const Lock = require("../models/OperationLock");
+  const Payment = require("../models/Payment");
   const { seedCatalog } = require("../seed/seedCatalog");
   const catalog = require("../seed/catalog");
   const { calculateTotals, createOrderFromCart } = require("../services/orderService");
@@ -33,12 +34,12 @@ test("Real MongoDB HTTP: catalog, authentication, cart, checkout, inventory and 
     if (options.cookie) headers.Cookie = options.cookie;
     const isForm = options.body instanceof FormData;
     if (options.body !== undefined && !isForm) headers["Content-Type"] = "application/json";
-    const response = await fetch(base + url, { method: options.method || "GET", headers, body: options.body === undefined ? undefined : isForm ? options.body : JSON.stringify(options.body) });
+    const response = await fetch(base + url, { method: options.method || "GET", redirect: "manual", headers, body: options.body === undefined ? undefined : isForm ? options.body : JSON.stringify(options.body) });
     const data = (response.headers.get("content-type") || "").includes("json") ? await response.json() : await response.text();
-    return { status: response.status, data, cookie: (response.headers.get("set-cookie") || "").split(";")[0] };
+    return { status: response.status, data, location: response.headers.get("location"), cookie: (response.headers.get("set-cookie") || "").split(";")[0] };
   };
   const address = { line1: "Native Test Road", city: "Dhaka", district: "Dhaka", postCode: "1207", phone: "01712345678" };
-  let customer; let adminCookie; let customerCookie; let otherCookie; let productId; let orderId; let invoiceId;
+  let customer; let otherCustomer; let adminCookie; let customerCookie; let otherCookie; let productId; let orderId; let invoiceId; let acceptanceProductId;
   try {
     await t.test("Catalog seed adds 24 products/12 categories, migrates starter art and preserves merchant edits", async () => {
       const category = await Category.create({ name: "Electronics", slug: "electronics", image: "/assets/products/headphones.svg" });
@@ -66,7 +67,7 @@ test("Real MongoDB HTTP: catalog, authentication, cart, checkout, inventory and 
       await User.create({ name: "Native admin", email: "admin@norda-test.example", password: "NativeAdminPassword123", role: "admin" });
       const admin = await request("/api/auth/login", { method: "POST", body: { email: "admin@norda-test.example", password: "NativeAdminPassword123" } }); assert.equal(admin.status, 200); adminCookie = admin.cookie;
       const registered = await request("/api/auth/register", { method: "POST", body: { name: "Native customer", email: "customer@norda-test.example", password: "NativeCustomer123" } }); assert.equal(registered.status, 201); customerCookie = registered.cookie; customer = registered.data;
-      const other = await request("/api/auth/register", { method: "POST", body: { name: "Another customer", email: "other@norda-test.example", password: "OtherCustomer123" } }); otherCookie = other.cookie;
+      const other = await request("/api/auth/register", { method: "POST", body: { name: "Another customer", email: "other@norda-test.example", password: "OtherCustomer123" } }); assert.equal(other.status, 201); otherCookie = other.cookie; otherCustomer = other.data;
       assert.equal((await request("/api/auth/profile", { cookie: customerCookie })).data.email, customer.email);
       assert.equal((await request("/api/admin/dashboard-summary", { cookie: customerCookie })).status, 403);
       assert.equal((await request("/api/auth/login", { method: "POST", body: { email: customer.email, password: "wrong" } })).status, 401);
@@ -151,6 +152,89 @@ test("Real MongoDB HTTP: catalog, authentication, cart, checkout, inventory and 
       assert.equal((await request("/api/orders", { method: "POST", cookie: customerCookie, body })).status, 200);
       assert.equal(await Order.countDocuments({ checkoutKey: body.checkoutKey }), 1); assert.equal((await Product.findById(productId)).stock, before - 1);
     });
+    await t.test("Admin inventory edits, customer COD delivery, paid invoice and verified review complete the full journey", async () => {
+      const product = await request("/api/products", { method: "POST", cookie: adminCookie, body: { name: "Acceptance journal", category: (await Category.findOne())._id.toString(), brandRef: (await Brand.findOne())._id.toString(), price: 900, stock: 4, images: ["/assets/products/photos/notebook.webp"] } });
+      assert.equal(product.status, 201); acceptanceProductId = product.data._id;
+      assert.equal((await request("/api/products/" + acceptanceProductId, { method: "PUT", cookie: adminCookie, body: { stock: 12, expectedStock: 4 } })).status, 200);
+      assert.equal((await request("/api/products/" + acceptanceProductId, { method: "PUT", cookie: adminCookie, body: { stock: 99, expectedStock: 4 } })).status, 409);
+      assert.equal((await Product.findById(acceptanceProductId)).stock, 12);
+      await request("/api/cart", { method: "DELETE", cookie: customerCookie });
+      assert.equal((await request("/api/cart", { method: "POST", cookie: customerCookie, body: { productId: acceptanceProductId, quantity: 2 } })).status, 201);
+      const placed = await request("/api/orders", { method: "POST", cookie: customerCookie, body: { paymentMethod: "cod", shippingAddress: address, checkoutKey: "acceptance-delivered-cod" } }); assert.equal(placed.status, 201);
+      assert.equal((await Product.findById(acceptanceProductId)).stock, 10);
+      assert.equal((await request("/api/orders/" + placed.data._id + "/status", { method: "PUT", cookie: adminCookie, body: { status: "delivered" } })).status, 409);
+      for (const status of ["processing", "shipped", "delivered"]) assert.equal((await request("/api/orders/" + placed.data._id + "/status", { method: "PUT", cookie: adminCookie, body: { status } })).status, 200);
+      const delivered = await Order.findById(placed.data._id); assert.equal(delivered.isPaid, true); assert.equal(delivered.status, "delivered");
+      const invoice = await request("/api/invoices/order/" + delivered._id, { cookie: customerCookie }); assert.equal(invoice.data.paymentStatus, "paid"); assert.equal(invoice.data.totalAmount, delivered.totalAmount);
+      assert.equal((await request("/api/auth/profile", { cookie: customerCookie })).data.address.line1, address.line1);
+      const review = await request("/api/reviews", { method: "POST", cookie: customerCookie, body: { productId: acceptanceProductId, rating: 5, comment: "Native complete customer journey" } }); assert.equal(review.status, 201); assert.equal(review.data.verifiedPurchase, true);
+      assert.equal((await Product.findById(acceptanceProductId)).stock, 10);
+      assert.equal((await request("/api/orders/" + delivered._id + "/status", { method: "PUT", cookie: adminCookie, body: { status: "cancelled" } })).status, 409);
+    });
+    await t.test("Two customers receive different profiles and only their own orders, invoices and carts", async () => {
+      assert.equal((await request("/dashboard.html")).status, 200);
+      for (const [cookie, account] of [[customerCookie, customer], [otherCookie, otherCustomer]]) {
+        const profile = await request("/api/auth/profile", { cookie }); assert.equal(profile.data.email, account.email);
+        const orders = await request("/api/orders/my", { cookie }); assert.equal(orders.status, 200); assert.ok(orders.data.every((order) => order.user === account._id));
+        const invoices = await request("/api/invoices/my", { cookie }); assert.equal(invoices.status, 200); assert.ok(invoices.data.every((invoice) => invoice.user === account._id));
+        assert.equal((await request("/api/admin/dashboard-summary", { cookie })).status, 403);
+      }
+      await request("/api/cart", { method: "DELETE", cookie: customerCookie }); await request("/api/cart", { method: "DELETE", cookie: otherCookie });
+      await request("/api/cart", { method: "POST", cookie: otherCookie, body: { productId: acceptanceProductId, quantity: 1 } });
+      assert.equal((await request("/api/cart", { cookie: customerCookie })).data.items.length, 0); assert.equal((await request("/api/cart", { cookie: otherCookie })).data.items.length, 1);
+      await request("/api/cart", { method: "DELETE", cookie: otherCookie });
+      const summary = await request("/api/admin/dashboard-summary", { cookie: adminCookie }); assert.equal(summary.status, 200); assert.equal(summary.data.totalOrders, await Order.countDocuments());
+      const csv = await request("/api/admin/reports/orders.csv", { cookie: adminCookie }); assert.equal(csv.status, 200); assert.match(csv.data, /Acceptance journal|Order ID/);
+    });
+    await t.test("Controlled gateway success, fail, cancel, repeated IPN and late validation preserve real MongoDB records", async () => {
+      const gateway = require("../services/sslcommerzService");
+      const original = { isConfigured: gateway.isConfigured, createPaymentSession: gateway.createPaymentSession, validatePayment: gateway.validatePayment };
+      const clientUrl = process.env.CLIENT_APP_URL; process.env.CLIENT_APP_URL = "https://norda-test.example";
+      try {
+        gateway.isConfigured = () => true;
+        let sessions = 0;
+        gateway.createPaymentSession = async () => { sessions++; return { checkoutUrl: "https://sandbox.sslcommerz.com/EasyCheckOut/acceptance-test", sessionKey: "native-test-session" }; };
+        for (const outcome of ["success", "fail", "cancel", "mismatch"]) {
+          const beforeStock = (await Product.findById(acceptanceProductId)).stock;
+          await request("/api/cart", { method: "POST", cookie: customerCookie, body: { productId: acceptanceProductId, quantity: 1 } });
+          const body = { shippingAddress: address, checkoutKey: "native-payment-acceptance-" + outcome };
+          const started = await request("/api/payments/sslcommerz/initiate", { method: "POST", cookie: customerCookie, body }); assert.equal(started.status, 201); const paymentOrderId = started.data.orderId;
+          const replay = await request("/api/payments/sslcommerz/initiate", { method: "POST", cookie: customerCookie, body }); assert.equal(replay.data.orderId, paymentOrderId); assert.equal(await Payment.countDocuments({ order: paymentOrderId }), 1);
+          const payment = await Payment.findOne({ order: paymentOrderId });
+          gateway.validatePayment = async () => ({ status: "VALID", tran_id: payment.transactionId, amount: payment.amount + (outcome === "mismatch" ? 1 : 0), currency: "BDT", risk_level: 0, val_id: "native-validation" });
+          const callback = { method: "POST", body: { tran_id: payment.transactionId, val_id: "native-validation" } };
+          if (outcome === "success") {
+            for (let repeat = 0; repeat < 2; repeat++) {
+              const accepted = await request("/api/payments/sslcommerz/success", callback); assert.equal(accepted.status, 303); assert.match(accepted.location, /status=success/);
+              assert.equal((await request("/api/payments/sslcommerz/ipn", { method: "POST", body: { ...callback.body, status: "VALID" } })).status, 200);
+            }
+            await request("/api/payments/sslcommerz/fail", callback); await request("/api/payments/sslcommerz/cancel", callback);
+            const paid = await Order.findById(paymentOrderId); assert.equal(paid.paymentStatus, "paid"); assert.equal(paid.status, "processing"); assert.equal((await Invoice.findOne({ order: paymentOrderId })).paymentStatus, "paid");
+            assert.equal((await Product.findById(acceptanceProductId)).stock, beforeStock - 1);
+          } else {
+            if (outcome === "mismatch") assert.equal((await request("/api/payments/sslcommerz/ipn", { method: "POST", body: { ...callback.body, status: "VALID" } })).status, 422);
+            else {
+              assert.equal((await request("/api/payments/sslcommerz/" + outcome, callback)).status, 303);
+              assert.equal((await request("/api/payments/sslcommerz/ipn", { method: "POST", body: { ...callback.body, status: outcome === "cancel" ? "CANCELLED" : "FAILED" } })).status, 200);
+              assert.equal((await Order.findById(paymentOrderId)).paymentStatus, outcome === "cancel" ? "cancelled" : "failed");
+              assert.equal((await Invoice.findOne({ order: paymentOrderId })).paymentStatus, outcome === "cancel" ? "cancelled" : "failed");
+            }
+            assert.equal((await Order.findById(paymentOrderId)).isPaid, false);
+            assert.equal((await request("/api/orders/" + paymentOrderId + "/status", { method: "PUT", cookie: adminCookie, body: { status: "processing" } })).status, 409);
+            for (let repeat = 0; repeat < 2; repeat++) assert.equal((await request("/api/orders/" + paymentOrderId + "/status", { method: "PUT", cookie: adminCookie, body: { status: "cancelled", cancelReason: "Native sandbox fixture" } })).status, 200);
+            assert.equal((await Product.findById(acceptanceProductId)).stock, beforeStock);
+            if (outcome === "cancel") {
+              for (let repeat = 0; repeat < 2; repeat++) assert.equal((await request("/api/payments/sslcommerz/ipn", { method: "POST", body: { ...callback.body, status: "VALID" } })).status, 200);
+              const late = await Order.findById(paymentOrderId); assert.equal(late.status, "cancelled"); assert.equal(late.paymentStatus, "review"); assert.equal((await Product.findById(acceptanceProductId)).stock, beforeStock);
+            }
+          }
+        }
+        assert.equal(sessions, 4);
+      } finally { Object.assign(gateway, original); if (clientUrl === undefined) delete process.env.CLIENT_APP_URL; else process.env.CLIENT_APP_URL = clientUrl; }
+    });
+    await require("../test-support/demoJourneys").demoJourneys(t, {
+      request, models: { Order, Payment, Product, Invoice, OperationLock: Lock }, customerCookie, otherCookie, adminCookie, productId: acceptanceProductId, address,
+    });
     await t.test("Multer upload upgrade accepts images, rejects unexpected files and preserves admin gates", async () => {
       const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jZfsAAAAASUVORK5CYII=", "base64");
       const form = new FormData(); form.append("image", new Blob([png], { type: "image/png" }), "native.png");
@@ -160,6 +244,15 @@ test("Real MongoDB HTTP: catalog, authentication, cart, checkout, inventory and 
       assert.equal((await request("/api/uploads", { method: "POST", cookie: customerCookie, body: {} })).status, 403);
       const extra = new FormData(); extra.append("image", new Blob([png], { type: "image/png" }), "a.png"); extra.append("image", new Blob([png], { type: "image/png" }), "b.png");
       assert.equal((await request("/api/uploads", { method: "POST", cookie: adminCookie, body: extra })).status, 400);
+    });
+    await t.test("Read-only acceptance preflight connects at the configured MongoDB port and preserves records", async () => {
+      const { spawnSync } = require("node:child_process");
+      const testUri = new URL(uri); testUri.pathname = "/" + dbName;
+      const before = { products: await Product.countDocuments(), users: await User.countDocuments(), orders: await Order.countDocuments() };
+      const result = spawnSync(process.execPath, [path.join(__dirname, "../scripts/acceptance-preflight.js")], { encoding: "utf8", timeout: 15000, env: { ...process.env, MONGO_URI: testUri.toString(), PORT: "5000" } });
+      assert.equal(result.status, 0, result.stderr); assert.match(result.stdout, /MongoDB connection: PASS/); assert.match(result.stdout, new RegExp(testUri.port));
+      assert.doesNotMatch(result.stdout, new RegExp(process.env.JWT_SECRET));
+      assert.deepEqual({ products: await Product.countDocuments(), users: await User.countDocuments(), orders: await Order.countDocuments() }, before);
     });
   } finally {
     for (const upload of uploads) await fs.unlink(path.join(__dirname, "../uploads", path.basename(upload))).catch(() => {});

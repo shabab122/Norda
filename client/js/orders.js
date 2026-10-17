@@ -22,6 +22,8 @@ async function loadOrders(justPlaced, invoiceNumber) {
     }
 
     root.innerHTML = banner + orders.map(renderOrder).join("");
+    const target = String(window.location.hash || "").slice(1);
+    if (/^order-[a-f0-9]{24}$/i.test(target)) document.getElementById(target)?.scrollIntoView({ block: "start" });
   } catch (error) {
     root.innerHTML = `<div class="empty-state"><h2>Orders unavailable</h2><p>${escapeHtml(error.message)}</p></div>`;
   }
@@ -31,7 +33,7 @@ function renderOrder(order) {
   const shortId = order._id.slice(-8).toUpperCase();
   const address = order.shippingAddress || {};
   return `
-    <article class="order-card">
+    <article class="order-card" id="order-${escapeHtml(order._id)}">
       <header class="order-head">
         <div>
           <span class="eyebrow">Order #${shortId}</span>
@@ -63,11 +65,12 @@ function renderOrder(order) {
             .join("")}
         </div>
         <aside class="order-summary">
-          <div><span>Payment method</span><strong>${order.paymentMethod === "sslcommerz" ? "SSLCOMMERZ" : "Cash on delivery"}</strong></div>
+          <div><span>Payment method</span><strong>${escapeHtml(paymentMethodLabel(order))}</strong></div>
           <div><span>Deliver to</span><strong>${escapeHtml([address.city, address.district].filter(Boolean).join(", ") || "Saved address")}</strong></div>
           <div><span>Subtotal</span><strong>${money(order.subtotal)}</strong></div>
           <div><span>Delivery</span><strong>${order.shippingFee ? money(order.shippingFee) : "Free"}</strong></div>
           <div class="order-total"><span>Total</span><strong>${money(order.totalAmount)}</strong></div>
+          ${order.paymentMethod === "demo" ? `<p class="summary-note"><strong>DEMO</strong> · No real money was transferred.</p>${!order.isPaid && order.status !== "cancelled" ? `<a class="btn btn-primary btn-sm btn-block" href="demo-payment.html?orderId=${encodeURIComponent(order._id)}">Resume or cancel demo</a>` : ""}` : ""}
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>

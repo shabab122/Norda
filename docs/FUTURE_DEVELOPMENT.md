@@ -1,5 +1,19 @@
 # Future NORDA development
 
+## Completed in 2.4.0
+
+- Separate local mobile/bKash and card/bank demo flows, with all three outcomes, ownership/replay guards and stock/invoice synchronization.
+- Clear DEMO order/invoice/admin labels and exclusion from real revenue; no merchant credentials are needed for the simulator.
+- Distinct homepage featured/new selections and inspection of all 24 product photos.
+- Real SSLCOMMERZ acceptance remains separate from these local simulations. Demo reservation expiry is still pending; sessions can be resumed/cancelled now.
+
+## Completed in 2.3.0
+
+- Separate personal customer dashboard and visible account/role identity, with guest/public and admin views retained.
+- Owner-scoped dashboard data, cross-tab/cached-page session guards and profile identity refresh.
+- Expanded native acceptance for the complete COD/admin/review journey, two-customer isolation and controlled gateway notification states.
+- Read-only setup preflight and a precise acceptance checklist. Actual browser/device checks and public SSLCOMMERZ acceptance remain release gates.
+
 ## Completed in 2.2.0
 
 - 24-product, 12-category catalog with original AI photos and a repeatable import.

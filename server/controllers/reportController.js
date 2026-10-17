@@ -57,7 +57,7 @@ const orderReportCsv = async (req, res, next) => {
       customer: order.user?.name || "Deleted user",
       email: order.user?.email || "",
       items: order.items.reduce((sum, item) => sum + item.quantity, 0),
-      paymentMethod: order.paymentMethod,
+      paymentMethod: order.paymentMethod === "demo" ? "DEMO / " + order.paymentChannel : order.paymentMethod,
       paymentStatus: order.paymentStatus,
       orderStatus: order.status,
       subtotal: order.subtotal,

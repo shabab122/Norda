@@ -26,7 +26,8 @@ const orderSchema = new mongoose.Schema(
     },
     subtotal: { type: Number, required: true, min: 0, default: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
-    paymentMethod: { type: String, enum: ["cod", "sslcommerz"], default: "cod" },
+    paymentMethod: { type: String, enum: ["cod", "sslcommerz", "demo"], default: "cod" },
+    paymentChannel: { type: String, enum: ["", "mobile_banking", "card_bank"], default: "" },
     totalAmount: { type: Number, required: true },
     currency: { type: String, default: "BDT", uppercase: true },
     status: {

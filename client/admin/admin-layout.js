@@ -20,7 +20,7 @@ function renderAdminShell(activePage) {
     </div>
   `;
 
-  if (bar && user) bar.textContent = user.name;
+  if (bar && user) { bar.textContent = user.name + " · Administrator"; bar.title = user.email; }
 
   document.getElementById("admin-logout").addEventListener("click", async (e) => {
     e.preventDefault();

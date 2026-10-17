@@ -72,14 +72,23 @@ async function loadCheckout() {
           <section class="checkout-card">
             <div class="checkout-card-head"><span>02</span><div><h2>Payment method</h2><p>Choose the way you would like to pay.</p></div></div>
             <div class="payment-options">
-              <label class="payment-option ${paymentConfig.sslcommerzEnabled ? "selected" : "disabled"}">
-                <input type="radio" name="payment-method" value="sslcommerz" ${paymentConfig.sslcommerzEnabled ? "checked" : "disabled"} />
-                <span class="payment-copy"><strong>Pay online with SSLCOMMERZ</strong><small>Cards, mobile banking and internet banking</small></span>
-                <span class="secure-chip">Secure</span>
-              </label>
-              ${!paymentConfig.sslcommerzEnabled ? `<p class="gateway-note">Online payment is currently unavailable. Cash on delivery is available below.</p>` : ""}
-              <label class="payment-option ${paymentConfig.sslcommerzEnabled ? "" : "selected"}">
-                <input type="radio" name="payment-method" value="cod" ${paymentConfig.sslcommerzEnabled ? "" : "checked"} />
+              ${paymentConfig.demoEnabled ? `
+                <p class="gateway-note demo-notice"><strong>Demo checkout</strong> · Simulated payments only. No money is transferred.</p>
+                <label class="payment-option selected">
+                  <input type="radio" name="payment-method" value="demo_mobile_banking" checked />
+                  <span class="payment-copy"><strong>Mobile Banking / bKash</strong><small>Try the mobile banking demo</small></span><span class="secure-chip">DEMO</span>
+                </label>
+                <label class="payment-option">
+                  <input type="radio" name="payment-method" value="demo_card_bank" />
+                  <span class="payment-copy"><strong>Card / Bank</strong><small>Try the card and bank payment demo</small></span><span class="secure-chip">DEMO</span>
+                </label>` : ""}
+              ${paymentConfig.sslcommerzEnabled ? `
+                <label class="payment-option ${paymentConfig.demoEnabled ? "" : "selected"}">
+                  <input type="radio" name="payment-method" value="sslcommerz" ${paymentConfig.demoEnabled ? "" : "checked"} />
+                  <span class="payment-copy"><strong>SSLCOMMERZ ${paymentConfig.environment === "live" ? "Live" : "Sandbox"}</strong><small>Continue to the configured provider checkout</small></span>
+                </label>` : ""}
+              <label class="payment-option ${paymentConfig.sslcommerzEnabled || paymentConfig.demoEnabled ? "" : "selected"}">
+                <input type="radio" name="payment-method" value="cod" ${paymentConfig.sslcommerzEnabled || paymentConfig.demoEnabled ? "" : "checked"} />
                 <span class="payment-copy"><strong>Cash on delivery</strong><small>Pay when the order reaches you</small></span>
               </label>
             </div>
@@ -127,9 +136,7 @@ function bindCheckoutForm() {
   const selectedMethod = document.querySelector('input[name="payment-method"]:checked');
   if (selectedMethod) {
     document.getElementById("place-order-btn").textContent =
-      selectedMethod.value === "sslcommerz"
-        ? "Continue to secure payment"
-        : "Place cash-on-delivery order";
+      checkoutButtonLabel(selectedMethod.value);
   }
 
   document.querySelectorAll('input[name="payment-method"]').forEach((input) => {
@@ -137,7 +144,7 @@ function bindCheckoutForm() {
       document.querySelectorAll(".payment-option").forEach((option) => option.classList.remove("selected"));
       input.closest(".payment-option").classList.add("selected");
       document.getElementById("place-order-btn").textContent =
-        input.value === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
+        checkoutButtonLabel(input.value);
     });
   });
 
@@ -148,10 +155,19 @@ function bindCheckoutForm() {
     const alert = document.getElementById("checkout-alert");
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
     button.disabled = true;
-    button.textContent = paymentMethod === "sslcommerz" ? "Opening secure payment…" : "Creating order…";
+    button.textContent = paymentMethod.startsWith("demo_") ? "Opening demo payment…" : paymentMethod === "sslcommerz" ? "Opening secure payment…" : "Creating order…";
     alert.innerHTML = "";
 
     try {
+      if (paymentMethod.startsWith("demo_")) {
+        const result = await Api.post("/payments/demo/initiate", {
+          shippingAddress: shippingPayload(), channel: paymentMethod.slice(5),
+          checkoutKey: checkoutKey(paymentMethod),
+        });
+        clearCheckoutKey();
+        window.location.assign(result.checkoutUrl);
+        return;
+      }
       if (paymentMethod === "sslcommerz") {
         const result = await Api.post("/payments/sslcommerz/initiate", {
           shippingAddress: shippingPayload(),
@@ -183,7 +199,7 @@ function bindCheckoutForm() {
         alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
       }
       button.disabled = false;
-      button.textContent = paymentMethod === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
+      button.textContent = checkoutButtonLabel(paymentMethod);
       alert.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   });
@@ -202,3 +218,7 @@ function checkoutKey(method) {
   return saved.key;
 }
 function clearCheckoutKey() { memoryCheckout = null; try { sessionStorage.removeItem("norda_checkout"); } catch {} }
+
+function checkoutButtonLabel(method) {
+  return method.startsWith("demo_") ? "Continue to demo payment" : method === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
+}

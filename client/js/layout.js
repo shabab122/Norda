@@ -24,8 +24,8 @@ function renderHeader(activePage = "") {
             <a href="index.html" class="${activePage === "home" ? "active" : ""}">Home</a>
             <a href="products.html" class="${activePage === "products" ? "active" : ""}">Shop</a>
             ${user ? `<a href="orders.html" class="${activePage === "orders" ? "active" : ""}">Orders</a>` : ""}
-            ${user ? `<a href="profile.html" class="${activePage === "profile" ? "active" : ""}">Profile</a>` : ""}
-            ${user?.role === "admin" ? `<a href="admin/dashboard.html">Admin</a>` : ""}
+            ${user && user.role !== "admin" ? `<a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">My account</a>` : ""}
+            ${!user ? `<a href="register.html">Create account</a>` : ""}
           </nav>
           <form class="search-form" id="global-search-form" role="search">
             <label class="sr-only" for="global-search">Search products</label>
@@ -33,7 +33,8 @@ function renderHeader(activePage = "") {
             <button type="submit">Search</button>
           </form>
         </div>
-        <div class="header-actions">
+        <div class="header-actions ${user ? "has-account" : ""}">
+          ${user ? `<a href="${accountHome(user)}" class="account-link ${user.role === "admin" ? "account-link-admin" : ""}" title="${escapeHtml(user.name + " · " + user.email)}" aria-label="${escapeHtml((user.role === "admin" ? "Administrator" : "Customer") + " account: " + user.name + ", " + user.email)}"><span class="account-avatar" aria-hidden="true">${escapeHtml(accountInitials(user.name))}</span><span class="account-link-copy"><strong>${escapeHtml(user.name)}</strong><small>${user.role === "admin" ? "Admin workspace" : "Customer account"}</small></span></a>` : ""}
           <a href="cart.html" class="icon-link cart-link">
             ${icon("bag")}<span>Cart</span><span id="cart-count" class="badge hidden">0</span>
           </a>
@@ -94,9 +95,10 @@ function renderFooter() {
         <div>
           <h4>Account</h4>
           <ul>
+            <li><a href="${Api.getUser() ? accountHome() : "login.html"}">${Api.getUser() ? "My dashboard" : "Sign in or create account"}</a></li>
             <li><a href="profile.html">Profile</a></li>
             <li><a href="orders.html">Orders & invoices</a></li>
-            <li><a href="login.html">Sign in</a></li>
+            ${!Api.getUser() ? `<li><a href="register.html">Create account</a></li>` : ""}
           </ul>
         </div>
         <div>
@@ -114,6 +116,13 @@ function renderFooter() {
       </div>
     </div>
   `;
+}
+
+function accountHome(user = Api.getUser()) {
+  return user?.role === "admin" ? "admin/dashboard.html" : "dashboard.html";
+}
+function accountInitials(name) {
+  return String(name || "Customer").trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => Array.from(part)[0]).join("").toUpperCase();
 }
 
 async function refreshCartBadge() {
@@ -278,6 +287,21 @@ window.addEventListener("norda:session-expired", () => {
     window.location.replace((admin ? "../" : "") + "login.html?next=" + encodeURIComponent(next));
   } else if (document.getElementById("site-header")) renderHeader(currentPage);
 });
+// Cookies/localStorage are shared between tabs. Refresh the visible identity
+// immediately when another tab changes accounts instead of showing stale data.
+window.addEventListener("storage", (event) => {
+  if (event.storageArea && event.storageArea !== window.localStorage) return;
+  if (!["norda_user", "norda_token", null].includes(event.key) || (event.key !== null && event.oldValue === event.newValue)) return;
+  Api.currentUser = null;
+  try { sessionStorage.removeItem("norda_checkout"); sessionStorage.removeItem("norda_pending_cart"); sessionStorage.removeItem("norda_cart_notice"); } catch { /* Optional browser storage. */ }
+  document.body?.setAttribute("data-account-changing", "true");
+  window.location.reload();
+});
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted) return;
+  document.body?.setAttribute("data-account-changing", "true");
+  window.location.reload();
+});
 document.addEventListener("click", async (event) => {
   const button = event.target.closest("[data-quick-cart]"); if (!button || button.disabled) return;
   const label = button.innerHTML; button.disabled = true; button.textContent = "Adding…";
@@ -297,4 +321,9 @@ function enableSkipLink() {
   if (!main || document.getElementById("skip-link")) return;
   main.id ||= "main-content";
   const link = document.createElement("a"); link.id = "skip-link"; link.className = "skip-link"; link.href = "#" + main.id; link.textContent = "Skip to content"; document.body.prepend(link);
+}
+
+function paymentMethodLabel(order) {
+  if (order.paymentMethod === "demo") return "DEMO · " + (order.paymentChannel === "mobile_banking" ? "Mobile Banking / bKash" : "Card / Bank");
+  return order.paymentMethod === "sslcommerz" ? "SSLCOMMERZ" : "Cash on delivery";
 }

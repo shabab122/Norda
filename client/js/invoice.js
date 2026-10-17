@@ -26,6 +26,7 @@ function renderInvoice(invoice) {
       <button type="button" class="btn btn-primary btn-sm" id="print-invoice">Print or save PDF</button>
     </div>
     <article class="invoice-sheet">
+      ${invoice.order?.paymentMethod === "demo" ? `<p class="demo-notice"><strong>DEMO INVOICE — SIMULATED PAYMENT</strong><br>No real money was transferred. This is a demonstration order.</p>` : ""}
       <header class="invoice-header">
         <a href="index.html" class="logo">NOR<span>DA</span></a>
         <div><span>Invoice</span><h1>${escapeHtml(invoice.invoiceNumber)}</h1></div>
