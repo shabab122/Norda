@@ -70,11 +70,11 @@ function renderOrder(order) {
           <div><span>Subtotal</span><strong>${money(order.subtotal)}</strong></div>
           <div><span>Delivery</span><strong>${order.shippingFee ? money(order.shippingFee) : "Free"}</strong></div>
           <div class="order-total"><span>Total</span><strong>${money(order.totalAmount)}</strong></div>
-          ${order.paymentMethod === "demo" ? `<p class="summary-note"><strong>DEMO</strong> · No real money was transferred.</p>${!order.isPaid && order.status !== "cancelled" ? `<a class="btn btn-primary btn-sm btn-block" href="demo-payment.html?orderId=${encodeURIComponent(order._id)}">Resume or cancel demo</a>` : ""}` : ""}
+          ${order.paymentMethod === "demo" ? `<p class="payment-context">Simulated payment · No real charge</p>${!order.isPaid && order.status !== "cancelled" ? `<a class="btn btn-primary btn-sm btn-block" href="demo-payment.html?orderId=${encodeURIComponent(order._id)}">Resume or cancel payment</a>` : ""}` : ""}
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>
       ${order.paymentStatus === "review" ? `<p class="order-note"><strong>Payment needs review.</strong> The store will need to check this payment before taking further action.</p>` : ""}
-      ${order.status === "cancelled" && order.cancelReason ? `<p class="order-note"><strong>Cancellation note:</strong> ${escapeHtml(order.cancelReason)}</p>` : ""}
+      ${order.status === "cancelled" && order.cancelReason ? `<p class="order-note"><strong>Cancellation note:</strong> ${escapeHtml(paymentNote(order.cancelReason))}</p>` : ""}
     </article>`;
 }

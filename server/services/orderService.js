@@ -47,7 +47,7 @@ const normalizeCheckoutKey = (value) => {
 
 const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "" }) => {
   if (!["cod", "sslcommerz", "demo"].includes(paymentMethod)) throw httpError(400, "Unsupported payment method");
-  if (paymentMethod === "demo" && !["mobile_banking", "card_bank"].includes(paymentChannel)) throw httpError(400, "Choose a demo payment channel");
+  if (paymentMethod === "demo" && !["mobile_banking", "card_bank"].includes(paymentChannel)) throw httpError(400, "Choose a payment channel");
   const address = normalizeShippingAddress(shippingAddress);
   const key = normalizeCheckoutKey(checkoutKey);
   return withOperationLock("cart:" + user._id, () => withDatabaseUnit(async (unit) => {

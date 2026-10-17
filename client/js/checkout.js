@@ -73,14 +73,14 @@ async function loadCheckout() {
             <div class="checkout-card-head"><span>02</span><div><h2>Payment method</h2><p>Choose the way you would like to pay.</p></div></div>
             <div class="payment-options">
               ${paymentConfig.demoEnabled ? `
-                <p class="gateway-note demo-notice"><strong>Demo checkout</strong> · Simulated payments only. No money is transferred.</p>
+                <p class="payment-context"><strong>Test environment</strong> · Payments are simulated; no money is transferred.</p>
                 <label class="payment-option selected">
                   <input type="radio" name="payment-method" value="demo_mobile_banking" checked />
-                  <span class="payment-copy"><strong>Mobile Banking / bKash</strong><small>Try the mobile banking demo</small></span><span class="secure-chip">DEMO</span>
+                  <span class="payment-copy"><strong>Mobile Banking / bKash</strong><small>Pay with mobile banking</small></span>
                 </label>
                 <label class="payment-option">
                   <input type="radio" name="payment-method" value="demo_card_bank" />
-                  <span class="payment-copy"><strong>Card / Bank</strong><small>Try the card and bank payment demo</small></span><span class="secure-chip">DEMO</span>
+                  <span class="payment-copy"><strong>Card / Bank</strong><small>Pay by card or bank</small></span>
                 </label>` : ""}
               ${paymentConfig.sslcommerzEnabled ? `
                 <label class="payment-option ${paymentConfig.demoEnabled ? "" : "selected"}">
@@ -155,7 +155,7 @@ function bindCheckoutForm() {
     const alert = document.getElementById("checkout-alert");
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
     button.disabled = true;
-    button.textContent = paymentMethod.startsWith("demo_") ? "Opening demo payment…" : paymentMethod === "sslcommerz" ? "Opening secure payment…" : "Creating order…";
+    button.textContent = paymentMethod.startsWith("demo_") ? "Opening payment…" : paymentMethod === "sslcommerz" ? "Opening secure payment…" : "Creating order…";
     alert.innerHTML = "";
 
     try {
@@ -220,5 +220,5 @@ function checkoutKey(method) {
 function clearCheckoutKey() { memoryCheckout = null; try { sessionStorage.removeItem("norda_checkout"); } catch {} }
 
 function checkoutButtonLabel(method) {
-  return method.startsWith("demo_") ? "Continue to demo payment" : method === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
+  return method.startsWith("demo_") ? "Continue to payment" : method === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
 }

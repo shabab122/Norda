@@ -2,6 +2,31 @@
 
 All notable project changes are recorded here.
 
+## [2.4.2] — 2026-10-18
+
+- Removed the opaque off-white favicon tile by reusing the existing transparent logo PNG unchanged. Pages use a different favicon asset URL so the old cached tile is replaced.
+- Removed the administrator logo's CSS background/padding tile. The logo design, wordmark, dimensions and commerce features are preserved.
+- Existing tests and static asset references pass; no dependency or credential changes.
+
+## [2.4.1] — 2026-10-18
+
+### Fixed
+
+- Removed repeated Demo headings/badges from customer checkout, payment, result, order and invoice views, retaining compact truthful simulation/no-charge notes.
+- Fixed the invoice's split/shrunken Norda wordmark by scoping document-label styles and using one shared brand component.
+- Improved invoice header/ID/email wrapping, brand alignment on small screens and print typography.
+- Normalized known legacy simulator cancellation notes for display; underlying records and custom text are unchanged.
+
+### Added
+
+- Original AI-generated N/shopping-ribbon identity, optimized transparent mark, consistent live Norda wordmark and matching tab icon on all pages.
+- Branding provenance/prompt documentation and focused regressions for the complete wordmark, invoice/payment disclosures and existing payment links.
+
+### Compatibility
+
+- Cart, stock, prices, payment outcome/replay/ownership rules, production guards, revenue calculations, original catalog/product photos and credentials are preserved. Backend edits are limited to customer-facing wording.
+- See `docs/VERIFICATION_RESULTS.md` for final checks and browser acceptance boundaries.
+
 ## [2.4.0] — 2026-10-17
 
 ### Added

@@ -1,4 +1,4 @@
-# NORDA 2.4 acceptance checklist
+# NORDA 2.4.1 acceptance checklist
 
 ## Recorded status
 
@@ -28,10 +28,10 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 ## Local demo payment journey
 
 1. Run development with your working `.env`; merchant credentials and a public callback URL are not required. Verify `/api/payments/config` reports `demoEnabled: true`. A production environment or `PAYMENT_DEMO_ENABLED=false` disables it.
-2. Add products, sign in and checkout using **Mobile Banking / bKash — DEMO**. On the demo page choose successful payment. Confirm a processing DEMO order, paid DEMO invoice, cleared cart and one stock decrement; real revenue stays unchanged.
-3. Repeat with **Card / Bank — DEMO**. Check the selected category, order total, result, invoice and DEMO labels.
+2. Add products, sign in and checkout using **Mobile Banking / bKash**. On the demo page choose successful payment. Confirm a processing order with a simulation note, paid invoice with a simulation note, cleared cart and one stock decrement; real revenue stays unchanged.
+3. Repeat with **Card / Bank**. Check the selected category, order total, result, invoice and compact simulation/no-charge notes.
 4. For each category, start a separate demo and choose failed payment; repeat with cancel. Both orders must be cancelled, stock restored once, and payment/invoice statuses must match the outcome. No real money moves.
-5. Leave a pending demo, return to My Orders and use Resume or cancel demo. Existing items are reserved until you finish/cancel or an admin cancels; automatic expiry is not implemented.
+5. Leave a pending demo, return to My Orders and use Resume or cancel payment. Existing items are reserved until you finish/cancel or an admin cancels; automatic expiry is not implemented.
 6. Refresh after completion; do not create another order/invoice or repeat stock updates. Another customer must not access/finish this demo. Browser/mobile/keyboard/print checks still need the visible inspection below.
 
 ## Customer browser journey
@@ -80,3 +80,7 @@ Requires your own sandbox merchant credentials and a public reachable callback h
 8. Save the observed results against the matrix before enabling live payments.
 
 Official integration reference: https://developer.sslcommerz.com/doc/v4/ . This release checks application behaviour with controlled responses and has not completed these public-provider steps.
+
+## Branding and invoice presentation
+
+Check the full Norda name and AI symbol in the storefront header/footer, invoice, payment page and admin sidebar. Inspect the updated tab icon, long invoice numbers and long email addresses at small widths. Confirm the repeated Demo badges/large yellow invoice banner are gone while the compact simulation/no-charge information remains readable, including in a printed invoice.

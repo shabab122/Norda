@@ -70,13 +70,13 @@ document.addEventListener("DOMContentLoaded", async () => {
   };
 
   if (isDemo && content) {
-    result.kicker = "Demo payment · " + result.kicker;
-    result.title = verifiedStatus === "success" ? "Demo payment successful." : result.title;
+    result.kicker = "Payment update";
+    result.title = verifiedStatus === "success" ? "Payment completed." : result.title;
     result.copy = verifiedStatus === "success"
-      ? "The simulated payment is recorded on your demo order and invoice. No real money was transferred."
+      ? "Your simulated payment is recorded on the order and invoice. No real money was transferred."
       : ["failed", "cancelled"].includes(verifiedStatus)
-        ? "No money was charged. This demo order was cancelled and its items are available again."
-        : "This is a demo payment. No real money is transferred. Check My Orders for its latest status.";
+        ? "No money was charged. This order was cancelled and its items are available again."
+        : "This payment is simulated. No real money is transferred. Check My Orders for its latest status.";
   }
   root.innerHTML = `
     <section class="result-card ${result.className}">

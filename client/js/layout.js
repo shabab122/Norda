@@ -15,7 +15,7 @@ function renderHeader(activePage = "") {
     </div>
     <div class="site-header">
       <div class="header-inner container">
-        <a href="index.html" class="logo" aria-label="Norda home">norda<span>.</span></a>
+        ${brandLogoHtml()}
         <button class="mobile-toggle" id="mobile-toggle" type="button" aria-controls="header-menu" aria-expanded="false">
           <span></span><span></span><span></span><span class="sr-only">Open menu</span>
         </button>
@@ -81,7 +81,7 @@ function renderFooter() {
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="index.html" class="logo">norda<span>.</span></a>
+          ${brandLogoHtml()}
           <p>Useful things, thoughtfully selected for everyday life in Bangladesh.</p>
         </div>
         <div>
@@ -324,6 +324,15 @@ function enableSkipLink() {
 }
 
 function paymentMethodLabel(order) {
-  if (order.paymentMethod === "demo") return "DEMO · " + (order.paymentChannel === "mobile_banking" ? "Mobile Banking / bKash" : "Card / Bank");
+  if (order.paymentMethod === "demo") return (order.paymentChannel === "mobile_banking" ? "Mobile Banking / bKash" : "Card / Bank");
   return order.paymentMethod === "sslcommerz" ? "SSLCOMMERZ" : "Cash on delivery";
+}
+
+function brandLogoHtml(prefix = "", extraClass = "", caption = "") {
+  return `<a href="${escapeHtml(prefix)}index.html" class="logo brand-logo ${escapeHtml(extraClass)}" aria-label="Norda home"><img class="brand-mark" src="${escapeHtml(prefix)}assets/brand/norda-mark.webp" width="40" height="44" alt="" /><strong class="brand-name">Norda</strong>${caption ? `<small class="brand-caption">${escapeHtml(caption)}</small>` : ""}</a>`;
+}
+
+function paymentNote(value) {
+  return String(value || "").replace(/^Demo payment failed; no money was charged$/, "Payment failed; no money was charged")
+    .replace(/^Demo checkout cancelled; no money was charged$/, "Checkout cancelled; no money was charged");
 }

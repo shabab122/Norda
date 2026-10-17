@@ -1,5 +1,10 @@
 # Future NORDA development
 
+## Completed in 2.4.1
+
+- Shared AI identity, complete invoice wordmark and consistent header/footer/admin/payment branding.
+- Clean customer-facing payment headings with compact simulation disclosures and improved invoice wrapping.
+
 ## Completed in 2.4.0
 
 - Separate local mobile/bKash and card/bank demo flows, with all three outcomes, ownership/replay guards and stock/invoice synchronization.

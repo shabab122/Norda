@@ -31,6 +31,7 @@ test("HTTP regression journeys using an isolated, fault-injectable model adapter
       assert.equal(pages.length, 19);
       for (const page of pages) { const response = await request(page); assert.equal(response.status, 200, page); assert.match(response.data, /<!DOCTYPE html>/i); }
       assert.equal((await request("/assets/products/headphones.svg")).status, 200);
+      for (const asset of ["/assets/brand/norda-mark.webp", "/assets/brand/norda-icon.png", "/css/branding.css"]) assert.equal((await request(asset)).status, 200, asset);
       assert.equal((await request("/api/health")).status, 200);
     });
     await t.test("Registration, invalid login and cookie-backed profile work", async () => {
