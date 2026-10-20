@@ -3,6 +3,7 @@ node_modules/
 .env.*
 !.env.example
 uploads/*
+.local-mail/
 !uploads/.gitkeep
 *.log
 

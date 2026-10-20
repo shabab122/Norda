@@ -1,5 +1,12 @@
 # Future NORDA development
 
+## Completed in 2.5.0
+
+- Forgot/reset password with one-use expiring email links, hashed tokens, request limits and session invalidation.
+- Email verification at signup, protected resend, verification status and SMTP/private development email delivery.
+- Up to 10 delivery addresses with labels, edit/delete/default actions, legacy compatibility and a checkout picker. Existing order/invoice snapshots are retained.
+- See [account setup and acceptance](ACCOUNT_RECOVERY.md). Real inbox delivery requires the owner's SMTP configuration; verification currently informs users without blocking established login/checkout access.
+
 ## Completed in 2.4.1
 
 - Shared AI identity, complete invoice wordmark and consistent header/footer/admin/payment branding.
@@ -32,8 +39,7 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 1 — account and checkout recovery
 
-- Forgot/reset password and email verification
-- Multiple delivery addresses and recipient details
+- Optional recipient names and additional address formats
 - Payment retry on an existing eligible order
 - Reservation expiry and safe automatic stock release
 - Stronger session/device management and ongoing dependency auditing

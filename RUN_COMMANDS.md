@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2/2.3/2.4/2.4.1 to 2.4.2
+## Update from 2.2–2.4.2 to 2.5.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway credentials exactly as they are. This update requires no database migration or reseeding.
 
@@ -23,6 +23,22 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Account email and address book
+
+Recovery, verification and multiple addresses require no reseed or migration. Keep the supplied `.env` unchanged. The optional new mail settings are listed in `.env.example` and [the account guide](docs/ACCOUNT_RECOVERY.md).
+
+For local development without an SMTP host, request a reset or verification email on the website, then run in another terminal:
+
+```bash
+cd server
+npm run mail:check
+npm run mail:preview -- your-account@example.com
+```
+
+Open your account's link from the terminal output. These are private, one-use links. They are not served by the website or included in the ZIP. Real inbox delivery uses your own SMTP settings; production requires SMTP and HTTPS account links.
+
+Manage saved addresses in `profile.html`; use the new selector in `checkout.html`. Existing passwords, MongoDB URI, JWT, admin and payment credentials are not replaced.
 
 ## Optional: import missing catalog samples
 

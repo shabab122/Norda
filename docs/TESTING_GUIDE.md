@@ -1,6 +1,6 @@
-# NORDA 2.3 testing and acceptance
+# NORDA 2.5 testing and acceptance
 
-Current results: 93 syntax checks, 74 default test passes (2 native entry-point skips), and 17 passes on each real MongoDB topology. See `ACCEPTANCE_CHECKLIST.md` for evidence and pending browser/public-payment checks. The customer dashboard consumes existing owner-scoped APIs; no account schema or credential migration is needed.
+Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Existing accounts and credentials need no migration.
 
 ## Automated verification
 
@@ -12,7 +12,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The two real database test entry points are intentionally skipped without an explicit test URI:
+The three real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration

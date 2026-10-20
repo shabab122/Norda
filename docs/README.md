@@ -14,3 +14,5 @@
 - `FUTURE_DEVELOPMENT.md` — backlog for subsequent development phases
 
 - `VERIFICATION_RESULTS.md` — exact checked results and unverified environment boundaries
+
+- [Account recovery, email verification and address book](ACCOUNT_RECOVERY.md) — 2.5 setup, API examples and acceptance.

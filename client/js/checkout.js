@@ -30,13 +30,15 @@ async function loadCheckout() {
     const shipping = subtotal >= store.freeShippingThreshold ? 0 : store.flatShippingFee;
     const total = subtotal + shipping;
     const address = profile.address || {};
+    checkoutAddresses = profile.addresses || [];
 
     root.innerHTML = `
       <div class="checkout-layout">
         <form id="checkout-form" class="checkout-form">
           <section class="checkout-card">
-            <div class="checkout-card-head"><span>01</span><div><h2>Delivery details</h2><p>We will save these details to your profile for your next order.</p></div></div>
+            <div class="checkout-card-head"><span>01</span><div><h2>Delivery details</h2><p>Choose a saved address or enter the delivery details for this order.</p></div></div>
             <div id="checkout-alert" aria-live="polite"></div>
+            ${checkoutAddressPicker(profile)}
             <div class="form-grid two">
               <div class="field field-wide">
                 <label for="address-line">Street address</label>
@@ -114,10 +116,26 @@ async function loadCheckout() {
       </div>
     `;
 
+    bindCheckoutAddressSelection();
     bindCheckoutForm();
   } catch (error) {
     root.innerHTML = `<div class="empty-state"><h2>Checkout unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="cart.html">Return to cart</a></div>`;
   }
+}
+
+let checkoutAddresses = [];
+function checkoutAddressPicker(profile) {
+  const addresses = profile.addresses || [];
+  return `<div class="field saved-address-picker">${addresses.length ? `<label for="checkout-saved-address">Saved delivery address</label><select id="checkout-saved-address">${addresses.map((entry) => `<option value="${escapeHtml(entry._id)}" ${entry.isDefault ? "selected" : ""}>${escapeHtml(entry.label)}${entry.isDefault ? " (Default)" : ""} — ${escapeHtml(entry.line1)}</option>`).join("")}<option value="new">Use a different address</option></select>` : ""}<small class="field-help">Edits below apply to this order. <a class="text-link" href="profile.html">Manage saved addresses</a> in your profile.</small></div>`;
+}
+function bindCheckoutAddressSelection() {
+  const select = document.getElementById("checkout-saved-address");
+  if (!select) return;
+  select.addEventListener("change", () => {
+    const address = checkoutAddresses.find((entry) => entry._id === select.value) || {};
+    const fields = { "address-line": "line1", "address-line-2": "line2", city: "city", district: "district", postcode: "postCode", phone: "phone", country: "country" };
+    for (const [id, key] of Object.entries(fields)) document.getElementById(id).value = address[key] || (key === "country" ? "Bangladesh" : "");
+  });
 }
 
 function shippingPayload() {

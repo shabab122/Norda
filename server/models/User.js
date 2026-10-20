@@ -41,6 +41,25 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     address: addressSchema,
+    // The original address remains available to older clients. Address-book
+    // defaults are resolved separately, so checkout cannot overwrite the book.
+    addresses: {
+      type: [new mongoose.Schema({
+        _id: { type: String, required: true },
+        label: { type: String, required: true, trim: true, maxlength: 30 },
+        ...addressSchema.obj,
+      })],
+      default: [],
+      validate: [(value) => value.length <= 10, "You can save up to 10 delivery addresses"],
+    },
+    defaultAddressId: { type: String, default: null },
+    emailVerifiedAt: { type: Date, default: null },
+    passwordResetHash: { type: String, select: false },
+    passwordResetExpiresAt: { type: Date, select: false },
+    passwordResetRequestedAt: { type: Date, select: false },
+    emailVerificationHash: { type: String, select: false },
+    emailVerificationExpiresAt: { type: Date, select: false },
+    emailVerificationRequestedAt: { type: Date, select: false },
     tokenVersion: { type: Number, default: 0 },
   },
   { timestamps: true }
