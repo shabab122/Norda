@@ -2,6 +2,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 const { cleanText, isValidEmail } = require("../utils/validation");
+const bcrypt = require("bcryptjs");
+const { addressBook, plainAddress, profilePayload, validateAddress } = require("../services/addressBookService");
+const { issueAccountLink, safeMailError, validPassword } = require("../services/accountRecoveryService");
+const { withOperationLock } = require("../services/operationLock");
 
 const cookieOptions = () => ({
   httpOnly: true,
@@ -11,24 +15,17 @@ const cookieOptions = () => ({
   path: "/",
 });
 
-const sendSession = (res, user, statusCode = 200) => {
+const sendSession = (res, user, statusCode = 200, extra = {}) => {
   const token = generateToken(user._id, user.tokenVersion || 0);
   res.cookie("norda_token", token, cookieOptions());
-  const payload = {
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    address: user.address,
-  };
+  const payload = { ...profilePayload(user), ...extra };
   if (process.env.AUTH_RETURN_TOKEN === "true") payload.token = token;
   res.status(statusCode).json(payload);
 };
 
 // @desc Register a new user
 // @route POST /api/auth/register
-const validatePassword = (value) =>
-  typeof value === "string" && value.length >= 8 && Buffer.byteLength(value, "utf8") <= 72;
+const validatePassword = validPassword;
 
 const cleanAddress = (value = {}) => {
   const address = value && typeof value === "object" ? value : {};
@@ -64,8 +61,13 @@ const register = async (req, res, next) => {
       return res.status(400).json({ message: "An account with this email already exists" });
     }
 
-    const user = await User.create({ name, email, password });
-    sendSession(res, user, 201);
+    const user = await User.create({ name, email, password, emailVerifiedAt: null });
+    let verificationEmail;
+    try { verificationEmail = await issueAccountLink(email, "verify"); }
+    catch (error) { safeMailError(error); verificationEmail = { delivery: "unavailable" }; }
+    // Email delivery trouble must not leave a successfully created account
+    // looking like a failed registration or discard a guest's cart selection.
+    sendSession(res, user, 201, { verificationEmail });
   } catch (error) {
     next(error);
   }
@@ -100,41 +102,45 @@ const login = async (req, res, next) => {
 // @desc Get logged in user's profile
 // @route GET /api/auth/profile
 const getProfile = async (req, res) => {
-  res.json({
-    _id: req.user._id,
-    name: req.user.name,
-    email: req.user.email,
-    role: req.user.role,
-    address: req.user.address,
-  });
+  res.json(profilePayload(req.user));
 };
 
 // @desc Update logged in user's profile
 // @route PUT /api/auth/profile
 const updateProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.user._id).select("+password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    if (req.body.name !== undefined) {
-      const name = cleanText(req.body.name, 80);
-      if (!name) return res.status(400).json({ message: "Name cannot be empty" });
-      user.name = name;
-    }
-    if (req.body.address !== undefined) user.address = cleanAddress(req.body.address);
-    if (req.body.password !== undefined) {
-      if (typeof req.body.currentPassword !== "string" || !(await user.matchPassword(req.body.currentPassword))) {
-        return res.status(400).json({ message: "Your current password is incorrect" });
+    await withOperationLock("address-book:" + req.user._id, async () => {
+      const user = await User.findById(req.user._id).select("+password");
+      if (!user) return res.status(404).json({ message: "User not found" });
+      const fields = {};
+      if (req.body.name !== undefined) {
+        fields.name = cleanText(req.body.name, 80);
+        if (!fields.name) return res.status(400).json({ message: "Name cannot be empty" });
       }
-      if (!validatePassword(req.body.password)) {
-        return res.status(400).json({ message: "Password must be at least 8 characters and no more than 72 UTF-8 bytes" });
+      if (req.body.address !== undefined) {
+        fields.address = cleanAddress(req.body.address);
+        if (user.addresses?.length) {
+          const book = addressBook(user);
+          const entry = book.addresses.find((item) => item.isDefault);
+          const updated = validateAddress({ ...entry, ...fields.address });
+          fields.addresses = book.addresses.map(({ isDefault, ...item }) => item._id === entry._id ? { _id: entry._id, ...updated } : item);
+          fields.address = plainAddress(updated);
+          fields.defaultAddressId = entry._id;
+        }
       }
-      user.password = req.body.password;
-      user.tokenVersion = (user.tokenVersion || 0) + 1;
-    }
-
-    const updated = await user.save();
-    sendSession(res, updated);
+      const update = { $set: fields };
+      if (req.body.password !== undefined) {
+        if (typeof req.body.currentPassword !== "string" || !(await user.matchPassword(req.body.currentPassword))) return res.status(400).json({ message: "Your current password is incorrect" });
+        if (!validatePassword(req.body.password)) return res.status(400).json({ message: "Password must be at least 8 characters and no more than 72 UTF-8 bytes" });
+        fields.password = await bcrypt.hash(req.body.password, 10);
+        update.$inc = { tokenVersion: 1 };
+        update.$unset = { passwordResetHash: 1, passwordResetExpiresAt: 1, passwordResetRequestedAt: 1 };
+      }
+      const version = req.user.tokenVersion || 0;
+      const updated = await User.findOneAndUpdate({ _id: req.user._id, $or: [{ tokenVersion: version }, ...(version ? [] : [{ tokenVersion: { $exists: false } }])] }, update, { new: true, runValidators: true });
+      if (!updated) return res.status(409).json({ message: "Your account changed. Refresh and sign in again before saving." });
+      sendSession(res, updated);
+    });
   } catch (error) {
     next(error);
   }

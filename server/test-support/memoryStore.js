@@ -14,6 +14,7 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
   if (key === "$or") return expected.some((part) => matches(row, part));
   if (key === "$and") return expected.every((part) => matches(row, part));
   const value = pathValue(row, key);
+  if (expected === null) return value === null || value === undefined;
   if (expected && typeof expected === "object" && !(expected instanceof Date) && !expected._id && typeof expected.toHexString !== "function") {
     return Object.entries(expected).every(([operator, argument]) => {
       const left = argument instanceof Date ? new Date(value).getTime() : value;
@@ -23,6 +24,8 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
       if (operator === "$nin") return !argument.some((item) => equal(value, item));
       if (operator === "$gte") return left >= right;
       if (operator === "$lte") return left <= right;
+      if (operator === "$gt") return left > right;
+      if (operator === "$lt") return left < right;
       if (operator === "$exists") return (value !== undefined) === argument;
       if (operator === "$regex") return new RegExp(argument, expected.$options || "").test(value || "");
       if (operator === "$options") return true;

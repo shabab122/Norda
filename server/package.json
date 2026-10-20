@@ -1,6 +1,6 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.4.2",
+  "version": "2.5.0",
   "description": "Norda commerce API with catalog, checkout, invoicing, payments and reporting",
   "main": "server.js",
   "type": "commonjs",
@@ -11,10 +11,12 @@
     "test": "node --test",
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
-    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js",
+    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js test/mongoAccount.test.js",
     "setup": "node scripts/setup-env.js",
     "seed:catalog": "node seed/seed.js --catalog-only",
-    "acceptance:preflight": "node scripts/acceptance-preflight.js"
+    "acceptance:preflight": "node scripts/acceptance-preflight.js",
+    "mail:check": "node scripts/account-mail.js --check",
+    "mail:preview": "node scripts/account-mail.js"
   },
   "engines": {
     "node": ">=22"
@@ -39,6 +41,7 @@
     "hpp": "^0.2.3",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.24.5",
-    "multer": "^2.4.0"
+    "multer": "^2.4.0",
+    "nodemailer": "10.1.7"
   }
 }

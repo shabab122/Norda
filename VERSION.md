@@ -1,17 +1,18 @@
 # Norda delivery metadata
 
-- Version: `2.4.2`
-- Source: uploaded `Norda-Main.zip`, whose Git snapshot has `main` at `44fed3b`
-- Delivery: source ZIP; existing GitHub repository/history is preserved by the update instructions
-- Prepared: 2026-10-18
-- Update base: `2.4.1`; transparent favicon and admin logo backgrounds
-- Catalog: 24 demonstration products, 12 categories and 24 original AI-generated product photos
-- Existing database import: `cd server` then `npm run seed:catalog`
-- Native persistence verification: MongoDB 7.0.45, standalone and single-member replica set
-- Customer account page: `dashboard.html`; existing admin workspace: `admin/dashboard.html`
-- Credentials: existing configuration is preserved; no default password or environment file is bundled
+- Version: `2.5.0`
+- Update base: supplied `Norda-Main(1).zip`, application version `2.4.2`
+- Prepared: 2026-10-20 (Asia/Dhaka)
+- Scope: forgot/reset password, email verification, multiple delivery addresses and checkout selection
 - Stack: HTML, CSS, JavaScript, Node.js, Express, MongoDB
-- Local application port: 5000; 3000 and 3002 reserved for GitStack/Gitea
-- Verification and release boundaries: `docs/UPDATE_REPORT.md`
-- Demo: enabled outside production by default, with an optional disable flag; never transfers real money.
-- Identity and generation prompt: `docs/BRANDING.md`.
+- Runtime: Node.js 22+; tested with 24.19.0 and MongoDB 7.0.45
+- Catalog: 24 sample products, 12 categories and existing AI product images retained
+- Customer page: `dashboard.html`; account settings: `profile.html`; admin: `admin/dashboard.html`
+- Existing installation: `cd server`, `npm ci`, `npm run verify`, `npm run dev`; no seed or migration required
+- Email: SMTP when configured; otherwise private local preview outside production. See `docs/ACCOUNT_RECOVERY.md`.
+- Compatibility: existing login/checkout access and all supplied credentials remain unchanged
+- Private configuration: supplied `server/.env` is retained byte-for-byte and remains ignored by Git
+- Local application port: 5000; 3000 and 3002 remain reserved for GitStack/Gitea
+- Verification and release boundaries: `docs/VERIFICATION_RESULTS.md`
+- Local payment simulation and the separate real SSLCOMMERZ integration are preserved
+- Brand assets and original generation prompt: `docs/BRANDING.md`

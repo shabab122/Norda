@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         Api.setSession(user, { replaceToken: true });
         const requested = new URLSearchParams(window.location.search).get("next");
         const next = await finishCartIntent() ? "cart.html" : requested ? safeNext(requested) : accountHome(user);
-        showAlert("Account created. Taking you to Norda…", "success");
+        showAlert("Account created. You can verify your email from your profile. Taking you to Norda…", "success");
         setTimeout(() => (window.location.href = next), 700);
       } catch (err) {
         showAlert(err.message, "error");

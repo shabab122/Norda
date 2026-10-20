@@ -1,4 +1,4 @@
-# Norda v2 — API Reference
+# Norda 2.5 — API Reference
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
@@ -23,8 +23,19 @@ Typical codes: `400` invalid input, `401` missing/invalid session, `403` wrong r
 | POST | `/auth/register` | Public | Create customer and session |
 | POST | `/auth/login` | Public | Create customer/admin session |
 | POST | `/auth/logout` | Public | Clear session cookie |
-| GET | `/auth/profile` | Customer | Read current profile |
+| POST | `/auth/forgot-password` | Public, rate limited | Request a one-use password reset email; generic account-existence response |
+| POST | `/auth/reset-password` | Public, rate limited | Consume token and set a new password; revoke previous sessions |
+| POST | `/auth/send-verification` | Customer, rate limited | Request/resend verification to the account email |
+| POST | `/auth/verify-email` | Public, rate limited | Explicitly consume a verification token |
+| GET | `/auth/addresses` | Customer | Read own saved addresses, default ID and limit |
+| POST | `/auth/addresses` | Customer | Add a labeled delivery address |
+| PUT | `/auth/addresses/:id` | Customer | Replace own saved address fields |
+| PUT | `/auth/addresses/:id/default` | Customer | Choose own default delivery address |
+| DELETE | `/auth/addresses/:id` | Customer | Remove own address; history is preserved |
+| GET | `/auth/profile` | Customer | Read profile, email verification and address book |
 | PUT | `/auth/profile` | Customer | Update name, address and optional password |
+
+See [account request examples and compatibility rules](ACCOUNT_RECOVERY.md#api-contract). Responses never include reset/verification tokens or password hashes.
 
 Register body:
 

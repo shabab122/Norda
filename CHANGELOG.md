@@ -2,6 +2,22 @@
 
 All notable project changes are recorded here.
 
+## [2.5.0] — 2026-10-20
+
+### Added
+
+- Forgot/reset password, 30-minute one-use hashed links, consistent public responses, per-account cooldowns and per-IP request limits. Atomic consumption prevents two concurrent password resets; successful resets revoke prior sessions without automatic login.
+- Email verification at registration, protected resend and 24-hour one-use confirmation links. Existing login, admin and checkout permissions remain compatible.
+- Up to 10 labeled delivery addresses, ownership checks, edit/delete/default operations, automatic legacy-address compatibility and a saved-address selector at checkout.
+- SMTP delivery with production TLS requirements, private development email previews, and `mail:check` / `mail:preview` commands. Only Nodemailer is added; prior dependency versions and supplied credentials are preserved.
+- Account HTTP, fault-injection, SMTP and frontend regressions, plus native MongoDB coverage on standalone and replica-set deployments.
+
+### Compatibility
+
+- Existing customer/admin passwords, `.env`, JWT/MongoDB/payment configuration, catalog, photos, orders, invoices, payment logic and stock workflows are retained.
+- Saving contact details no longer submits a possibly stale delivery address. Address-book edits do not rewrite historical order or invoice snapshots.
+- No seed or database migration is required. See `docs/ACCOUNT_RECOVERY.md` and the current verification report for setup and acceptance limits.
+
 ## [2.4.2] — 2026-10-18
 
 - Removed the opaque off-white favicon tile by reusing the existing transparent logo PNG unchanged. Pages use a different favicon asset URL so the old cached tile is replaced.
