@@ -95,6 +95,8 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **ORDER-08A** An online order shall not enter fulfillment until SSLCOMMERZ payment has been validated.
 - **ORDER-09** Cancelling an unpaid order shall restore its reserved stock once only and record the reason and time.
 - **ORDER-10** A paid order shall require a future refund workflow before cancellation; v2 shall reject direct paid-order cancellation.
+- **ORDER-11** Unpaid online/simulated reservations shall expire after the configured period; startup and periodic sweeps shall restore stock once and synchronize the existing invoice. COD, paid and review orders are excluded.
+- **ORDER-12** Expiry shall preserve order/invoice records. Legacy unpaid online orders derive their deadline from creation time; expired real orders must re-reserve available non-archived products before recovery.
 - **INV-01** Every order shall receive a unique invoice number.
 - **INV-02** The invoice shall preserve line items, delivery address, subtotal, shipping fee, total, currency and payment state.
 - **INV-03** A customer shall access only invoices belonging to that account.
@@ -110,12 +112,15 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **PAY-05** The server shall send success, failure, cancellation and IPN callback URLs when creating the hosted session.
 - **PAY-06** A successful callback/IPN shall not mark an order paid until the validation API confirms status, transaction ID, amount, currency and acceptable risk level.
 - **PAY-07** Valid online payment shall mark the payment and order paid, synchronize the invoice and move a pending order to processing.
-- **PAY-08** Failed or cancelled online checkout shall keep the order unpaid for administrator review or cancellation.
+- **PAY-08** Failed or cancelled online checkout shall keep the order unpaid, with eligible retry/resume until payment, manual cancellation or automatic reservation expiry.
 - **PAY-09** Online order totals shall be limited to the configured gateway range used by this implementation: ৳10 through ৳500,000.
 - **PAY-10** Gateway redirect URLs returned to the client shall use HTTPS and an exact `sslcommerz.com` host or subdomain.
 - **PAY-10A** Live-mode application and callback base URLs shall use HTTPS; local HTTP URLs are allowed only in sandbox mode.
 - **PAY-11** Delivering a cash-on-delivery order shall record it paid; an administrator may also explicitly confirm received cash.
 - **PAY-12** The browser result page shall derive its displayed payment outcome from the authenticated order record, not trust callback query text alone.
+
+- **PAY-13** Owner-only real payment retry shall retain the same order/invoice, original totals/address and newer cart. Previous attempts must be queried/reconciled before another session is created; pending sessions are resumed.
+- **PAY-14** Repeated retry requests and callbacks shall not duplicate stock or payments. Old failure hints cannot overwrite a newer attempt; late or multiple successful charges require review and block fulfillment.
 
 ### 4.7 Orders and reviews
 

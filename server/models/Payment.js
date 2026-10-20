@@ -7,6 +7,8 @@ const paymentSchema = new mongoose.Schema(
     gateway: { type: String, enum: ["sslcommerz", "demo"], default: "sslcommerz" },
     channel: { type: String, enum: ["", "mobile_banking", "card_bank"], default: "" },
     transactionId: { type: String, required: true, unique: true, index: true },
+    retryKey: { type: String, maxlength: 80 },
+    duplicateValidationIds: { type: [String], default: [] },
     sessionKey: { type: String, default: "" },
     checkoutUrl: { type: String, default: "" },
     validationId: { type: String, default: "" },
@@ -25,5 +27,7 @@ const paymentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+paymentSchema.index({ order: 1, retryKey: 1 }, { unique: true, partialFilterExpression: { retryKey: { $type: "string" } } });
 
 module.exports = mongoose.model("Payment", paymentSchema);

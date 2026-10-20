@@ -3,8 +3,12 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const app = require("./app");
 const connectDB = require("./config/db");
+const { reservationMinutes, sweepSeconds } = require("./config/reservations");
+const { startReservationWorker } = require("./services/reservationService");
 
 const validateEnvironment = () => {
+  reservationMinutes();
+  sweepSeconds();
   if (!process.env.JWT_SECRET || process.env.JWT_SECRET.length < 32 || process.env.JWT_SECRET.startsWith("replace_")) {
     throw new Error("JWT_SECRET must be configured with at least 32 characters");
   }
@@ -25,9 +29,14 @@ const startServer = async () => {
     console.log("Norda API running on http://localhost:" + port);
   });
 
+  const stopReservations = startReservationWorker();
+  let shuttingDown = false;
   const shutdown = (signal) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(signal + " received. Closing server...");
     server.close(async () => {
+      await stopReservations();
       await mongoose.connection.close();
       process.exit(0);
     });

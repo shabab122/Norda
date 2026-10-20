@@ -1,6 +1,6 @@
-# NORDA 2.5 testing and acceptance
+# NORDA 2.6 testing and acceptance
 
-Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Existing accounts and credentials need no migration.
+Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Existing accounts and credentials need no migration.
 
 ## Automated verification
 
@@ -12,7 +12,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The three real database test entry points are intentionally skipped without an explicit test URI:
+The four real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration

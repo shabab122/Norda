@@ -137,6 +137,21 @@ const validatePayment = async (validationId) => {
   return parseGatewayResponse(response);
 };
 
+// Official transaction/session query API. Credentials stay on the server.
+const queryPayment = async ({ transactionId, sessionKey }) => {
+  if (!isConfigured()) throw httpError(503, "SSLCOMMERZ is not configured");
+  const query = new URLSearchParams({ store_id: process.env.SSLCOMMERZ_STORE_ID, store_passwd: process.env.SSLCOMMERZ_STORE_PASSWORD, format: "json" });
+  if (sessionKey) query.set("sessionkey", sessionKey);
+  else query.set("tran_id", transactionId);
+  let data;
+  try {
+    const response = await fetchWithTimeout(getBaseUrl() + "/validator/api/merchantTransIDvalidationAPI.php?" + query, { method: "GET" });
+    data = await parseGatewayResponse(response);
+  } catch { throw httpError(502, "The previous payment could not be checked. Please try again later."); }
+  if (data.APIConnect !== "DONE") throw httpError(502, "The previous payment could not be checked. Please try again later.");
+  return data;
+};
+
 const verifyPaymentForOrder = (result, payment) => {
   const validStatus = result.status === "VALID" || result.status === "VALIDATED";
   const sameTransaction = result.tran_id === payment.transactionId;
@@ -164,5 +179,6 @@ module.exports = {
   isHttpUrl,
   isLive,
   validatePayment,
+  queryPayment,
   verifyPaymentForOrder,
 };

@@ -43,6 +43,9 @@ const orderSchema = new mongoose.Schema(
     },
     transactionId: { type: String, default: "", index: true },
     checkoutKey: { type: String, maxlength: 80 },
+    reservationExpiresAt: Date,
+    reservationExpiredAt: Date,
+    paidTransactionId: { type: String, default: "" },
     paymentReviewReason: { type: String, default: "", maxlength: 500 },
     paidAt: Date,
     stockRestored: { type: Boolean, default: false },
@@ -52,6 +55,7 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+orderSchema.index({ reservationExpiresAt: 1, status: 1, isPaid: 1 });
 orderSchema.index({ user: 1, createdAt: -1 });
 orderSchema.index({ status: 1, paymentStatus: 1, createdAt: -1 });
 orderSchema.index({ user: 1, checkoutKey: 1 }, { unique: true, partialFilterExpression: { checkoutKey: { $type: "string" } } });

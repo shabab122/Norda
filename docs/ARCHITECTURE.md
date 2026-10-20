@@ -107,3 +107,9 @@ Checkout keys are unique per customer through a partial index. Successful replay
 `review` is an explicit order/invoice payment state. A late validated payment can have `isPaid:true` (funds validated) while cancellation and restored inventory stay intact; `paymentStatus:review` prevents fulfillment and tells operators to resolve the payment. Gateway risk review has `isPaid:false`.
 
 No external gateway call runs inside a MongoDB transaction. Test model adapters live under `test-support/` and are never imported by application composition.
+
+## Version 2.6 checkout recovery
+
+Orders carry `reservationExpiresAt`, `reservationExpiredAt` and the first `paidTransactionId`. A server-owned startup/periodic worker expires eligible unpaid online orders; legacy orders derive the deadline from `createdAt`. COD, paid and review states are excluded. Records are retained; no TTL deletion is used.
+
+Expiry, retries, cancellation and callback capture share the existing distributed order lock. Retry queries all real payment attempts outside database transactions, validates successful remote rows, resumes a pending hosted session or records a new unique attempt after a confirmed terminal outcome. Expired reservations re-check/re-reserve each product inside the existing transaction/compensation unit. The order, invoice, price/address snapshots and a newer cart remain intact. Payment rows have optional per-order unique retry keys; old attempt failures cannot overwrite the current attempt. Late or multiple successful charges require sticky review. Details: [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md).

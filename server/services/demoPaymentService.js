@@ -9,6 +9,8 @@ const { syncInvoicePayment } = require("./invoiceService");
 const { insertDocument, querySession, withDatabaseUnit, writeOptions } = require("./databaseUnit");
 const { withOperationLock } = require("./operationLock");
 
+const { expireInUnit, reservationDeadline, isReservationDue } = require("./reservationService");
+
 // This local simulator never contacts SSLCOMMERZ and cannot run in production.
 const demoEnabled = () => process.env.NODE_ENV !== "production" && process.env.PAYMENT_DEMO_ENABLED !== "false";
 const requireDemo = () => { if (!demoEnabled()) throw httpError(503, "Test payments are unavailable in this environment"); };
@@ -25,6 +27,7 @@ const view = (payment, order, invoice) => ({
   channel: payment.channel, status: payment.status, orderStatus: order.status,
   amount: order.totalAmount, currency: order.currency, invoiceNumber: invoice.invoiceNumber,
   transactionId: payment.transactionId,
+  reservationExpiresAt: reservationDeadline(order), reservationExpiredAt: order.reservationExpiredAt || null, reservationDue: isReservationDue(order),
   checkoutUrl: "demo-payment.html?orderId=" + encodeURIComponent(order._id),
   resultUrl: "payment-result.html?orderId=" + encodeURIComponent(order._id),
 });
@@ -48,8 +51,9 @@ const initiateDemo = async ({ user, shippingAddress, checkoutKey, channel }) => 
     const { order, invoice } = await createOrderFromCart({ user, shippingAddress, checkoutKey, paymentMethod: "demo", paymentChannel: channel });
     try {
       return await withOperationLock("order:" + order._id, () => withDatabaseUnit(async (unit) => {
-        const current = await querySession(Order.findById(order._id), unit.session);
+        const current = await expireInUnit(await querySession(Order.findById(order._id), unit.session), unit);
         let payment = await querySession(Payment.findOne({ order: order._id, gateway: "demo" }), unit.session);
+        if (current.reservationExpiredAt) return view(payment || { channel: current.paymentChannel, status: "cancelled", transactionId: "" }, current, invoice);
         if (!payment) {
           if (current.status === "cancelled") throw httpError(409, "This order was cancelled");
           payment = await createDemoPayment(current, user, unit);
@@ -77,9 +81,11 @@ const completeDemo = async (user, id, outcome) => {
   if (!["success", "failure", "cancel"].includes(outcome)) throw httpError(400, "Choose a valid test outcome");
   // Ownership is checked before and after acquiring the distributed order lock.
   await ownedOrder(user, id);
-  return withOperationLock("order:" + id, () => withDatabaseUnit(async (unit) => {
+  const result = await withOperationLock("order:" + id, () => withDatabaseUnit(async (unit) => {
     const { session, compensate } = unit;
     let order = await ownedOrder(user, id, session);
+    order = await expireInUnit(order, unit);
+    if (order.reservationExpiredAt) return { reservationExpired: true };
     let payment = await querySession(Payment.findOne({ order: order._id, gateway: "demo", user: user._id }), session);
     const invoice = await querySession(Invoice.findOne({ order: order._id }), session);
     if (!invoice) throw httpError(409, "Payment records need store review");
@@ -120,6 +126,8 @@ const completeDemo = async (user, id, outcome) => {
     if (!synced) throw httpError(409, "Payment invoice needs store review");
     return { ...view(updated, order, synced), replayed: false };
   }));
+  if (result.reservationExpired) throw httpError(409, "This payment reservation expired and its stock was released. Please check My Orders.");
+  return result;
 };
 
 module.exports = { demoEnabled, initiateDemo, getDemo, completeDemo };

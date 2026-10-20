@@ -2,9 +2,9 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.4.2 to 2.5.0
+## Update from 2.2–2.5.0 to 2.6.0
 
-Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway credentials exactly as they are. This update requires no database migration or reseeding.
+Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
 From the updated project root:
 
@@ -23,6 +23,10 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Checkout recovery
+
+The server starts the reservation worker automatically. Unpaid online/simulated reservations default to 30 minutes and are swept every 30 seconds. On startup, older overdue unpaid orders can release their held stock. COD, paid and review orders are excluded. My Orders offers eligible real SSLCOMMERZ orders **Retry or resume online payment** using the same order/invoice. No new environment setting is required; optional overrides and a one-shot sweep command are in [docs/CHECKOUT_RECOVERY.md](docs/CHECKOUT_RECOVERY.md).
 
 ## Account email and address book
 
@@ -85,13 +89,12 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c fix/norda-logo-transparency
+git switch -c feat/checkout-recovery
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 git rm --ignore-unmatch server/.envy
 cd server
 npm ci
-npm run setup
-npm run seed:catalog
+npm run acceptance:preflight
 npm run verify
 npm run dev
 ```
@@ -106,8 +109,8 @@ After review:
 cd /path/to/your/existing/Norda-repository
 git status
 git add .
-git commit -m "fix: remove logo and favicon backgrounds"
-git push -u origin fix/norda-logo-transparency
+git commit -m "feat: add payment reservation expiry and same-order checkout recovery"
+git push -u origin feat/checkout-recovery
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

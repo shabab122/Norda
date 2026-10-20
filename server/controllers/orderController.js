@@ -1,3 +1,4 @@
+const { orderView } = require("../services/orderView");
 const { pagination } = require("../utils/validation");
 const Order = require("../models/Order");
 const { syncInvoicePayment } = require("../services/invoiceService");
@@ -31,7 +32,7 @@ const createOrder = async (req, res, next) => {
 const getMyOrders = async (req, res, next) => {
   try {
     const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.json(orders);
+    res.json(orders.map(orderView));
   } catch (error) {
     next(error);
   }
@@ -46,7 +47,7 @@ const getOrder = async (req, res, next) => {
     if (!isOwner && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to view this order" });
     }
-    res.json(order);
+    res.json(orderView(order));
   } catch (error) {
     next(error);
   }
@@ -66,7 +67,7 @@ const getAllOrders = async (req, res, next) => {
         .limit(limit),
       Order.countDocuments(filter),
     ]);
-    res.json({ orders, total, page, pages: Math.ceil(total / limit) || 1 });
+    res.json({ orders: orders.map(orderView), total, page, pages: Math.ceil(total / limit) || 1 });
   } catch (error) {
     next(error);
   }

@@ -2,6 +2,14 @@
 
 All notable project changes are recorded here.
 
+## [2.6.0] — 2026-10-21
+
+- Added 30-minute unpaid online/simulation reservations, startup catch-up and a periodic stock-release worker, with optional timing overrides and a one-shot expiry command.
+- Added owner-only SSLCOMMERZ retry on the existing order/invoice. Reconcile prior transaction/session history and validate missed successes before resuming a pending session or opening a new unique transaction. Expired orders re-reserve available stock; manual cancellations remain final.
+- Added request replay and concurrent retry protection, late-payment/duplicate-charge review, current-attempt failure guards and expiry-aware customer/admin messages. Original price/address snapshots and newer carts are preserved.
+- Added recovery fault-injection, HTTP, frontend and gateway-query tests; native MongoDB acceptance covers both standalone compensation and replica-set transactions.
+- Retained the input `.env` byte-for-byte, all dependency versions, account recovery/address-book behavior, catalog, AI photos and branding. Keep later laptop SMTP edits when applying the update. No reseed/migration is required.
+
 ## [2.5.0] — 2026-10-20
 
 ### Added

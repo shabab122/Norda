@@ -10,6 +10,8 @@ const { createInvoiceForOrder, syncInvoicePayment } = require("./invoiceService"
 const { insertDocument, querySession, withDatabaseUnit, writeOptions } = require("./databaseUnit");
 const { withOperationLock } = require("./operationLock");
 
+const { nextReservationDeadline } = require("../config/reservations");
+
 const REQUIRED_ADDRESS_FIELDS = ["line1", "city", "district", "postCode", "phone"];
 const normalizeShippingAddress = (value = {}) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw httpError(400, "Please provide a delivery address");
@@ -85,7 +87,8 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     }
     const order = await insertDocument(Order, {
       user: user._id, items, shippingAddress: address, ...totals, currency: store.currency,
-      paymentMethod, paymentChannel, paymentStatus: "pending", ...(key ? { checkoutKey: key } : {}),
+      paymentMethod, paymentChannel, paymentStatus: "pending",
+      ...(paymentMethod !== "cod" ? { reservationExpiresAt: nextReservationDeadline() } : {}), ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
     const invoice = await createInvoiceForOrder(order, session);
@@ -107,7 +110,7 @@ const ORDER_TRANSITIONS = {
 };
 const canTransitionOrder = (from, to) => from === to || Boolean(ORDER_TRANSITIONS[from]?.includes(to));
 
-const cancelInUnit = async (order, reason, unit) => {
+const cancelInUnit = async (order, reason, unit, options = {}) => {
   const { session, compensate } = unit;
   if (order.status === "cancelled" && order.stockRestored) {
     await syncInvoicePayment(order, session);
@@ -122,10 +125,11 @@ const cancelInUnit = async (order, reason, unit) => {
   const previous = {
     status: order.status, paymentStatus: order.paymentStatus, stockRestored: order.stockRestored || false,
     cancelledAt: order.cancelledAt || null, cancelReason: order.cancelReason || "",
+    ...(options.expiredAt ? { reservationExpiredAt: order.reservationExpiredAt || null } : {}),
   };
   const updated = await Order.findOneAndUpdate(
     { _id: order._id, isPaid: false, status: order.status, stockRestored: { $ne: true } },
-    { $set: { stockRestored: true, status: "cancelled", paymentStatus: "cancelled", cancelledAt: new Date(), cancelReason: cleanText(reason, 300) || "Cancelled by administrator" } },
+    { $set: { stockRestored: true, status: "cancelled", paymentStatus: "cancelled", cancelledAt: new Date(), cancelReason: cleanText(reason, 300) || "Cancelled by administrator", ...(options.expiredAt ? { reservationExpiredAt: options.expiredAt } : {}) } },
     writeOptions(session, { new: true })
   );
   if (!updated) throw httpError(409, "Order changed while cancelling. Please refresh it.");

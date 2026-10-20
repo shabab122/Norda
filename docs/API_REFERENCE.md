@@ -1,4 +1,4 @@
-# Norda 2.5 — API Reference
+# Norda 2.6 — API Reference
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
@@ -179,12 +179,15 @@ Status update examples:
 |---|---|---|---|
 | GET | `/payments/config` | Public | Gateway availability/environment |
 | POST | `/payments/sslcommerz/initiate` | Customer | Create online order/invoice/payment session |
+| POST | `/payments/sslcommerz/:orderId/retry` | Order owner | Reconcile prior attempts and retry/resume the existing order |
 | POST | `/payments/sslcommerz/success` | Gateway | Validate and redirect to result page |
 | POST | `/payments/sslcommerz/fail` | Gateway | Record failure and redirect |
 | POST | `/payments/sslcommerz/cancel` | Gateway | Record cancellation and redirect |
 | POST | `/payments/sslcommerz/ipn` | Gateway | Server-to-server result notification |
 
 Initiation accepts `{ "shippingAddress": { … } }` using the same address shape as COD. On success it returns `orderId`, `invoiceNumber` and an allowlisted HTTPS `checkoutUrl`.
+
+Retry requires `{ "retryKey": "a-unique-request-key" }` (12–80 alphanumeric, underscore or hyphen characters). It preserves the order/invoice and cart, checks stock again after expiry, resumes pending sessions, and blocks manual cancellations/review. It may return `alreadyPaid:true` or `review:true` after validation. See [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md) for response/error semantics and reservation policy. Order reads add `paymentRecovery` with the deadline, expired marker and current retry eligibility. `GET /payments/config` adds `reservationMinutes`.
 
 ## Invoices and reviews
 
