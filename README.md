@@ -2,9 +2,12 @@
 
 A full-stack e-commerce application for Bangladesh, built with HTML, CSS, browser JavaScript, Node.js, Express and MongoDB. Customers browse the catalog, keep a stock-aware cart, check out using cash on delivery, a local demo simulator or configured SSLCOMMERZ, follow orders, print invoices and review delivered purchases. Administrators manage the catalog, media, orders, invoices and reports.
 
-**Current version: 2.5.0 — account recovery, email verification and delivery address book.**
+**Current version: 2.6.0 — checkout recovery, reservation expiry and same-order online payment retry.**
 
 ## What's improved
+
+- Unpaid online/simulated reservations expire after 30 minutes by default; a startup/periodic worker releases stock once and synchronizes the existing invoice. COD, paid and review orders are excluded.
+- Real SSLCOMMERZ retry from My Orders keeps the same order/invoice, original totals/address and a newer cart. Previous attempts are reconciled with the gateway; pending sessions resume, expired orders re-check stock, and late/duplicate charges require review. See [checkout recovery](docs/CHECKOUT_RECOVERY.md).
 
 - Forgot/reset password with expiring one-use links, hashed token storage, request limits and old-session revocation.
 - Email verification on registration, resend from Profile, visible verification status and explicit confirmation. Existing accounts keep their current login and shopping access.
@@ -78,7 +81,7 @@ NORDA defaults to port **5000**. Ports **3000** and **3002** are rejected at sta
 
 **Existing installations:** retain your current `.env`, `MONGO_URI` and `server/uploads` when applying the update. After `npm ci`, run **`npm run seed:catalog`** from `server/` to add the new catalog to your existing database. This command does not change the admin account, existing prices, purchased stock, custom photos or orders. It replaces only missing/known starter illustration images. The new-install template uses `norda_db`; your existing URI is preserved.
 
-**Updating from 2.2–2.4.2:** no database migration or reseed is required. Keep your working `.env`, including your `27018` MongoDB port if that is how Docker exposes your database. Run `npm ci`, `npm run acceptance:preflight`, `npm run verify` and `npm run dev`. The update never runs setup/seed automatically.
+**Updating from 2.2–2.5.0:** no database migration or reseed is required. Keep your working `.env`, including your `27018` MongoDB port if that is how Docker exposes your database. Run `npm ci`, `npm run acceptance:preflight`, `npm run verify` and `npm run dev`. The update never runs setup/seed automatically. Keep the working SMTP settings you configured on your laptop; the ZIP cannot include changes made only to that local `.env`. Older overdue unpaid online orders become eligible for stock release when the server starts.
 
 The catalog is demonstration data: brands, prices and quantities are illustrative, and photos are AI-generated. One organizer is intentionally sold out; several products have low stock so you can check these states. See [catalog and shopping guide](docs/CATALOG_GUIDE.md) before replacing the samples with saleable inventory.
 
@@ -103,7 +106,7 @@ See [the demo payment guide](docs/DEMO_PAYMENTS.md) for the new local simulator 
 
 For the requested demo, keep your existing `.env` and run the development server. With `NODE_ENV=development` (or unset), checkout shows **Mobile Banking/bKash** and **Card/Bank**. They open `demo-payment.html`; choose a simulated outcome, then inspect My Orders and its invoice. No real financial information is collected. Both demo and COD use the existing cart and server-calculated totals.
 
-Demo is enabled by default outside production, unless `PAYMENT_DEMO_ENABLED=false`. It is always disabled when `NODE_ENV=production`, even if that flag is true. Keep a demo store separate from real inventory: successful simulations reserve/decrement actual catalog stock in the configured development database. Failure/cancellation restores it; abandoned sessions can be resumed/cancelled from My Orders or by an administrator. Automatic reservation expiry remains future work.
+Demo is enabled by default outside production, unless `PAYMENT_DEMO_ENABLED=false`. It is always disabled when `NODE_ENV=production`, even if that flag is true. Keep a demo store separate from real inventory: successful simulations reserve/decrement actual catalog stock in the configured development database. Failure/cancellation restores it; abandoned sessions can be resumed/cancelled from My Orders or by an administrator. Unpaid reservations now expire automatically; My Orders shows their deadline and released-stock state.
 
 The **separate real SSLCOMMERZ integration** still requires merchant configuration. Its option is shown only when its existing configuration checks pass. A local demo does not validate SSLCOMMERZ or bKash connectivity. To enable the provider checkout, configure these in the server's private environment:
 
@@ -117,7 +120,7 @@ CLIENT_APP_URL=https://your-storefront.example
 
 The gateway must reach the callback/IPN URLs. Success notifications are checked through the gateway validation API. A validated payment arriving after order cancellation remains a **payment review**; it does not reopen fulfillment or reserve inventory again. Review transactions need operational resolution before fulfillment/refund changes.
 
-Failed/abandoned hosted payments remain visible for administrator review and eligible cancellation. Retrying a real provider payment on an existing order, automatic reservation expiry and gateway refunds remain future development items. Demo sessions can already be resumed from My Orders.
+Failed/abandoned hosted payments remain visible in My Orders. Eligible real gateway orders support **Retry or resume online payment** on the same order and invoice; automatically expired orders must re-reserve available stock. Unpaid reservations expire after 30 minutes by default and are swept every 30 seconds while the server is running. Manual cancellation stays final. Gateway refunds and review resolution remain future development. See [the recovery policy and API](docs/CHECKOUT_RECOVERY.md).
 
 ## Verification
 
@@ -151,6 +154,7 @@ server/uploads/         Local runtime uploads, excluded from source distribution
 
 ## Documentation
 
+- [Checkout recovery, reservation expiry and online payment retry](docs/CHECKOUT_RECOVERY.md)
 - [Account recovery, email and multiple addresses](docs/ACCOUNT_RECOVERY.md)
 - [Run and update commands](RUN_COMMANDS.md)
 - [Update report and verification boundaries](docs/UPDATE_REPORT.md)

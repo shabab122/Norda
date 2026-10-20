@@ -7,6 +7,10 @@ const { syncInvoicePayment } = require("../services/invoiceService");
 const { querySession, withDatabaseUnit, writeOptions } = require("../services/databaseUnit");
 const { withOperationLock } = require("../services/operationLock");
 const gateway = require("../services/sslcommerzService");
+const { markPaymentUnsuccessful, orderFields, validateAndCapture } = require("../services/paymentStateService");
+const { expireInUnit } = require("../services/reservationService");
+const { retryPayment } = require("../services/paymentRetryService");
+const { reservationMinutes } = require("../config/reservations");
 const { demoEnabled } = require("../services/demoPaymentService");
 
 const createTransactionId = () => "NOR" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(8).toString("hex").toUpperCase();
@@ -17,7 +21,7 @@ const resultUrl = (status, orderId) => {
   if (orderId) url.searchParams.set("orderId", orderId.toString());
   return url.toString();
 };
-const getPaymentConfig = (req, res) => res.json({ sslcommerzEnabled: gateway.isConfigured(), environment: gateway.isLive() ? "live" : "sandbox", demoEnabled: demoEnabled(), demoChannels: ["mobile_banking", "card_bank"] });
+const getPaymentConfig = (req, res) => res.json({ sslcommerzEnabled: gateway.isConfigured(), environment: gateway.isLive() ? "live" : "sandbox", demoEnabled: demoEnabled(), demoChannels: ["mobile_banking", "card_bank"], reservationMinutes: reservationMinutes() });
 
 const initiateSslcommerz = async (req, res, next) => {
   if (!gateway.isConfigured()) return res.status(503).json({ message: "Online payment is currently unavailable. Please choose cash on delivery." });
@@ -31,22 +35,26 @@ const initiateSslcommerz = async (req, res, next) => {
         user: req.user, shippingAddress: req.body.shippingAddress,
         paymentMethod: "sslcommerz", checkoutKey: req.body.checkoutKey,
       }));
-      if (order.paymentStatus === "review" || order.status === "cancelled") throw httpError(409, "This order needs store review; a new payment cannot be started.");
-      if (order.isPaid) return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, alreadyPaid: true };
-      payment = await Payment.findOne({ order: order._id }).sort({ createdAt: -1 });
-      if (payment?.checkoutUrl && payment.status === "initiated") {
-        return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, checkoutUrl: gateway.ensureGatewayUrl(payment.checkoutUrl) };
-      }
-      if (payment) throw httpError(409, "A payment attempt is already recorded. Check your order before trying again.");
-      const transactionId = createTransactionId();
-      initializationStarted = true;
-      payment = await Payment.create({ order: order._id, user: req.user._id, transactionId, amount: order.totalAmount, currency: order.currency });
-      await Order.updateOne({ _id: order._id }, { $set: { transactionId } });
-      const session = await gateway.createPaymentSession({ order, invoice, user: req.user, transactionId });
-      // A callback may already have advanced this record. Session metadata must
-      // never overwrite its financial state with a stale document save.
-      await Payment.updateOne({ _id: payment._id }, { $set: { sessionKey: session.sessionKey, checkoutUrl: session.checkoutUrl } });
-      return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, checkoutUrl: session.checkoutUrl };
+      return withOperationLock("order:" + order._id, async () => {
+        order = await withDatabaseUnit(async (unit) => expireInUnit(await querySession(Order.findById(order._id), unit.session), unit));
+        if (order.paymentStatus === "review") throw httpError(409, "This order needs store review; a new payment cannot be started.");
+        if (order.status === "cancelled") throw httpError(409, "This order was cancelled or its reservation expired. Open My Orders to check available recovery options.");
+        if (order.isPaid) return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, alreadyPaid: true };
+        payment = await Payment.findOne({ order: order._id }).sort({ createdAt: -1 });
+        if (payment?.checkoutUrl && payment.status === "initiated") {
+          return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, checkoutUrl: gateway.ensureGatewayUrl(payment.checkoutUrl) };
+        }
+        if (payment) throw httpError(409, "A payment attempt is already recorded. Check your order before trying again.");
+        const transactionId = createTransactionId();
+        initializationStarted = true;
+        payment = await Payment.create({ order: order._id, user: req.user._id, transactionId, amount: order.totalAmount, currency: order.currency });
+        await Order.updateOne({ _id: order._id }, { $set: { transactionId } });
+        const session = await gateway.createPaymentSession({ order, invoice, user: req.user, transactionId });
+        // A callback may already have advanced this record. Session metadata must
+        // never overwrite its financial state with a stale document save.
+        await Payment.updateOne({ _id: payment._id }, { $set: { sessionKey: session.sessionKey, checkoutUrl: session.checkoutUrl } });
+        return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, checkoutUrl: session.checkoutUrl };
+      });
     });
     res.status(201).json(result);
   } catch (error) {
@@ -72,95 +80,9 @@ const initiateSslcommerz = async (req, res, next) => {
   }
 };
 
-const paymentFields = (payment) => ({
-  status: payment.status, failureReason: payment.failureReason || "", validationId: payment.validationId || "",
-  bankTransactionId: payment.bankTransactionId || "", cardType: payment.cardType || "", riskLevel: payment.riskLevel || 0, paidAt: payment.paidAt || null,
-});
-const orderFields = (order) => ({
-  status: order.status, isPaid: order.isPaid, paymentStatus: order.paymentStatus,
-  paymentReviewReason: order.paymentReviewReason || "", paidAt: order.paidAt || null,
-});
-
-const markPaymentUnsuccessful = async (transactionId, outcome, reason) => {
-  if (typeof transactionId !== "string" || transactionId.length > 100) return null;
-  const reference = await Payment.findOne({ transactionId });
-  if (!reference || reference.gateway === "demo") return null;
-  return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async (unit) => {
-    const { session, compensate } = unit;
-    const payment = await querySession(Payment.findOne({ transactionId }), session);
-    const order = payment && await querySession(Order.findById(payment.order), session);
-    // Failure/cancellation notifications are hints. They cannot undo validated
-    // payment, dismiss a review, cancel fulfillment, or release stock.
-    if (!payment || ["paid", "review"].includes(payment.status) || order?.isPaid || order?.paymentStatus === "review") return payment;
-    const previousPayment = paymentFields(payment);
-    const updatedPayment = await Payment.findOneAndUpdate({ _id: payment._id, status: { $nin: ["paid", "review"] } },
-      { $set: { status: outcome, failureReason: String(reason || outcome).slice(0, 500) } }, writeOptions(session, { new: true }));
-    if (!updatedPayment) return payment;
-    compensate(() => Payment.updateOne({ _id: payment._id }, { $set: previousPayment }));
-    if (order && order.status !== "cancelled") {
-      const previousOrder = orderFields(order);
-      const updatedOrder = await Order.findOneAndUpdate({ _id: order._id, isPaid: false },
-        { $set: { paymentStatus: outcome === "cancelled" ? "cancelled" : "failed" } }, writeOptions(session, { new: true }));
-      if (updatedOrder) {
-        compensate(async () => {
-          await Order.updateOne({ _id: order._id }, { $set: previousOrder });
-          await syncInvoicePayment({ ...order.toObject(), ...previousOrder });
-        });
-        await syncInvoicePayment(updatedOrder, session);
-      }
-    }
-    return updatedPayment;
-  }));
-};
-
-const validateAndCapture = async (transactionId, validationId) => {
-  if (typeof transactionId !== "string" || transactionId.length > 100 || typeof validationId !== "string" || validationId.length > 100) {
-    return { ok: false, reason: "Invalid payment notification" };
-  }
-  const reference = await Payment.findOne({ transactionId });
-  if (!reference || reference.gateway === "demo") return { ok: false, reason: "Payment record not found" };
-  const gatewayResult = await gateway.validatePayment(validationId);
-  return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async (unit) => {
-    const { session, compensate } = unit;
-    const payment = await querySession(Payment.findOne({ transactionId }), session);
-    const order = payment && await querySession(Order.findById(payment.order), session);
-    if (!payment || !order) return { ok: false, reason: "Order or payment record not found" };
-    const verification = gateway.verifyPaymentForOrder(gatewayResult, payment);
-    // Mismatched callbacks cannot corrupt an otherwise valid payment attempt.
-    if (!verification.sameTransaction || !verification.sameAmount || !verification.sameCurrency || !verification.validStatus) {
-      return { ok: false, order, reason: "Payment details did not match the saved order" };
-    }
-    if (payment.status === "paid" && order.isPaid) {
-      await syncInvoicePayment(order, session);
-      return { ok: true, review: order.paymentStatus === "review", order };
-    }
-    const late = order.status === "cancelled" || order.stockRestored;
-    const review = late || !verification.valid;
-    const reviewReason = late
-      ? "A validated payment arrived after cancellation. Store review is required; inventory remains restored."
-      : review ? "The gateway marked this transaction for risk review." : "";
-    const paidAt = verification.valid ? payment.paidAt || new Date() : null;
-    const previousPayment = paymentFields(payment);
-    const updatedPayment = await Payment.findOneAndUpdate({ _id: payment._id }, { $set: {
-      status: verification.valid ? "paid" : "review", validationId: String(gatewayResult.val_id || validationId).slice(0, 100),
-      bankTransactionId: String(gatewayResult.bank_tran_id || "").slice(0, 100), cardType: String(gatewayResult.card_type || "").slice(0, 100),
-      riskLevel: verification.riskLevel, failureReason: reviewReason, paidAt,
-    } }, writeOptions(session, { new: true }));
-    if (!updatedPayment) throw httpError(409, "Payment record changed");
-    compensate(() => Payment.updateOne({ _id: payment._id }, { $set: previousPayment }));
-    const previousOrder = orderFields(order);
-    const updatedOrder = await Order.findOneAndUpdate({ _id: order._id }, { $set: {
-      isPaid: verification.valid, paymentStatus: review ? "review" : "paid", paymentReviewReason: reviewReason,
-      paidAt, status: !review && order.status === "pending" ? "processing" : order.status,
-    } }, writeOptions(session, { new: true }));
-    if (!updatedOrder) throw httpError(409, "Order record changed");
-    compensate(async () => {
-      await Order.updateOne({ _id: order._id }, { $set: previousOrder });
-      await syncInvoicePayment({ ...order.toObject(), ...previousOrder });
-    });
-    await syncInvoicePayment(updatedOrder, session);
-    return { ok: true, review, order: updatedOrder };
-  }));
+const retrySslcommerz = async (req, res, next) => {
+  try { res.json(await retryPayment({ user: req.user, orderId: req.params.orderId, retryKey: req.body.retryKey })); }
+  catch (error) { next(error); }
 };
 
 const sslcommerzSuccess = async (req, res) => {
@@ -194,4 +116,4 @@ const sslcommerzIpn = async (req, res) => {
   }
 };
 
-module.exports = { getPaymentConfig, initiateSslcommerz, markPaymentUnsuccessful, sslcommerzCancel, sslcommerzFail, sslcommerzIpn, sslcommerzSuccess, validateAndCapture };
+module.exports = { getPaymentConfig, initiateSslcommerz, retrySslcommerz, markPaymentUnsuccessful, sslcommerzCancel, sslcommerzFail, sslcommerzIpn, sslcommerzSuccess, validateAndCapture };

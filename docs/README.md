@@ -7,7 +7,7 @@
 - `ASSET_NOTES.md` — source and prompts for storefront/catalog visuals
 - `reference/` — original supplied flow sketches
 
-- `UPDATE_REPORT.md` — 2.3 changes, data compatibility and verification boundaries
+- `UPDATE_REPORT.md` — 2.6 changes, data compatibility and verification boundaries
 - `ACCEPTANCE_CHECKLIST.md` — recorded automated evidence and pending laptop/public-gateway acceptance
 - `CATALOG_GUIDE.md` — import, product list, login/cart checks and admin product entry
 - `DEPENDENCY_AUDIT.json` — release audit with zero reported vulnerabilities
@@ -16,3 +16,5 @@
 - `VERIFICATION_RESULTS.md` — exact checked results and unverified environment boundaries
 
 - [Account recovery, email verification and address book](ACCOUNT_RECOVERY.md) — 2.5 setup, API examples and acceptance.
+
+- [Checkout recovery](CHECKOUT_RECOVERY.md) — reservation policy, automatic release, real payment retry, upgrade commands and acceptance.

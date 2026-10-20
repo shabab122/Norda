@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const order = await Api.get("/orders/" + encodeURIComponent(orderId));
       isDemo = order.paymentMethod === "demo";
-      verifiedStatus = order.paymentStatus === "paid" ? "success" : order.paymentStatus;
+      verifiedStatus = order.paymentStatus === "paid" ? "success" : order.paymentStatus === "review" ? "review" : order.reservationExpiredAt ? "expired" : order.paymentStatus;
       orderSummary = `
         <div class="result-order">
           <span>Order</span><strong>#${order._id.slice(-8).toUpperCase()}</strong>
@@ -34,16 +34,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       copy: "We validated the transaction and your order is now being processed.",
       className: "success",
     },
+    expired: {
+      kicker: "Reservation expired", title: "Your reserved items were released.",
+      copy: "Open My Orders to retry online payment on this order. We will check stock again before payment. Simulated payments require a new order.", className: "warning",
+    },
     cancelled: {
       kicker: "Checkout cancelled",
       title: "Checkout was not completed.",
-      copy: "Check the saved order for the latest payment status. The store can review this attempt before cancelling the order.",
+      copy: "Open My Orders to retry or resume online payment on the saved order. Unpaid reservations expire automatically.",
       className: "cancelled",
     },
     failed: {
       kicker: "Payment incomplete",
       title: "We could not confirm payment.",
-      copy: "No successful payment was recorded. The unpaid order remains visible for review.",
+      copy: "No successful payment was recorded. Open My Orders to retry online payment using the same order and invoice.",
       className: "failed",
     },
     review: {

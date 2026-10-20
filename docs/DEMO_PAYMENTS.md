@@ -29,7 +29,7 @@ Open http://localhost:5000. Add products, sign in and checkout. Select either de
 
 All simulated orders/invoices include a compact no-charge note in customer and admin views, including printed invoices and order CSVs. Simulated payments are excluded from the administrator's revenue total. The simulator uses the configured development database's inventory; use a separate development database for demonstrations alongside a real store.
 
-Leaving the page does not cancel a reservation automatically. My Orders offers **Resume or cancel payment** until completion/cancellation. An administrator can also cancel an unpaid demo. Automatic reservation expiry is future work. If initiation was interrupted after creating an order, the customer can resume from My Orders; a new cart is not consumed.
+Leaving the page keeps the reservation only until its deadline (30 minutes by default). My Orders offers **Resume or cancel payment** before completion/cancellation/expiry. An administrator can cancel an unpaid demo; the automatic worker also releases overdue stock once. An expired simulation requires a new order. See [checkout recovery](CHECKOUT_RECOVERY.md). If initiation was interrupted after creating an order, the customer can resume from My Orders; a new cart is not consumed.
 
 ## API boundaries
 

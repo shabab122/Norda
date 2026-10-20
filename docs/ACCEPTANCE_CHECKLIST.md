@@ -1,4 +1,4 @@
-# NORDA 2.4.1 acceptance checklist
+# NORDA 2.6.0 acceptance checklist
 
 ## Recorded status
 
@@ -9,6 +9,7 @@
 | Different customer identities and private data | Frontend VM + real HTTP ownership checks pass | Verify two browser profiles show the right name/email/data |
 | Desktop/mobile layout, keyboard and print | Responsive/print rules and static/VM checks are present | Actual browser/device acceptance pending |
 | Gateway success/failure/cancel/IPN state handling | Controlled provider responses + real MongoDB pass | Public SSLCOMMERZ sandbox acceptance pending |
+| Reservation expiry and same-order retry | Automated HTTP, race/fault-injection and both native MongoDB topology checks pass | Follow [checkout recovery acceptance](CHECKOUT_RECOVERY.md#update-and-acceptance), including public sandbox retry |
 | Configuration and credentials | Read-only preflight; no credential/seed changes; additive demo fields need no migration | Retain your working `.env` and uploads |
 
 ## Before starting

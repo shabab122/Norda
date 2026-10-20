@@ -27,7 +27,8 @@ async function loadDemoPayment() {
 
 function demoPaymentHtml(session) {
   const mobile = session.channel === "mobile_banking";
-  const terminal = session.status !== "initiated" || session.orderStatus === "cancelled";
+  const expired = Boolean(session.reservationExpiredAt || session.reservationDue);
+  const terminal = expired || session.status !== "initiated" || session.orderStatus === "cancelled";
   return `
     <section class="demo-gateway" aria-labelledby="demo-title">
       <div class="demo-gateway-head">${brandLogoHtml()}<span class="payment-session-tag">Payment session</span></div>
@@ -43,14 +44,14 @@ function demoPaymentHtml(session) {
           </div>
           <div id="demo-payment-alert" role="status" aria-live="polite"></div>
           ${terminal ? `
-            <div class="alert alert-info"><strong>Payment ${escapeHtml(session.orderStatus === "cancelled" && session.status === "initiated" ? "cancelled" : session.status)}</strong><p>This session has finished. Open your order to view its recorded status.</p></div>
+            <div class="alert alert-info"><strong>Payment ${escapeHtml(expired ? "reservation expired" : session.orderStatus === "cancelled" && session.status === "initiated" ? "cancelled" : session.status)}</strong><p>This session has finished. Open your order to view its recorded status.</p></div>
             <a class="btn btn-primary btn-block" href="payment-result.html?orderId=${encodeURIComponent(session.orderId)}">View payment result</a>` : `
             <div class="demo-outcomes" role="group" aria-label="Test payment actions">
               <button class="btn btn-primary btn-block" type="button" data-demo-outcome="success">Complete test payment</button>
               <button class="btn btn-outline btn-block" type="button" data-demo-outcome="failure">Test a failed payment</button>
               <button class="button-link demo-cancel" type="button" data-demo-outcome="cancel">Cancel payment</button>
             </div>
-            <p class="summary-note">You can also return to My Orders and resume this payment later.</p>`}
+            <p class="summary-note">You can return to My Orders and resume this payment before the reservation expires.</p>`}
         </div>
         <aside class="demo-order" aria-label="Order summary">
           <span class="eyebrow">Your order</span><h2>${money(session.amount)}</h2>
@@ -58,6 +59,7 @@ function demoPaymentHtml(session) {
           <div><dt>Invoice</dt><dd>${escapeHtml(session.invoiceNumber)}</dd></div>
           <div><dt>Currency</dt><dd>${escapeHtml(session.currency)}</dd></div>
           <div><dt>Method</dt><dd>${mobile ? "Mobile Banking / bKash" : "Card / Bank"}</dd></div></dl>
+          ${session.reservationExpiresAt ? `<p>Reservation ends ${escapeHtml(formatDate(session.reservationExpiresAt, true))}.</p>` : ""}
           <p>Your order total includes delivery. A failed or cancelled payment returns the reserved items to stock.</p>
           <a class="text-link" href="orders.html">← My orders</a>
         </aside>

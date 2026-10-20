@@ -1,5 +1,12 @@
 # Future NORDA development
 
+## Completed in 2.6.0
+
+- Unpaid online/simulated reservation expiry, startup catch-up and automatic stock release with one existing invoice.
+- Same-order real SSLCOMMERZ retry, gateway-history reconciliation and pending-session resume. Expired orders re-reserve stock; snapshot prices, addresses and newer carts are retained.
+- Late/duplicate payment review, old-attempt callback protection, customer/admin recovery messages and tests on both MongoDB topologies.
+- See [checkout recovery policy, setup and acceptance](CHECKOUT_RECOVERY.md). Public merchant sandbox checks and refunds/review resolution remain separate work.
+
 ## Completed in 2.5.0
 
 - Forgot/reset password with one-use expiring email links, hashed tokens, request limits and session invalidation.
@@ -17,7 +24,7 @@
 - Separate local mobile/bKash and card/bank demo flows, with all three outcomes, ownership/replay guards and stock/invoice synchronization.
 - Clear DEMO order/invoice/admin labels and exclusion from real revenue; no merchant credentials are needed for the simulator.
 - Distinct homepage featured/new selections and inspection of all 24 product photos.
-- Real SSLCOMMERZ acceptance remains separate from these local simulations. Demo reservation expiry is still pending; sessions can be resumed/cancelled now.
+- Real SSLCOMMERZ acceptance remains separate from these local simulations. Demo reservation expiry is included in 2.6.0; active sessions can be resumed/cancelled.
 
 ## Completed in 2.3.0
 
@@ -40,8 +47,6 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 ## Phase 1 — account and checkout recovery
 
 - Optional recipient names and additional address formats
-- Payment retry on an existing eligible order
-- Reservation expiry and safe automatic stock release
 - Stronger session/device management and ongoing dependency auditing
 
 ## Phase 2 — order operations
