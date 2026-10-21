@@ -2,6 +2,14 @@
 
 All notable project changes are recorded here.
 
+## [2.8.0] — 2026-10-21
+
+- Added courier/tracking metadata, administrator shipment updates, append-only history and an owner-protected customer tracking page. Normal fulfillment, payment and cancellation/refund guards still apply; old basic status controls retain compatibility.
+- Added a durable transactional order-email outbox for confirmations, payment changes, shipping, delivery, cancellation and shipment progress. Staged activation, atomic claims, exponential retry, stable Message-ID, worker recovery and admin retry keep SMTP outside commerce transactions. Account mail previews remain separate from new `mail:orders` previews.
+- Added up to 50 size/color options per product with global SKU uniqueness, per-option price/discount/photos/availability and independent stock. Selection survives guest sign-in; cart lines, checkout, expiry/retry, payment review, cancellation and return receipt retain exact option identity. Invoices preserve option snapshots.
+- Added SKU stock/edit races, rollback, privacy, shipment replay, notification worker and frontend/upload-retry regressions. Native HTTP journeys pass on standalone and replica-set MongoDB; isolated SMTP and actual server/worker startup/shutdown checks pass.
+- Retained input credentials, dependency versions, existing catalog/photos/branding and prior account/payment/refund features. No reseed/manual migration is required. Courier updates are store-entered; actual carrier API automation is separate future work.
+
 ## [2.7.0] — 2026-10-21
 
 - Added the administrator Requests & payments workspace with transaction history, fresh gateway verification, risky-payment acknowledgement, retained-charge selection, explicit approval/refunded closure and private audit notes.

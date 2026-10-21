@@ -1,6 +1,5 @@
 const Order = require("../models/Order");
 const Payment = require("../models/Payment");
-const Product = require("../models/Product");
 const Refund = require("../models/Refund");
 const httpError = require("../utils/httpError");
 const { withOperationLock } = require("./operationLock");
@@ -61,11 +60,7 @@ const reviewOrder = async ({ orderId, user, body }) => {
     if (charges.some((source) => source !== selected && returned(source, true) < moneyCents(source.amount))) throw httpError(409, "Refund the additional validated charges before approving the retained payment");
     return withDatabaseUnit(async (unit) => {
       order = await querySession(Order.findById(orderId), unit.session);
-      if (order.stockRestored) for (const item of order.items) {
-        const reserved = await Product.findOneAndUpdate({ _id: item.product, isArchived: { $ne: true }, stock: { $gte: item.quantity } }, { $inc: { stock: -item.quantity } }, writeOptions(unit.session, { new: true }));
-        if (!reserved) throw httpError(409, "Not enough stock to reopen fulfillment for " + item.name);
-        unit.compensate(() => Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } }));
-      }
+      if (order.stockRestored) for (const item of order.items) await require("./inventoryService").reserveItem(item, unit);
       await patch(Payment, selected.payment, { status: "paid", paidAt: selected.payment.paidAt || new Date() }, unit);
       const updated = await patchOrder(order, { isPaid: true, paymentStatus: "paid", paidAt: order.paidAt || new Date(), paidTransactionId: selected.payment.transactionId,
         status: "processing", stockRestored: false, reservationExpiredAt: null, cancelledAt: null, cancelReason: "",

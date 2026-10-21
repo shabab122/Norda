@@ -101,6 +101,7 @@ const completeDemo = async (user, id, outcome) => {
       return { ...view(payment, order, invoice), replayed: true };
     }
     if (order.status === "cancelled" || order.stockRestored || order.isPaid) throw httpError(409, "This order has already changed. Check My Orders.");
+    const notificationPrevious = order.toObject();
     if (outcome === "success") {
       const previous = { isPaid: order.isPaid, paymentStatus: order.paymentStatus, status: order.status, paidAt: order.paidAt || null };
       const original = order.toObject();
@@ -124,7 +125,7 @@ const completeDemo = async (user, id, outcome) => {
     } }, writeOptions(session, { new: true }));
     if (!updated) throw httpError(409, "Payment session changed");
     compensate(() => Payment.updateOne({ _id: payment._id }, { $set: { status: payment.status, paidAt: payment.paidAt || null, failureReason: payment.failureReason || "", cardType: payment.cardType || "" } }));
-    const synced = await syncInvoicePayment(order, session);
+    const synced = await syncInvoicePayment(order, session, unit, notificationPrevious);
     if (!synced) throw httpError(409, "Payment invoice needs store review");
     return { ...view(updated, order, synced), replayed: false };
   }));

@@ -22,7 +22,7 @@ async function loadCart() {
     }
     const subtotal = items.filter((item) => !item.unavailable).reduce((sum, item) => sum + item.price * item.quantity, 0);
     const shipping = subtotal >= store.freeShippingThreshold ? 0 : store.flatShippingFee;
-    const blocked = items.some((item) => item.unavailable || item.quantity > item.product.stock);
+    const blocked = items.some((item) => item.unavailable || item.quantity > (item.stock ?? item.product.stock));
     root.innerHTML = notice + `<div class="cart-layout"><div class="cart-items">
       <div class="cart-list-heading"><h2>Your selection · ${items.length} item${items.length === 1 ? "" : "s"}</h2><button class="text-button danger-text" type="button" id="clear-cart">Clear cart</button></div>
       ${items.map(cartRow).join("")}</div><aside class="summary-card" aria-label="Order summary">
@@ -36,12 +36,12 @@ async function loadCart() {
   } catch (error) { if (sequence !== cartLoadSequence) return; root.innerHTML = `<div class="empty-state"><h2>Cart unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="cart.html">Try again</a></div>`; }
 }
 function cartRow(item) {
-  if (item.unavailable || !item.product) return `<article class="cart-unavailable" data-item-id="${escapeHtml(item._id)}"><h3>${escapeHtml(item.product?.name || "Unavailable product")}</h3><p>This item is no longer available. Remove it to continue checkout.</p><button class="remove-link" type="button">Remove item</button></article>`;
-  const product = item.product;
-  const image = resolveImage(product.images?.[0] || "/assets/products/collection.svg");
+  if (item.unavailable || !item.product) return `<article class="cart-unavailable" data-item-id="${escapeHtml(item._id)}"><h3>${escapeHtml(item.product?.name || "Unavailable product")}</h3><p>${escapeHtml(item.unavailableReason || "This item is no longer available. Remove it to continue checkout.")}</p><button class="remove-link" type="button">Remove item</button></article>`;
+  const product = { ...item.product, stock: item.stock ?? item.product.stock };
+  const image = resolveImage(item.image || product.images?.[0] || "/assets/products/collection.svg");
   return `<article class="cart-row" data-item-id="${escapeHtml(item._id)}" data-stock="${product.stock}">
     <a class="cart-thumb" href="product-detail.html?id=${encodeURIComponent(product._id)}"><img src="${escapeHtml(image)}" alt="${escapeHtml(product.name)}" /></a>
-    <div class="cart-product"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">${escapeHtml(product.name)}</a><span>${money(item.price)} each</span>${item.quantity > product.stock ? `<span class="danger-text">Only ${product.stock} available now</span>` : ""}<button class="remove-link" type="button">Remove</button></div>
+    <div class="cart-product"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">${escapeHtml(product.name)}</a>${item.variantId ? `<span>${escapeHtml(variantLabel(item))}</span>` : ""}<span>${money(item.price)} each</span>${item.quantity > product.stock ? `<span class="danger-text">Only ${product.stock} available now</span>` : ""}<button class="remove-link" type="button">Remove</button></div>
     <div class="cart-qty"><button class="btn-icon qty-decrease" type="button" aria-label="Decrease quantity" ${item.quantity <= 1 || product.stock === 0 ? "disabled" : ""}>−</button><label class="sr-only" for="qty-${item._id}">Quantity</label><input id="qty-${item._id}" class="qty-value" type="number" min="1" max="${Math.max(product.stock, 1)}" step="1" value="${item.quantity}" ${product.stock === 0 ? "disabled" : ""} /><button class="btn-icon qty-increase" type="button" aria-label="Increase quantity" ${item.quantity >= product.stock ? "disabled" : ""}>+</button></div><strong class="cart-line-total">${money(item.price * item.quantity)}</strong></article>`;
 }
 function bindCart() {

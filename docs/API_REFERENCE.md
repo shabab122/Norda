@@ -1,4 +1,4 @@
-# Norda 2.7 — API Reference
+# Norda 2.8 — API Reference
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
@@ -108,6 +108,12 @@ Product write body:
 }
 ```
 
+## Product variants
+
+Product create/update accepts `variants` with stable `_id` on existing rows, globally unique `sku`, `size`, `color`, `price`, `discountPrice`, `stock`, `images`, `isActive` and `expectedStock` for inventory edits. Up to 50 options; retire existing rows rather than deleting them. An ordered simple product cannot be converted in place.
+
+Public product reads include active options and `hasVariants`; combined public stock sums active options. Base prices are derived from the cheapest active option for filters/sorting. SKU is included in keyword search. Cart POST accepts optional `variantId` and requires it for variant products; reads include selected stock/price/photo/labels. Order/invoice items snapshot option identity and SKU. See [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md) for full rules and examples.
+
 ## Uploads
 
 | Method | Path | Access | Purpose |
@@ -193,6 +199,19 @@ All operations paths, bodies, statuses and replay rules are documented in [ORDER
 Request creation accepts `{ "type": "cancellation", "reason": "Please cancel before shipment", "requestKey": "a-unique-request-key" }`. Use `type:"return"` for a paid delivered order. Request/refund keys are 12–80 alphanumeric, underscore or hyphen characters. Changing an intent under the same key is rejected.
 
 Order/invoice reads add separate request/return/refund state and amounts; original invoice totals and fulfillment/payment enums remain compatible. Pending cancellation or refund operations block fulfillment/payment retry. Refund initiation is not completion: only verified provider `refunded`, acknowledged cash repayment or explicit local simulation completes the ledger. Customer projections exclude internal audit notes, bank/provider references and payment session secrets.
+
+## Delivery tracking and email administration
+
+| Method | Path | Access | Purpose |
+|---|---|---|---|
+| GET | `/orders/:id/tracking` | Owner/Admin | Courier metadata and paginated public shipment history |
+| POST | `/orders/:id/shipment` | Admin | Save courier details or append guarded shipment progress |
+| GET | `/admin/notifications` | Admin | Email delivery queue/status, filters and redacted errors |
+| POST | `/admin/notifications/:id/retry` | Admin | Retry an exhausted failed email without repeating commerce writes |
+
+Shipment body includes `event`, `requestKey`, optional `courierName`, `trackingNumber`, HTTPS `trackingUrl`, `location` and public `note`. Normal order/payment guards still control shipping/delivery; COD confirmation synchronizes the existing invoice. Request-key replay prevents duplicate events; backwards/closed updates are rejected.
+
+Email list filters: `status`, `orderId`, `page`, `limit`. Responses never expose SMTP credentials, message bodies/source state or claim tokens. Sent denotes SMTP acceptance; file-mode records are private previews. See [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md) for limits, event names, retries and example bodies.
 
 ## Payments
 

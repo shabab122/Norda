@@ -59,7 +59,7 @@ function renderOrder(order) {
                   </a>
                   <div>
                     <a href="product-detail.html?id=${encodeURIComponent(item.product)}"><strong>${escapeHtml(item.name)}</strong></a>
-                    <small>Quantity ${item.quantity} · ${money(item.price)} each</small>
+                    ${item.variantId ? `<small>${escapeHtml(variantLabel(item))}</small>` : ""}<small>Quantity ${item.quantity} · ${money(item.price)} each</small>
                     ${order.status === "delivered" ? `<a class="text-link" href="product-detail.html?id=${encodeURIComponent(item.product)}#write-review">Write a review</a>` : ""}
                   </div>
                   <strong>${money(item.price * item.quantity)}</strong>
@@ -80,6 +80,7 @@ function renderOrder(order) {
           ${order.cancellationStatus && order.cancellationStatus !== "none" ? `<p class="payment-context">Cancellation: ${escapeHtml(order.cancellationStatus)}</p>` : ""}
           ${order.returnStatus && order.returnStatus !== "none" ? `<p class="payment-context">Return: ${escapeHtml(order.returnStatus)}</p>` : ""}
           ${order.refundStatus && order.refundStatus !== "none" ? `<p class="payment-context"><strong>Refund: ${escapeHtml(order.refundStatus.replace(/_/g, " "))}</strong> · ${money(order.refundedAmount || 0)} completed</p>` : ""}
+          <a class="btn btn-outline btn-sm btn-block" href="order-tracking.html?orderId=${encodeURIComponent(order._id)}">Track delivery</a>
           <a class="btn btn-outline btn-sm btn-block" href="order-support.html?orderId=${encodeURIComponent(order._id)}">Cancellation, returns & refunds</a>
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>

@@ -1,3 +1,4 @@
+const { parseVariants, variantSummary, publicProduct } = require("../services/variantService");
 const mongoose = require("mongoose");
 const httpError = require("../utils/httpError");
 const { withOperationLock } = require("../services/operationLock");
@@ -88,6 +89,8 @@ const uniqueSlug = async (name, excludedId = null) => {
 const createProduct = async (req, res, next) => {
   try {
     const payload = await parseProductPayload(req.body);
+    const variants = await parseVariants(req.body.variants);
+    if (variants?.length) Object.assign(payload, variantSummary(variants), { variants });
     payload.slug = await uniqueSlug(payload.name);
     const product = await Product.create(payload);
     res.status(201).json(product);
@@ -115,7 +118,7 @@ const listProducts = async (req, res, next, management = false) => {
     }
     if (keyword) {
       const safeKeyword = escapeRegExp(cleanText(keyword, 80));
-      filter.$or = ["name", "description", "brand"].map((key) => ({ [key]: { $regex: safeKeyword, $options: "i" } }));
+      filter.$or = ["name", "description", "brand", "variants.sku"].map((key) => ({ [key]: { $regex: safeKeyword, $options: "i" } }));
     }
     const priceMatch = {};
     if (minPrice !== undefined && minPrice !== "") {
@@ -142,7 +145,7 @@ const listProducts = async (req, res, next, management = false) => {
       { path: "category", select: "name slug" }, { path: "brandRef", select: "name slug logo" },
     ]);
     const total = result.total[0]?.count || 0;
-    res.json({ products, total, page, pages: Math.ceil(total / limit) || 1 });
+    res.json({ products: management ? products : products.map(publicProduct), total, page, pages: Math.ceil(total / limit) || 1 });
   } catch (error) { next(error); }
 };
 const getProducts = (req, res, next) => listProducts(req, res, next);
@@ -154,8 +157,7 @@ const getProduct = async (req, res, next) => {
       .populate("category", "name slug")
       .populate("brandRef", "name slug logo");
     if (!product) return res.status(404).json({ message: "Product not found" });
-    const result = product.toObject();
-    if (result.isArchived) result.stock = 0;
+    const result = publicProduct(product);
     res.json(result);
   } catch (error) {
     next(error);
@@ -176,6 +178,8 @@ const updateProduct = async (req, res, next) => {
       const product = await Product.findById(req.params.id);
       if (!product) throw httpError(404, "Product not found");
       const payload = await parseProductPayload(req.body, product);
+      const variants = await parseVariants(req.body.variants, product);
+      if (product.variants?.length && ["stock", "price", "discountPrice"].some((field) => req.body[field] !== undefined) && variants === null) throw httpError(400, "Update price and stock on the individual variants");
       if (req.body.name !== undefined) payload.slug = await uniqueSlug(payload.name, product._id);
       // Only set fields intentionally edited by the form. In particular, an
       // unrelated product edit must not overwrite a concurrent stock change.
@@ -185,9 +189,11 @@ const updateProduct = async (req, res, next) => {
       }
       if (req.body.brandRef !== undefined || req.body.brand !== undefined) { fields.brandRef = payload.brandRef; fields.brand = payload.brand; }
       if (payload.slug) fields.slug = payload.slug;
+      if (variants !== null) { fields.variants = variants; if (variants.length) Object.assign(fields, variantSummary(variants)); }
       const filter = { _id: product._id };
+      if (variants !== null) filter.$or = [{ inventoryVersion: product.inventoryVersion || 0 }, ...(product.inventoryVersion ? [] : [{ inventoryVersion: { $exists: false } }])];
       if (fields.stock !== undefined && req.body.expectedStock !== undefined) filter.stock = Number(req.body.expectedStock);
-      const saved = await Product.findOneAndUpdate(filter, { $set: fields }, { new: true, runValidators: true });
+      const saved = await Product.findOneAndUpdate(filter, { $set: fields, $inc: { inventoryVersion: 1 } }, { new: true, runValidators: true });
       if (!saved) throw httpError(409, "Stock changed while you were editing. Reopen the product before updating inventory.");
       return saved;
     });

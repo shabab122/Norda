@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const orderItemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    variantId: mongoose.Schema.Types.ObjectId, sku: { type: String, default: "" },
+    size: { type: String, default: "" }, color: { type: String, default: "" },
     name: { type: String, required: true },
     quantity: { type: Number, required: true },
     price: { type: Number, required: true },
@@ -23,6 +25,11 @@ const orderSchema = new mongoose.Schema(
       postCode: String,
       country: { type: String, default: "Bangladesh" },
       phone: String,
+    },
+    shipment: {
+      courierName: { type: String, default: "", maxlength: 80 }, trackingNumber: { type: String, default: "", maxlength: 100 },
+      trackingUrl: { type: String, default: "", maxlength: 500 }, state: { type: String, default: "", enum: ["", "shipped", "in_transit", "out_for_delivery", "delivery_attempted", "delivered"] },
+      shippedAt: Date, deliveredAt: Date, lastUpdatedAt: Date,
     },
     subtotal: { type: Number, required: true, min: 0, default: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },

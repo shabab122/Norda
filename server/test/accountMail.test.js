@@ -72,6 +72,8 @@ test("SMTP configuration verifies and delivers an actual message to an isolated 
     assert.equal(await mail.checkMailConfiguration(), "smtp");
     assert.equal((await mail.sendAccountMail({ to: "buyer@norda.example", subject: "Norda verification test", text: "Confirm your account using the one-use link." })).delivery, "smtp");
     assert.equal(received.length, 1); assert.match(received[0], /To: buyer@norda.example/); assert.match(received[0], /Subject: Norda verification test/);
+    await mail.sendAccountMail({ to: "buyer@norda.example", subject: "Norda order confirmation", text: "Order confirmed. SKU NOR-FOREST-M, quantity 2.", kind: "order_confirmation", messageId: "<norda-order-integration@norda.example>" });
+    assert.equal(received.length, 2); assert.match(received[1], /Message-ID: <norda-order-integration@norda.example>/i); assert.match(received[1], /NOR-FOREST-M/);
     process.env.NODE_ENV = "production";
     assert.equal(mail.mailConfiguration().options.requireTLS, true);
     await assert.rejects(mail.checkMailConfiguration());

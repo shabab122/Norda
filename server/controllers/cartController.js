@@ -1,17 +1,17 @@
+const { selection } = require("../services/inventoryService");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
-const { effectivePrice, isPositiveInteger } = require("../utils/validation");
+const { isPositiveInteger } = require("../utils/validation");
 const { withOperationLock } = require("../services/operationLock");
 
-const cartProductFields = "name images price discountPrice stock isArchived";
+const cartProductFields = "name images price discountPrice stock isArchived variants";
 const serializeCart = (cart, userId) => {
   if (!cart) return { user: userId, items: [] };
   const value = cart.toObject();
-  value.items = value.items.map((item) => ({
-    ...item,
-    unavailable: !item.product || Boolean(item.product.isArchived),
-    price: item.product ? effectivePrice(item.product) : item.price,
-  }));
+  value.items = value.items.map((item) => {
+    try { const selected = selection(item.product, item.variantId); return { ...item, ...selected, unavailable: false }; }
+    catch (error) { return { ...item, unavailable: true, unavailableReason: error.message }; }
+  });
   return value;
 };
 const getCart = async (req, res, next) => {
@@ -37,13 +37,14 @@ const addToCart = async (req, res, next) => {
       if (!product || product.isArchived) {
         const error = new Error("This product is no longer available"); error.statusCode = 404; throw error;
       }
-      const existing = cart.items.find((item) => item.product.toString() === product._id.toString());
+      const selected = selection(product, req.body.variantId);
+      const existing = cart.items.find((item) => item.product.toString() === product._id.toString() && String(item.variantId || "") === String(selected.variantId || ""));
       const requested = quantity + (existing?.quantity || 0);
-      if (!isPositiveInteger(requested) || requested > product.stock) {
+      if (!isPositiveInteger(requested) || requested > selected.stock) {
         const error = new Error("Not enough stock available"); error.statusCode = 409; throw error;
       }
-      if (existing) { existing.quantity = requested; existing.price = effectivePrice(product); }
-      else cart.items.push({ product: product._id, quantity, price: effectivePrice(product) });
+      if (existing) { existing.quantity = requested; existing.price = selected.price; }
+      else cart.items.push({ product: product._id, quantity, ...selected });
     });
     res.status(201).json(cart);
   } catch (error) { next(error); }
@@ -56,10 +57,11 @@ const updateCartItem = async (req, res, next) => {
       const item = cart.items.id(req.params.itemId);
       if (!item) { const error = new Error("Cart item not found"); error.statusCode = 404; throw error; }
       const product = await Product.findById(item.product);
-      if (!product || product.isArchived || quantity > product.stock) {
+      const selected = selection(product, item.variantId);
+      if (quantity > selected.stock) {
         const error = new Error("This quantity is unavailable. Please review your cart."); error.statusCode = 409; throw error;
       }
-      item.quantity = quantity; item.price = effectivePrice(product);
+      item.quantity = quantity; item.price = selected.price;
     }));
   } catch (error) { next(error); }
 };

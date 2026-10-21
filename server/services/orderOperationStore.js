@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
-const Product = require("../models/Product");
 const OrderEvent = require("../models/OrderEvent");
 const httpError = require("../utils/httpError");
 const { querySession, insertDocument, writeOptions } = require("./databaseUnit");
@@ -27,7 +26,7 @@ const patch = async (Model, document, fields, unit) => {
 const patchOrder = async (order, fields, unit) => {
   const updated = await patch(Order, order, fields, unit);
   unit.compensate(() => syncInvoicePayment(order));
-  const invoice = await syncInvoicePayment(updated, unit.session);
+  const invoice = await syncInvoicePayment(updated, unit.session, unit, order);
   if (!invoice) throw httpError(409, "The invoice needs store review before this operation");
   return updated;
 };
@@ -43,11 +42,7 @@ const ownedOrder = async (id, user, session) => {
   return order;
 };
 const restoreStock = async (order, unit) => {
-  for (const item of order.items) {
-    const result = await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } }, writeOptions(unit.session));
-    if (!result.matchedCount) throw httpError(409, "A historical product is missing. Inventory needs store review.");
-    unit.compensate(() => Product.updateOne({ _id: item.product }, { $inc: { stock: -item.quantity } }));
-  }
+  for (const item of order.items) await require("./inventoryService").restoreItem(item, unit);
 };
 const cancelForOperations = async (order, reason, unit) => {
   if (!["pending", "processing", "cancelled"].includes(order.status)) throw httpError(409, "A shipped or delivered order cannot be cancelled");

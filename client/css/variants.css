@@ -1,0 +1,15 @@
+.variant-selection { padding: 18px 0; }
+.variant-selection label { display: block; font-weight: 600; margin-bottom: 9px; }
+.variant-selection select { width: 100%; max-width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font: inherit; background: #fff; }
+.variant-selection .field-help { margin-top: 9px; }
+.variant-choose { font-weight: 600; color: var(--brand); }
+#product-form > .variant-editor-wrap { grid-column: 1 / -1; min-width: 0; margin: 12px 0 20px; }
+.variant-editor-card { padding: 16px; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; background: #f8faf5; }
+.variant-card-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.variant-card-heading small { color: var(--ink-soft); }
+.variant-fields { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+.variant-editor-card label { display: block; font-size: .8rem; margin: 9px 0; }
+.variant-editor-card input:not([type=checkbox]), .variant-editor-card textarea { width: 100%; min-width: 0; padding: 10px; border: 1px solid var(--border); border-radius: 6px; font: inherit; background: white; }
+.variant-editor-card .check-field { display: flex; gap: 9px; }
+@media(max-width:600px) { .variant-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:380px) { .variant-fields { grid-template-columns: 1fr; } }

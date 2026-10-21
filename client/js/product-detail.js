@@ -1,4 +1,5 @@
 let activeProductId = "";
+let productCartBusy = false;
 
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
@@ -26,6 +27,7 @@ async function loadProduct() {
 }
 
 function renderProduct(product) {
+  const hasVariants = Boolean(product.hasVariants || product.variants?.length);
   const discounted =
     product.discountPrice > 0 && Number(product.discountPrice) < Number(product.price);
   const price = discounted ? product.discountPrice : product.price;
@@ -51,7 +53,7 @@ function renderProduct(product) {
       <div class="pd-media">
         <div class="pd-gallery">${mainVisual}</div>
         ${
-          images.length > 1
+          images.length > 1 || hasVariants
             ? `<div class="pd-thumbnails">${images
                 .map(
                   (image, index) =>
@@ -68,19 +70,20 @@ function renderProduct(product) {
           <span>${product.ratingCount ? "★ " + Number(product.ratingAverage).toFixed(1) : "No ratings yet"}</span>
           ${product.ratingCount ? `<a href="#reviews">${product.ratingCount} verified review${product.ratingCount === 1 ? "" : "s"}</a>` : ""}
         </div>
-        <div class="pd-price">
-          <span class="price-now">${money(price)}</span>
+        <div class="pd-price" id="pd-price">
+          <span class="price-now">${hasVariants ? "From " : ""}${money(price)}</span>
           ${discounted ? `<span class="price-old">${money(product.price)}</span><span class="sale-copy">Save ${money(product.price - product.discountPrice)}</span>` : ""}
         </div>
         <p class="pd-description">${escapeHtml(product.description || "More information will be added soon.")}</p>
         <div class="pd-meta-grid">
           <div><span>Brand</span><strong>${escapeHtml(brand)}</strong></div>
-          <div><span>Availability</span><strong class="${product.stock === 0 ? "danger-text" : ""}">${stockText}</strong></div>
+          <div><span>Availability</span><strong id="pd-stock" class="${product.stock === 0 ? "danger-text" : ""}">${hasVariants ? "Choose an option" : stockText}</strong></div>
         </div>
+        ${hasVariants ? `<div class="variant-selection"><label for="pd-variant">Size / color</label><select id="pd-variant"><option value="">Choose your option…</option>${(product.variants || []).map((v) => `<option value="${escapeHtml(v._id)}" ${v.stock <= 0 ? "disabled" : ""}>${escapeHtml([v.size, v.color].filter(Boolean).join(" / "))} — ${money(v.discountPrice > 0 ? v.discountPrice : v.price)}${v.stock <= 0 ? " · Sold out" : ""}</option>`).join("")}</select><p id="pd-variant-info" class="field-help">Choose a size/color to see its price, photos and available stock.</p></div>` : ""}
         <div class="pd-actions">
           <label for="qty-input">Quantity</label>
           <input type="number" id="qty-input" class="qty-input" value="1" min="1" max="${Math.max(product.stock, 1)}" ${product.stock === 0 ? "disabled" : ""} />
-          <button id="add-to-cart-btn" class="btn btn-primary" ${product.stock === 0 ? "disabled" : ""}>
+          <button id="add-to-cart-btn" class="btn btn-primary" ${product.stock === 0 || hasVariants ? "disabled" : ""}>
             ${product.stock === 0 ? "Unavailable" : "Add to cart"}
           </button>
         </div>
@@ -144,6 +147,7 @@ function renderProduct(product) {
   `;
 
   bindProductInteractions(product);
+  bindVariantSelection(product);
 }
 
 function bindProductInteractions(product) {
@@ -172,17 +176,19 @@ function bindProductInteractions(product) {
 
   document.getElementById("add-to-cart-btn")?.addEventListener("click", async () => {
     const button = document.getElementById("add-to-cart-btn");
-    if (button.disabled) return;
-    button.disabled = true;
+    if (button.disabled || productCartBusy) return;
+    productCartBusy = true; button.disabled = true;
+    const account = Api.getUser()?._id;
     const alert = document.getElementById("pd-alert");
     const quantity = Number(document.getElementById("qty-input").value);
     try {
-      if (!await addProductToCart(product._id, quantity)) return;
+      if (!await addProductToCart(product._id, quantity, document.getElementById("pd-variant")?.value || undefined)) return;
+      if (account !== Api.getUser()?._id) return;
       alert.innerHTML = `<div class="alert alert-success">Added to cart. <a href="cart.html">View cart</a></div>`;
       refreshCartBadge();
     } catch (error) {
-      alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
-    } finally { button.disabled = product.stock === 0; }
+      if (account === Api.getUser()?._id) alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
+    } finally { productCartBusy = false; const choice = document.getElementById("pd-variant"); button.disabled = choice ? !choice.value : product.stock === 0; }
   });
 
   document.getElementById("review-form")?.addEventListener("submit", async (event) => {
@@ -238,4 +244,32 @@ async function loadReviews(productId) {
   } catch {
     list.innerHTML = `<p>Reviews could not be loaded.</p>`;
   }
+}
+
+function bindVariantSelection(product) {
+  const select = document.getElementById("pd-variant"); if (!select) return;
+  const update = () => {
+    const variant = product.variants.find((v) => String(v._id) === select.value), button = document.getElementById("add-to-cart-btn"), quantity = document.getElementById("qty-input");
+    button.disabled = productCartBusy || !variant || variant.stock < 1;
+    quantity.disabled = !variant || variant.stock < 1;
+    quantity.max = String(Math.max(variant?.stock || 0, 1)); quantity.value = "1";
+    if (!variant) {
+      document.getElementById("pd-stock").textContent = "Choose an option";
+      document.getElementById("pd-variant-info").textContent = "Choose a size/color to see its price, photos and available stock.";
+      document.getElementById("pd-price").innerHTML = `<span class="price-now">From ${money(product.discountPrice > 0 ? product.discountPrice : product.price)}</span>`;
+      return;
+    }
+    const discounted = variant.discountPrice > 0 && variant.discountPrice < variant.price;
+    document.getElementById("pd-price").innerHTML = `<span class="price-now">${money(discounted ? variant.discountPrice : variant.price)}</span>${discounted ? `<span class="price-old">${money(variant.price)}</span>` : ""}`;
+    document.getElementById("pd-stock").textContent = variant.stock <= 5 ? "Only " + variant.stock + " left" : variant.stock + " available";
+    document.getElementById("pd-variant-info").textContent = variantLabel(variant);
+    const images = (variant.images?.length ? variant.images : product.images || []).map(resolveImage).filter(Boolean);
+    if (images.length) document.getElementById("main-product-image").src = images[0];
+    const thumbnails = document.querySelector(".pd-thumbnails");
+    if (thumbnails) { thumbnails.innerHTML = images.map((url) => `<button type="button" data-image="${escapeHtml(url)}"><img src="${escapeHtml(url)}" alt="" /></button>`).join(""); thumbnails.querySelectorAll("button").forEach((button) => button.addEventListener("click", () => { document.getElementById("main-product-image").src = button.dataset.image; })); }
+  };
+  select.addEventListener("change", update);
+  const selected = new URLSearchParams(window.location.search).get("variantId");
+  if (product.variants.some((v) => v._id === selected && v.stock > 0)) select.value = selected;
+  update();
 }

@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 const app = require("./app");
+const { startNotificationWorker } = require("./services/notificationService");
 const { startRefundWorker } = require("./services/refundService");
 const connectDB = require("./config/db");
 const { reservationMinutes, sweepSeconds } = require("./config/reservations");
@@ -24,6 +25,7 @@ const validateEnvironment = () => {
 const startServer = async () => {
   validateEnvironment();
   await connectDB();
+  await Promise.all([require("./models/Product").init(), require("./models/ShipmentEvent").init(), require("./models/OrderNotification").init()]);
   const port = Number(process.env.PORT) || 5000;
   if ([3000, 3002].includes(port)) throw new Error("Ports 3000 and 3002 are reserved for GitStack/Gitea. Use PORT=5000 for Norda.");
   const server = app.listen(port, () => {
@@ -32,13 +34,14 @@ const startServer = async () => {
 
   const stopReservations = startReservationWorker();
   const stopRefunds = startRefundWorker();
+  const stopNotifications = startNotificationWorker();
   let shuttingDown = false;
   const shutdown = (signal) => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(signal + " received. Closing server...");
     server.close(async () => {
-      await Promise.all([stopReservations(), stopRefunds()]);
+      await Promise.all([stopReservations(), stopRefunds(), stopNotifications()]);
       await mongoose.connection.close();
       process.exit(0);
     });

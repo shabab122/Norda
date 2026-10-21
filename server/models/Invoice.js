@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const invoiceItemSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
+    variantId: mongoose.Schema.Types.ObjectId, sku: { type: String, default: "" },
+    size: { type: String, default: "" }, color: { type: String, default: "" },
     name: { type: String, required: true },
     quantity: { type: Number, required: true, min: 1 },
     unitPrice: { type: Number, required: true, min: 0 },

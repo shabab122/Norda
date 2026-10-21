@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const Order = require("../models/Order");
 const Payment = require("../models/Payment");
 const Invoice = require("../models/Invoice");
-const Product = require("../models/Product");
 const httpError = require("../utils/httpError");
 const gateway = require("./sslcommerzService");
 const { nextReservationDeadline } = require("../config/reservations");
@@ -58,12 +57,7 @@ const reconcileAttempts = async (order, attempts) => {
 const prepareReservation = async (order, unit, transactionId, renew) => {
   if (order.stockRestored) {
     if (!order.reservationExpiredAt) throw httpError(409, "This cancelled order cannot be reopened");
-    for (const item of order.items) {
-      const product = await Product.findOneAndUpdate({ _id: item.product, isArchived: { $ne: true }, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }, writeOptions(unit.session, { new: true }));
-      if (!product) throw httpError(409, "Not enough stock to retry payment for " + item.name + ". Your order and cart have been kept.");
-      unit.compensate(() => Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } }));
-    }
+    for (const item of order.items) await require("./inventoryService").reserveItem(item, unit);
   }
   const previous = {
     stockRestored: order.stockRestored || false, status: order.status, paymentStatus: order.paymentStatus,
@@ -76,7 +70,7 @@ const prepareReservation = async (order, unit, transactionId, renew) => {
   } }, writeOptions(unit.session, { new: true }));
   if (!updated) throw httpError(409, "The order changed before payment retry");
   unit.compensate(async () => { await Order.updateOne({ _id: order._id }, { $set: previous }); await syncInvoicePayment({ ...order.toObject(), ...previous }); });
-  await syncInvoicePayment(updated, unit.session);
+  await syncInvoicePayment(updated, unit.session, unit, previous);
   return updated;
 };
 const retryPayment = async ({ user, orderId, retryKey }) => {

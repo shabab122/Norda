@@ -19,13 +19,16 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
     return Object.entries(expected).every(([operator, argument]) => {
       const left = argument instanceof Date ? new Date(value).getTime() : value;
       const right = argument instanceof Date ? argument.getTime() : argument;
-      if (operator === "$ne") return !equal(value, argument);
-      if (operator === "$in") return argument.some((item) => equal(value, item));
+      if (operator === "$ne") return !(Array.isArray(value) ? value.some((v) => equal(v, argument)) : equal(value, argument));
+      if (operator === "$in") return argument.some((item) => Array.isArray(value) ? value.some((v) => equal(v, item)) : equal(value, item));
       if (operator === "$nin") return !argument.some((item) => equal(value, item));
       if (operator === "$gte") return left >= right;
       if (operator === "$lte") return left <= right;
       if (operator === "$gt") return left > right;
       if (operator === "$lt") return left < right;
+      if (operator === "$size") return Array.isArray(value) && value.length === argument;
+      if (operator === "$elemMatch") return Array.isArray(value) && value.some((v) => matches(v, argument));
+      if (operator === "$type") return typeof value === argument;
       if (operator === "$exists") return (value !== undefined) === argument;
       if (operator === "$regex") return new RegExp(argument, expected.$options || "").test(value || "");
       if (operator === "$options") return true;
@@ -34,15 +37,18 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
   }
   return Array.isArray(value) ? value.some((item) => equal(item, expected)) : equal(value, expected);
 });
-const apply = (row, update, inserted = false) => {
+const apply = (row, update, inserted = false, filter = {}) => {
   if (inserted && update.$setOnInsert) Object.assign(row, clone(update.$setOnInsert));
   if (update.$set) Object.assign(row, clone(update.$set));
-  for (const [key, value] of Object.entries(update.$inc || {})) row[key] = (row[key] || 0) + value;
+  for (const [key, value] of Object.entries(update.$inc || {})) {
+    if (key === "variants.$.stock") { const variant = row.variants.find((v) => matches(v, filter.variants.$elemMatch)); variant.stock += value; }
+    else row[key] = (row[key] || 0) + value;
+  }
   for (const key of Object.keys(update.$unset || {})) delete row[key];
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -113,12 +119,12 @@ const installMemoryStore = () => {
       checkFailure(name, "findOneAndUpdate");
       let row = [...records[name].values()].find((item) => matches(item, filter));
       if (!row && options.upsert) { row = clone(filter); apply(row, update, true); return models[name].create(row); }
-      if (!row) return null; apply(row, update); return document(name, row);
+      if (!row) return null; apply(row, update, false, filter); return document(name, row);
     });
     patch(name, "findByIdAndUpdate", (id, update, options) => models[name].findOneAndUpdate({ _id: id }, update, options));
     patch(name, "updateOne", async (filter, update) => {
       checkFailure(name, "updateOne"); const row = [...records[name].values()].find((item) => matches(item, filter));
-      if (!row) return { matchedCount: 0 }; apply(row, update); return { matchedCount: 1, modifiedCount: 1 };
+      if (!row) return { matchedCount: 0 }; apply(row, update, false, filter); return { matchedCount: 1, modifiedCount: 1 };
     });
     patch(name, "deleteOne", async (filter) => { checkFailure(name, "deleteOne"); const row = [...records[name].values()].find((item) => matches(item, filter)); if (row) records[name].delete(String(row._id)); return { deletedCount: row ? 1 : 0 }; });
   }

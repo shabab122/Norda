@@ -16,11 +16,11 @@ async function loadCheckout() {
       getStoreConfig(),
     ]);
     const items = cart.items || [];
-    if (items.some((item) => item.unavailable || !item.product || item.quantity > item.product.stock)) {
+    if (items.some((item) => item.unavailable || !item.product || item.quantity > (item.stock ?? item.product.stock))) {
       root.innerHTML = `<div class="empty-state"><h2>Your cart needs a quick review</h2><p>An item or quantity is no longer available. Your selection has been kept.</p><a class="btn btn-primary" href="cart.html">Review cart</a></div>`;
       return;
     }
-    checkoutSignature = JSON.stringify(items.map((item) => [item.product._id, item.quantity, item.price]));
+    checkoutSignature = JSON.stringify(items.map((item) => [item.product._id, item.variantId || "", item.quantity, item.price]));
     if (!items.length) {
       root.innerHTML = `<div class="empty-state spacious"><h2>Your cart is empty</h2><p>Add at least one product before checkout.</p><a class="btn btn-primary" href="products.html">Browse products</a></div>`;
       return;
@@ -103,7 +103,7 @@ async function loadCheckout() {
           <div class="checkout-items">
             ${items
               .map(
-                (item) => `<div><span>${escapeHtml(item.product.name)} <small>× ${item.quantity}</small></span><strong>${money(item.price * item.quantity)}</strong></div>`
+                (item) => `<div><span>${escapeHtml(item.product.name)}${item.variantId ? ` <small>${escapeHtml(variantLabel(item))}</small>` : ""} <small>× ${item.quantity}</small></span><strong>${money(item.price * item.quantity)}</strong></div>`
               )
               .join("")}
           </div>

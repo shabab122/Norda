@@ -1,4 +1,4 @@
-> Current version: 2.7.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+> Current version: 2.8.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
 
 # Norda — Project Requirements
 
@@ -7,7 +7,7 @@
 | Field | Value |
 |---|---|
 | Product | Norda e-commerce website |
-| Version | 2.7.0 |
+| Version | 2.8.0 |
 | Delivery branch | `feature/v2-complete-commerce-flow` |
 | Baseline commit | `8d913fa` — Basic foundation of Frontend & Backend |
 | Intended market | Bangladesh |
@@ -155,6 +155,19 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **REPORT-02** CSV export shall support order-state, payment-state and inclusive date-range filters.
 - **REPORT-03** CSV values shall be quoted, escape embedded quotes and neutralize spreadsheet-formula prefixes.
 
+### 4.10 Courier, transactional email and product variants (2.8)
+
+- **SHIP-01** Administrators shall record courier name, tracking number, optional HTTPS link and public shipment events under existing fulfillment/payment guards.
+- **SHIP-02** Shipment history shall retain server timestamps and replay keys; repeated requests shall not duplicate events or update stock/payment twice. Closed/backwards updates shall be rejected.
+- **SHIP-03** Customers shall read only their own courier/history view, with pagination. Private administrator actor metadata shall remain excluded. Carrier booking/API synchronization is deferred.
+- **MAIL-01** New order confirmation, payment changes, shipping, delivery and cancellation shall stage transactional email through the existing SMTP configuration, with simulation disclosures and private account links.
+- **MAIL-02** Email shall be held until commit; SMTP calls shall remain outside order/database transactions. Delivery failures shall preserve saved commerce state, use bounded retry/claims and support administrator retry of failed messages.
+- **MAIL-03** SMTP acceptance and local preview shall remain distinct from actual inbox placement. Credentials, bodies and claim tokens shall remain excluded from email administration responses; account/order previews shall be private and separate.
+- **VAR-01** A product shall support up to 50 retained size/color options with globally unique SKU, individual price/discount/photos/availability and independent whole-number stock.
+- **VAR-02** Cart/checkout shall require the selected option and keep different options as separate lines. Guest intent shall preserve the option through authentication; server prices/stock shall remain authoritative.
+- **VAR-03** Stock reservation/restoration shall update the same SKU through checkout, expiry/retry, cancellation, payment review and received returns. A stale variant inventory edit shall conflict instead of overwriting a sale.
+- **VAR-04** Orders/invoices shall preserve original SKU/size/color/price snapshots. Existing options cannot be deleted; ordered simple products cannot be converted in place. Existing catalog entries shall remain unchanged unless the owner edits them.
+
 ## 5. Non-functional requirements
 
 ### Security
@@ -208,9 +221,9 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 
 Included: physical-product catalog, one currency, flat/free delivery rule, one shipping address per order, COD, SSLCOMMERZ hosted checkout, manual fulfillment, invoice history, verified reviews, local uploads and CSV reporting.
 
-Included since the baseline: account recovery/email verification, multiple saved addresses, local payment simulation, reservation expiry/same-order retry, payment review resolution, customer cancellation requests, whole-order return portal and provider-confirmed/refund-ledger workflows.
+Included since the baseline: account recovery/email verification, multiple saved addresses, local payment simulation, reservation expiry/same-order retry, payment review resolution, customer cancellation requests, whole-order return portal, provider-confirmed/refund-ledger workflows, manual courier history/customer tracking, queued transactional order email and independent SKU variants.
 
-Deferred: coupons, tax engine, variants/SKUs, wish lists, item-level returns/exchanges, configurable return policies, split shipments, multiple warehouses, customer deletion, order/shipping/refund email/SMS, formal credit notes/accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
+Deferred: coupons, tax engine, carrier API booking/labels/webhooks, per-SKU alert/bulk tooling, wish lists, item-level returns/exchanges, configurable return policies, split shipments, multiple warehouses, customer deletion, refund-specific email, SMS, formal credit notes/accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
 
 ## 8. Release acceptance summary
 

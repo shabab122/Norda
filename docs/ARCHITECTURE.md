@@ -1,4 +1,4 @@
-# Norda 2.7 — Architecture and Data Model
+# Norda 2.8 — Architecture and Data Model
 
 ## System view
 
@@ -80,6 +80,8 @@ Keeping payment separate from fulfillment prevents a failed charge from appearin
 | `orderrequests` | Customer cancellation/whole-order return requests, decisions, receipt and restock metadata |
 | `refunds` | Replay-safe source-charge ledger, reserved/completed balance, provider references and reconciliation state |
 | `orderevents` | Append-only API audit of new administrator/request/refund decisions; private to administrators |
+| `shipmentevents` | Append-only courier/progress snapshots, request replay key and private administrator actor |
+| `ordernotifications` | Durable order email payload, commit activation, atomic delivery claim, retry and transport state |
 | `reviews` | Unique customer/product review, rating, comment and verified-purchase flag |
 | `uploads` | Stored-file metadata and administrator ownership |
 
@@ -124,3 +126,11 @@ Expiry, retries, cancellation and callback capture share the existing distribute
 The lock `order:<id>` serializes these operations with callbacks, reservation expiry, payment retry and fulfillment. Database writes stay inside transactions or registered compensations; provider network calls remain outside database transactions. A durable `submitting` refund state is committed before the network boundary. Interrupted/uncertain submissions reserve balance and require existing-reference reconciliation instead of a blind retry.
 
 Cancellation and return state are separate from fulfillment; a received return preserves delivered history. Refund state is separate from paid history and immutable original invoice totals. `settledPayment` plus validation/bank references identifies the retained sale; extra-charge refunds are counted separately. Customer endpoints return public projections; administrator endpoints add transaction/audit detail while omitting hosted-session secrets. See [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md) for states, API and acceptance.
+
+## Version 2.8 courier, email and option inventory
+
+Products embed retained size/color options. A partial unique multikey SKU index enforces uniqueness across products; service validation rejects duplicate combinations within one product. `inventoryService` reserves/restores a selected option plus product total in one atomic document update. Every stock write increments an inventory revision so full option edits cannot overwrite a concurrent sale. Ordered simple products cannot switch to variant mode; existing options are retired rather than deleted. Cart/order/invoice items carry stable option IDs and snapshot labels/prices.
+
+`shipmentService` validates courier details, HTTPS links, replay keys and forward progress. Shipment events, order/COD state, invoice synchronization and staged emails share the existing order lock/database unit. The customer tracking endpoint returns public projections with paginated history; administrator actor/request metadata stays private.
+
+`notificationService` stages durable held records inside the database unit. New `afterCommit` hooks activate them after the transaction/compensated operation succeeds; failed activation can be recovered by the worker. Provider calls run outside commerce transactions. Atomic sending claims, bounded exponential retry and stable Message-ID provide at-least-once SMTP delivery. Existing account SMTP/file transport is reused with optional message IDs, and local account/order previews are filtered separately. The API starts/stops all three workers with its existing lifecycle. See [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md) and [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md).

@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.6.0 to 2.7.0
+## Update from 2.2–2.7.0 to 2.8.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -23,6 +23,23 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Delivery tracking, order email and variants
+
+- Customer: **My Orders → Track delivery**.
+- Admin: **Delivery tracking** to assign courier/record progress; **Email notifications** for delivery attempts and failed-email retry.
+- Admin: **Products → New product → Use size / color variants**. Existing products are not automatically converted or reseeded.
+
+The email worker runs on startup/every 15 seconds using the same SMTP configuration. New indexes are initialized with the API. No new credentials or manual migration are required. Keep NORDA on port 5000. Read [docs/DELIVERY_NOTIFICATIONS.md](docs/DELIVERY_NOTIFICATIONS.md) and [docs/PRODUCT_VARIANTS.md](docs/PRODUCT_VARIANTS.md).
+
+For development file-mode order email, leave the API running, then in another terminal:
+
+```bash
+cd server
+npm run mail:orders -- your-account@example.com
+```
+
+The existing `mail:preview` command continues to show account reset/verification mail separately.
 
 ## Payment review, cancellation and returns
 
@@ -95,7 +112,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/order-operations
+git switch -c feat/tracking-notifications-variants
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 git rm --ignore-unmatch server/.envy
 cd server
@@ -115,8 +132,8 @@ After review:
 cd /path/to/your/existing/Norda-repository
 git status
 git add .
-git commit -m "feat: add payment reviews, cancellation requests and return refunds"
-git push -u origin feat/order-operations
+git commit -m "feat: add courier tracking, order notifications and product variants"
+git push -u origin feat/tracking-notifications-variants
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.
@@ -130,4 +147,4 @@ NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm
 
 Use `NORDA_EXPECT_TRANSACTIONS=1` and your replica-set URI to test transactions. Both modes were verified for this release with native MongoDB 7.0.45. GitHub Actions runs both modes on MongoDB 7.
 
-The tests use new random `norda_test_*` databases, then remove only those test databases. Use an isolated MongoDB server with permission to create test databases. The tests exercise real HTTP authentication, all catalog categories/images, cart operations, checkout/invoices, cancellation, simultaneous stock purchases, payment review, return receipt, refund persistence and rollback. They do not use your store's database name or import demo records into it.
+The tests use new random `norda_test_*` databases, then remove only those test databases. Use an isolated MongoDB server with permission to create test databases. The tests exercise real HTTP authentication, all catalog categories/images, cart operations, checkout/invoices, cancellation, simultaneous stock purchases, payment review, return receipt, refund persistence, SKU inventory/receipt, courier history, email queue and rollback. They do not use your store's database name or import demo records into it.
