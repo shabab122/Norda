@@ -1,4 +1,4 @@
-# Norda 2.6 — API Reference
+# Norda 2.7 — API Reference
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
@@ -173,6 +173,27 @@ Status update examples:
 
 `isPaid` is accepted only for COD. Online payment state is gateway-controlled.
 
+## Cancellation, return, payment review and refunds
+
+All operations paths, bodies, statuses and replay rules are documented in [ORDER_OPERATIONS.md#api-contract](ORDER_OPERATIONS.md#api-contract).
+
+| Method | Path | Access | Purpose |
+|---|---|---|---|
+| GET | `/orders/:id/operations` | Owner/Admin | Public request and refund progress |
+| POST | `/orders/:id/requests` | Owner/Admin | Cancellation or whole-order return request |
+| GET | `/admin/operations` | Admin | Request/review/refund queues with pagination |
+| GET | `/admin/operations/orders/:id` | Admin | Transaction, request, refund and audit history |
+| POST | `/admin/operations/orders/:id/review` | Admin | Verify, retain, approve, close-refunded or add a private note |
+| POST | `/admin/operations/orders/:id/refunds` | Admin | Queue a remaining or partial monetary refund against a verified captured balance |
+| POST | `/admin/operations/requests/:id/decision` | Admin | Approve/reject with customer-visible message |
+| POST | `/admin/operations/requests/:id/receive` | Admin | Confirm all returned goods received and choose restocking |
+| POST | `/admin/operations/refunds/:id/confirm` | Admin | Confirm actually returned cash with a receipt; cannot complete gateway refunds |
+| POST | `/admin/operations/refunds/:id/reconcile` | Admin | Query an existing refund or recover an uncertain provider reference |
+
+Request creation accepts `{ "type": "cancellation", "reason": "Please cancel before shipment", "requestKey": "a-unique-request-key" }`. Use `type:"return"` for a paid delivered order. Request/refund keys are 12–80 alphanumeric, underscore or hyphen characters. Changing an intent under the same key is rejected.
+
+Order/invoice reads add separate request/return/refund state and amounts; original invoice totals and fulfillment/payment enums remain compatible. Pending cancellation or refund operations block fulfillment/payment retry. Refund initiation is not completion: only verified provider `refunded`, acknowledged cash repayment or explicit local simulation completes the ledger. Customer projections exclude internal audit notes, bank/provider references and payment session secrets.
+
 ## Payments
 
 | Method | Path | Access | Purpose |
@@ -210,7 +231,7 @@ Review body: `{ "productId": "…", "rating": 5, "comment": "Useful and comforta
 | GET | `/admin/dashboard-summary` | Admin | Counts, paid revenue, statuses, low stock and recent orders |
 | GET | `/admin/reports/orders.csv` | Admin | Download order CSV |
 
-CSV query parameters: `status`, `paymentStatus`, `from=YYYY-MM-DD` and `to=YYYY-MM-DD`. The `to` date is inclusive through 23:59:59.999 UTC.
+CSV query parameters: `status`, `paymentStatus`, `from=YYYY-MM-DD` and `to=YYYY-MM-DD`. The `to` date is inclusive through 23:59:59.999 UTC. CSV preserves existing columns and appends confirmed ordinary refunds, additional-payment refunds, pending amount, refund state and net sales. Dashboard/CSV net sales exclude review and simulated funds; confirmed ordinary refunds reduce retained sale value.
 
 ## Version 2.1 additions and changes
 

@@ -77,6 +77,10 @@ function renderOrder(order) {
           ${order.paymentRecovery?.reservationExpiresAt && !order.isPaid && order.paymentStatus !== "review" && order.status !== "cancelled" ? `<p class="payment-context">Items reserved until ${escapeHtml(formatDate(order.paymentRecovery.reservationExpiresAt, true))}. Unpaid reservations are released automatically.</p>` : ""}
           ${order.reservationExpiredAt ? `<p class="payment-context">Reservation expired. Items were released to stock.${order.paymentMethod === "sslcommerz" ? " Retry checks stock before opening payment." : " Add available items to your cart to place a new order."}</p>` : ""}
           ${order.paymentRecovery?.canRetry ? `<button type="button" class="btn btn-primary btn-sm btn-block" data-payment-retry="${escapeHtml(order._id)}">Retry or resume online payment</button><div data-retry-alert="${escapeHtml(order._id)}" role="status" aria-live="polite"></div>` : ""}
+          ${order.cancellationStatus && order.cancellationStatus !== "none" ? `<p class="payment-context">Cancellation: ${escapeHtml(order.cancellationStatus)}</p>` : ""}
+          ${order.returnStatus && order.returnStatus !== "none" ? `<p class="payment-context">Return: ${escapeHtml(order.returnStatus)}</p>` : ""}
+          ${order.refundStatus && order.refundStatus !== "none" ? `<p class="payment-context"><strong>Refund: ${escapeHtml(order.refundStatus.replace(/_/g, " "))}</strong> · ${money(order.refundedAmount || 0)} completed</p>` : ""}
+          <a class="btn btn-outline btn-sm btn-block" href="order-support.html?orderId=${encodeURIComponent(order._id)}">Cancellation, returns & refunds</a>
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>

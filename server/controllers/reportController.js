@@ -49,6 +49,11 @@ const orderReportCsv = async (req, res, next) => {
       { key: "shippingFee", label: "Shipping Fee" },
       { key: "total", label: "Total" },
       { key: "currency", label: "Currency" },
+      { key: "refundedAmount", label: "Order Refund Completed" },
+      { key: "extraRefundedAmount", label: "Additional Payment Refund" },
+      { key: "refundPendingAmount", label: "Order Refund Pending" },
+      { key: "refundStatus", label: "Refund Status" },
+      { key: "netSales", label: "Net Sales (Excludes Review and Simulation)" },
     ];
     const rows = orders.map((order) => ({
       orderId: order._id,
@@ -64,6 +69,11 @@ const orderReportCsv = async (req, res, next) => {
       shippingFee: order.shippingFee,
       total: order.totalAmount,
       currency: order.currency,
+      refundedAmount: order.refundedAmount || 0,
+      extraRefundedAmount: order.extraRefundedAmount || 0,
+      refundPendingAmount: order.refundPendingAmount || 0,
+      refundStatus: order.refundStatus || "none",
+      netSales: order.isPaid && order.paymentStatus === "paid" && order.status !== "cancelled" && order.paymentMethod !== "demo" ? Math.max(0, Number((order.totalAmount - (order.refundedAmount || 0)).toFixed(2))) : 0,
     }));
 
     const datePart = new Date().toISOString().slice(0, 10);

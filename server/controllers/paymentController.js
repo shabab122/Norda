@@ -1,3 +1,4 @@
+const { hasBlockingOperation } = require("../services/orderOperationStore");
 const crypto = require("node:crypto");
 const Order = require("../models/Order");
 const Payment = require("../models/Payment");
@@ -37,6 +38,7 @@ const initiateSslcommerz = async (req, res, next) => {
       }));
       return withOperationLock("order:" + order._id, async () => {
         order = await withDatabaseUnit(async (unit) => expireInUnit(await querySession(Order.findById(order._id), unit.session), unit));
+        if (hasBlockingOperation(order)) throw httpError(409, "Resolve the order request before starting another payment");
         if (order.paymentStatus === "review") throw httpError(409, "This order needs store review; a new payment cannot be started.");
         if (order.status === "cancelled") throw httpError(409, "This order was cancelled or its reservation expired. Open My Orders to check available recovery options.");
         if (order.isPaid) return { orderId: order._id, invoiceNumber: invoice.invoiceNumber, alreadyPaid: true };

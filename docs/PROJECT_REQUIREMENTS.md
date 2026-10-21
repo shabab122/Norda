@@ -1,4 +1,4 @@
-> Version 2.1.0 update: the original requirements below remain the baseline. Checkout replay/locking, transactions where available, payment review, multi-image administration, product archiving and session invalidation are added in `UPDATE_REPORT.md`. The uploaded v2 source was already merged into main; older prepared-branch references below describe its delivery history.
+> Current version: 2.7.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
 
 # Norda — Project Requirements
 
@@ -7,7 +7,7 @@
 | Field | Value |
 |---|---|
 | Product | Norda e-commerce website |
-| Version | 2.0.0 |
+| Version | 2.7.0 |
 | Delivery branch | `feature/v2-complete-commerce-flow` |
 | Baseline commit | `8d913fa` — Basic foundation of Frontend & Backend |
 | Intended market | Bangladesh |
@@ -94,7 +94,7 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **ORDER-08** Valid forward transitions shall be pending → processing → shipped → delivered. Pending or processing may be cancelled; shipped and delivered orders may not be cancelled in this baseline.
 - **ORDER-08A** An online order shall not enter fulfillment until SSLCOMMERZ payment has been validated.
 - **ORDER-09** Cancelling an unpaid order shall restore its reserved stock once only and record the reason and time.
-- **ORDER-10** A paid order shall require a future refund workflow before cancellation; v2 shall reject direct paid-order cancellation.
+- **ORDER-10** Direct paid-order cancellation shall remain blocked by the original status endpoint. Approved cancellation requests shall coordinate verified captured-payment refunds, stock restoration and invoice state through the operations workflow.
 - **ORDER-11** Unpaid online/simulated reservations shall expire after the configured period; startup and periodic sweeps shall restore stock once and synchronize the existing invoice. COD, paid and review orders are excluded.
 - **ORDER-12** Expiry shall preserve order/invoice records. Legacy unpaid online orders derive their deadline from creation time; expired real orders must re-reserve available non-archived products before recovery.
 - **INV-01** Every order shall receive a unique invoice number.
@@ -131,7 +131,20 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **REVIEW-03** Verified reviews shall contain a one-to-five rating and an optional comment up to 1,200 characters.
 - **REVIEW-04** Product rating average and count shall be recalculated after a review is saved.
 
-### 4.8 Administration and reporting
+### 4.8 Order operations (2.7)
+
+- **OPS-01** Customers shall request cancellation only before shipment and full-order return only after paid delivery, with ownership and eligibility checks.
+- **OPS-02** Pending cancellation shall block fulfillment and payment retry. Administrator rejection shall retain payment/inventory state; approval shall restore reserved stock once and queue any remaining captured-payment refund.
+- **OPS-03** Return approval shall not change stock or initiate repayment. Recording physical receipt of all items shall require an explicit restock decision; only sellable returns shall increase stock, once.
+- **OPS-04** Real payment review shall show recorded attempts/reasons, freshly validate captured charges, require explicit risk acknowledgement when applicable and record administrator notes/decisions. Additional charges must be fully refunded before approving a retained sale.
+- **OPS-05** Refunds shall have a persistent replay key, unique transaction ID, source bank charge, amount cap and state history. Pending/uncertain refunds shall reserve their source balance; duplicate-charge refunds shall be separate from original-order refunds.
+- **OPS-06** Provider initiation shall remain pending until a matching refund query confirms `refunded`. A timeout/interrupted submission shall require reconciliation, never blind resubmission or manual gateway-completion overrides.
+- **OPS-07** COD repayment shall require an explicit actual-payment acknowledgement, receipt/reference and audit note. Simulation shall remain identified and move no real money.
+- **OPS-08** Original invoice identity/items/totals/address shall remain immutable; refund amounts and return state shall synchronize separately. Confirmed ordinary refunds shall reduce net revenue; review/simulated funds and additional-payment refunds shall not inflate/double-reduce it.
+- **OPS-09** Customer operation views shall exclude private audit notes, payment session secrets and bank/provider references. Operations shall share the existing order lock and transaction/compensation unit.
+- **OPS-10** Full-order returns shall support partial monetary refund records after eligibility; per-item quantities, exchanges, configurable windows and formal credit notes remain future development.
+
+### 4.9 Administration and reporting
 
 - **ADMIN-01** Every management endpoint shall require both authentication and the administrator role.
 - **ADMIN-02** The overview shall show products, categories, brands, customers, orders, invoices, paid revenue, pending orders, failed payments, fulfillment counts, low-stock products and recent orders.
@@ -152,7 +165,7 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 - **SEC-04** API responses shall omit stack traces and replace production 5xx details with a generic message.
 - **SEC-05** The API shall apply secure HTTP headers, request-size limits, rate limiting, Mongo query sanitization and HTTP parameter pollution protection.
 - **SEC-06** Server-generated identifiers, prices, role decisions and paid state shall not trust browser-supplied values.
-- **SEC-07** Environment secrets, local runtime uploads and dependencies shall not be committed or included in distribution archives.
+- **SEC-07** Environment secrets, local runtime uploads and dependencies shall not be committed or included in public distributions. This personal update preserves the supplied ignored `.env` for the owner; retain the working local environment when applying source.
 
 ### Reliability and integrity
 
@@ -195,7 +208,9 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 
 Included: physical-product catalog, one currency, flat/free delivery rule, one shipping address per order, COD, SSLCOMMERZ hosted checkout, manual fulfillment, invoice history, verified reviews, local uploads and CSV reporting.
 
-Deferred: coupons, tax engine, variants/SKUs, wish lists, returns portal, gateway refunds, split shipments, multiple warehouses, customer deletion, email/SMS, accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
+Included since the baseline: account recovery/email verification, multiple saved addresses, local payment simulation, reservation expiry/same-order retry, payment review resolution, customer cancellation requests, whole-order return portal and provider-confirmed/refund-ledger workflows.
+
+Deferred: coupons, tax engine, variants/SKUs, wish lists, item-level returns/exchanges, configurable return policies, split shipments, multiple warehouses, customer deletion, order/shipping/refund email/SMS, formal credit notes/accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
 
 ## 8. Release acceptance summary
 

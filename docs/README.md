@@ -1,5 +1,6 @@
 # Documentation index
 
+- [Order operations](ORDER_OPERATIONS.md) — 2.7 payment review, cancellation requests, whole-order returns, refunds and acceptance.
 - `PROJECT_REQUIREMENTS.md` — roles, scope, numbered functional/non-functional requirements and acceptance criteria
 - `ARCHITECTURE.md` — application boundaries, request/order flows, state model and collections
 - `API_REFERENCE.md` — routes, permissions, bodies, filters and error behavior
@@ -7,7 +8,7 @@
 - `ASSET_NOTES.md` — source and prompts for storefront/catalog visuals
 - `reference/` — original supplied flow sketches
 
-- `UPDATE_REPORT.md` — 2.6 changes, data compatibility and verification boundaries
+- `UPDATE_REPORT.md` — 2.7 changes, data compatibility and verification boundaries
 - `ACCEPTANCE_CHECKLIST.md` — recorded automated evidence and pending laptop/public-gateway acceptance
 - `CATALOG_GUIDE.md` — import, product list, login/cart checks and admin product entry
 - `DEPENDENCY_AUDIT.json` — release audit with zero reported vulnerabilities

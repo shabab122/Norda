@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const mongoose = require("mongoose");
 const app = require("./app");
+const { startRefundWorker } = require("./services/refundService");
 const connectDB = require("./config/db");
 const { reservationMinutes, sweepSeconds } = require("./config/reservations");
 const { startReservationWorker } = require("./services/reservationService");
@@ -30,13 +31,14 @@ const startServer = async () => {
   });
 
   const stopReservations = startReservationWorker();
+  const stopRefunds = startRefundWorker();
   let shuttingDown = false;
   const shutdown = (signal) => {
     if (shuttingDown) return;
     shuttingDown = true;
     console.log(signal + " received. Closing server...");
     server.close(async () => {
-      await stopReservations();
+      await Promise.all([stopReservations(), stopRefunds()]);
       await mongoose.connection.close();
       process.exit(0);
     });

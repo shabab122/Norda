@@ -2,6 +2,16 @@
 
 All notable project changes are recorded here.
 
+## [2.7.0] — 2026-10-21
+
+- Added the administrator Requests & payments workspace with transaction history, fresh gateway verification, risky-payment acknowledgement, retained-charge selection, explicit approval/refunded closure and private audit notes.
+- Added owner-scoped cancellation requests, administrator approve/reject decisions, fulfillment/payment-retry guards, one-time stock restoration and captured-payment refund coordination.
+- Added whole-order return requests, approval, physical receipt and explicit sellable-stock decisions. Refunds queue after receipt rather than approval.
+- Added a replay-safe refund ledger for real SSLCOMMERZ, recorded COD repayment and local simulation; partial monetary refunds and duplicate-charge balances are separate. A background worker queries provider references; uncertain submissions require reconciliation rather than blind resubmission.
+- Kept invoice identity, original items/prices/totals and shipping snapshots; added refund progress and return state. Dashboard/CSV sales exclude review funds and subtract confirmed ordinary refunds without counting duplicate-charge refunds twice.
+- Added fault-injection, HTTP, frontend, provider-contract and native MongoDB tests on both standalone and replica-set paths. Verified 248 default passes and 69 native passes per topology; public merchant/browser acceptance remains environment-specific.
+- Preserved input credentials, dependencies, catalog/photos, branding and account recovery. No reseed/manual migration is required. Keep later laptop SMTP settings and uploaded media during update.
+
 ## [2.6.0] — 2026-10-21
 
 - Added 30-minute unpaid online/simulation reservations, startup catch-up and a periodic stock-release worker, with optional timing overrides and a one-shot expiry command.

@@ -14,7 +14,7 @@ const paymentFields = (payment) => ({
 });
 const orderFields = (order) => ({
   status: order.status, isPaid: order.isPaid, paymentStatus: order.paymentStatus,
-  paymentReviewReason: order.paymentReviewReason || "", paidAt: order.paidAt || null, paidTransactionId: order.paidTransactionId || "",
+  paymentReviewReason: order.paymentReviewReason || "", paymentReviewStatus: order.paymentReviewStatus || "none", paidAt: order.paidAt || null, paidTransactionId: order.paidTransactionId || "",
 });
 const unsuccessfulInUnit = async (payment, order, outcome, reason, unit) => {
   const { session, compensate } = unit;
@@ -88,6 +88,7 @@ const captureInUnit = async (payment, order, result, validationId, unit) => {
   compensate(() => Payment.updateOne({ _id: payment._id }, { $set: previousPayment }));
   const previousOrder = orderFields(order);
   const updatedOrder = await Order.findOneAndUpdate({ _id: order._id }, { $set: {
+    paymentReviewStatus: review ? "open" : order.paymentReviewStatus || "none",
     isPaid: Boolean(order.isPaid || verification.valid), paymentStatus: review ? "review" : "paid", paymentReviewReason: reviewReason,
     paidAt, paidTransactionId: order.paidTransactionId || (verification.valid ? payment.transactionId : ""),
     status: !review && order.status === "pending" ? "processing" : order.status,

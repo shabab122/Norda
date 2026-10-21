@@ -130,11 +130,13 @@ const validatePayment = async (validationId) => {
     store_passwd: process.env.SSLCOMMERZ_STORE_PASSWORD,
     format: "json",
   });
-  const response = await fetchWithTimeout(
-    getBaseUrl() + "/validator/api/validationserverAPI.php?" + query.toString(),
-    { method: "GET" }
-  );
-  return parseGatewayResponse(response);
+  try {
+    const response = await fetchWithTimeout(
+      getBaseUrl() + "/validator/api/validationserverAPI.php?" + query.toString(),
+      { method: "GET" }
+    );
+    return await parseGatewayResponse(response);
+  } catch { throw httpError(502, "The payment could not be verified. Please try again later."); }
 };
 
 // Official transaction/session query API. Credentials stay on the server.
@@ -151,6 +153,20 @@ const queryPayment = async ({ transactionId, sessionKey }) => {
   if (data.APIConnect !== "DONE") throw httpError(502, "The previous payment could not be checked. Please try again later.");
   return data;
 };
+
+const refundRequest = async (parameters) => {
+  if (!isConfigured()) throw httpError(503, "SSLCOMMERZ is unavailable for refunds");
+  const query = new URLSearchParams({ store_id: process.env.SSLCOMMERZ_STORE_ID, store_passwd: process.env.SSLCOMMERZ_STORE_PASSWORD, format: "json", ...parameters });
+  try {
+    return await parseGatewayResponse(await fetchWithTimeout(getBaseUrl() + "/validator/api/merchantTransIDvalidationAPI.php?" + query, { method: "GET" }));
+  } catch { throw httpError(502, "The refund gateway could not be reached. Its financial result must be reconciled before another attempt."); }
+};
+const initiateRefund = (refund) => refundRequest({
+  bank_tran_id: refund.bankTransactionId, refund_trans_id: refund.transactionId,
+  refund_amount: Number(refund.amount).toFixed(2), refund_remarks: String(refund.reason).slice(0, 255),
+  refe_id: String(refund._id), v: "1",
+});
+const queryRefund = (refundReference) => refundRequest({ refund_ref_id: refundReference });
 
 const verifyPaymentForOrder = (result, payment) => {
   const validStatus = result.status === "VALID" || result.status === "VALIDATED";
@@ -180,5 +196,7 @@ module.exports = {
   isLive,
   validatePayment,
   queryPayment,
+  initiateRefund,
+  queryRefund,
   verifyPaymentForOrder,
 };

@@ -69,7 +69,7 @@ test("Payment results use saved server state and retain simulation disclosure wi
 test("Every page loads shared branding and the new AI-derived tab icon", () => {
   const pages = fs.readdirSync(client).filter((name) => name.endsWith(".html")).map((name) => name)
     .concat(fs.readdirSync(path.join(client, "admin")).filter((name) => name.endsWith(".html")).map((name) => "admin/" + name));
-  assert.equal(pages.length, 22);
+  assert.equal(pages.length, 24);
   for (const page of pages) {
     const html = read(page); assert.match(html, /css\/branding\.css/, page); assert.match(html, /assets\/brand\/norda-mark\.png/, page);
     assert.doesNotMatch(html.match(/<title>[^]*?<\/title>/)?.[0] || "", /demo/i, page);

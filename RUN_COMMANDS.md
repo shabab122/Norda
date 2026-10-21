@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.5.0 to 2.6.0
+## Update from 2.2–2.6.0 to 2.7.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -23,6 +23,12 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Payment review, cancellation and returns
+
+Customer: **My Orders → Cancellation, returns & refunds**. Administrator: **Requests & payments**, or `http://localhost:5000/admin/operations.html`. No new credentials, seed or manual migration are required. Refund reconciliation starts automatically with the server every 30 seconds. Keep the API running while a gateway refund is pending; the next startup catches up with saved eligible refunds.
+
+Use [docs/ORDER_OPERATIONS.md](docs/ORDER_OPERATIONS.md) for paid/unpaid cancellation, return receipt/restocking, provider-confirmed refunds, cash receipts and uncertain-refund recovery. A local simulated refund moves no money. Real merchant refund permissions and public sandbox acceptance must be checked using your own setup.
 
 ## Checkout recovery
 
@@ -89,7 +95,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/checkout-recovery
+git switch -c feat/order-operations
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 git rm --ignore-unmatch server/.envy
 cd server
@@ -109,8 +115,8 @@ After review:
 cd /path/to/your/existing/Norda-repository
 git status
 git add .
-git commit -m "feat: add payment reservation expiry and same-order checkout recovery"
-git push -u origin feat/checkout-recovery
+git commit -m "feat: add payment reviews, cancellation requests and return refunds"
+git push -u origin feat/order-operations
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.
@@ -124,4 +130,4 @@ NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm
 
 Use `NORDA_EXPECT_TRANSACTIONS=1` and your replica-set URI to test transactions. Both modes were verified for this release with native MongoDB 7.0.45. GitHub Actions runs both modes on MongoDB 7.
 
-The tests use new random `norda_test_*` databases, then remove only those test databases. Use an isolated MongoDB server with permission to create test databases. The tests exercise real HTTP authentication, all catalog categories/images, cart operations, checkout/invoices, cancellation, simultaneous stock purchases and rollback. They do not use your store's database name or import demo records into it.
+The tests use new random `norda_test_*` databases, then remove only those test databases. Use an isolated MongoDB server with permission to create test databases. The tests exercise real HTTP authentication, all catalog categories/images, cart operations, checkout/invoices, cancellation, simultaneous stock purchases, payment review, return receipt, refund persistence and rollback. They do not use your store's database name or import demo records into it.

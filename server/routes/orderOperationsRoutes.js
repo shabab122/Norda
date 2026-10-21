@@ -1,0 +1,14 @@
+const express = require("express");
+const { protect, adminOnly } = require("../middleware/auth");
+const controller = require("../controllers/orderOperationsController");
+const router = express.Router();
+router.use(protect, adminOnly);
+router.get("/", controller.listAdminOperations);
+router.get("/orders/:id", controller.getAdminOrderOperations);
+router.post("/orders/:id/review", controller.reviewOrder);
+router.post("/orders/:id/refunds", controller.requestRefund);
+router.post("/requests/:id/decision", controller.decideRequest);
+router.post("/requests/:id/receive", controller.receiveReturn);
+router.post("/refunds/:id/confirm", controller.confirmRefund);
+router.post("/refunds/:id/reconcile", controller.reconcileRefund);
+module.exports = router;

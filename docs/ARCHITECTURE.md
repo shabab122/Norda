@@ -1,4 +1,4 @@
-# Norda v2 — Architecture and Data Model
+# Norda 2.7 — Architecture and Data Model
 
 ## System view
 
@@ -52,16 +52,16 @@ flowchart TD
     K --> L["Delivered + review eligible"]
 ```
 
-Stock is reserved at order creation for both payment methods. A failed online payment therefore creates a visible unpaid order, matching the supplied operational flow. The administrator decides whether to investigate or cancel it. Cancellation is restricted to unpaid pending/processing orders and restores each item once.
+Stock is reserved at order creation for both payment methods. A failed online payment therefore creates a visible unpaid order, matching the supplied operational flow. The administrator decides whether to investigate or cancel it. Direct status cancellation is restricted to unpaid pending/processing orders and restores each item once. The separate operations workflow adds approved paid cancellation with refund coordination, and paid delivered returns with physical receipt/restock decisions.
 
 ## Order and payment states
 
 | Concern | States | Authority |
 |---|---|---|
 | Fulfillment | pending, processing, shipped, delivered, cancelled | Administrator, constrained by transition map |
-| Order payment | pending, paid, failed, cancelled | Validated gateway callback/IPN, or administrator for COD only |
+| Order payment | pending, paid, failed, cancelled, review | Validated gateway callback/IPN, or administrator for COD only |
 | Gateway transaction | initiated, paid, failed, cancelled, review, error | Payment service |
-| Invoice payment | pending, paid, failed, cancelled | Synchronized from order payment state |
+| Invoice payment | pending, paid, failed, cancelled, review | Synchronized from order payment state |
 
 Keeping payment separate from fulfillment prevents a failed charge from appearing as a cancelled shipment and prevents a shipped order from implying that online payment was validated.
 
@@ -77,6 +77,9 @@ Keeping payment separate from fulfillment prevents a failed charge from appearin
 | `orders` | Customer, immutable line snapshots, address, totals, fulfillment/payment states and cancellation/restock metadata |
 | `invoices` | One-per-order immutable billing snapshot and synchronized payment state |
 | `payments` | Gateway transaction, expected amount/currency, validation metadata, risk and outcome |
+| `orderrequests` | Customer cancellation/whole-order return requests, decisions, receipt and restock metadata |
+| `refunds` | Replay-safe source-charge ledger, reserved/completed balance, provider references and reconciliation state |
+| `orderevents` | Append-only API audit of new administrator/request/refund decisions; private to administrators |
 | `reviews` | Unique customer/product review, rating, comment and verified-purchase flag |
 | `uploads` | Stored-file metadata and administrator ownership |
 
@@ -113,3 +116,11 @@ No external gateway call runs inside a MongoDB transaction. Test model adapters 
 Orders carry `reservationExpiresAt`, `reservationExpiredAt` and the first `paidTransactionId`. A server-owned startup/periodic worker expires eligible unpaid online orders; legacy orders derive the deadline from `createdAt`. COD, paid and review states are excluded. Records are retained; no TTL deletion is used.
 
 Expiry, retries, cancellation and callback capture share the existing distributed order lock. Retry queries all real payment attempts outside database transactions, validates successful remote rows, resumes a pending hosted session or records a new unique attempt after a confirmed terminal outcome. Expired reservations re-check/re-reserve each product inside the existing transaction/compensation unit. The order, invoice, price/address snapshots and a newer cart remain intact. Payment rows have optional per-order unique retry keys; old attempt failures cannot overwrite the current attempt. Late or multiple successful charges require sticky review. Details: [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md).
+
+## Version 2.7 order operations
+
+`orderRequestService` owns customer eligibility, decisions and return receipt. `paymentReviewService` verifies captured history, retains a canonical charge and resolves review with explicit risk acknowledgement. `verifiedPayments` isolates strict gateway/source verification. `refundService` owns the charge-capped ledger, provider submission/query, cash receipts and startup/30-second reconciliation worker. Shared helpers in `orderOperationStore` synchronize order/invoice summaries, audit and stock restoration inside the existing database unit.
+
+The lock `order:<id>` serializes these operations with callbacks, reservation expiry, payment retry and fulfillment. Database writes stay inside transactions or registered compensations; provider network calls remain outside database transactions. A durable `submitting` refund state is committed before the network boundary. Interrupted/uncertain submissions reserve balance and require existing-reference reconciliation instead of a blind retry.
+
+Cancellation and return state are separate from fulfillment; a received return preserves delivered history. Refund state is separate from paid history and immutable original invoice totals. `settledPayment` plus validation/bank references identifies the retained sale; extra-charge refunds are counted separately. Customer endpoints return public projections; administrator endpoints add transaction/audit detail while omitting hosted-session secrets. See [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md) for states, API and acceptance.

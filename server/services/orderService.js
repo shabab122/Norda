@@ -12,6 +12,8 @@ const { withOperationLock } = require("./operationLock");
 
 const { nextReservationDeadline } = require("../config/reservations");
 
+const { hasBlockingOperation } = require("./orderOperationStore");
+
 const REQUIRED_ADDRESS_FIELDS = ["line1", "city", "district", "postCode", "phone"];
 const normalizeShippingAddress = (value = {}) => {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw httpError(400, "Please provide a delivery address");
@@ -152,6 +154,7 @@ const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () =>
   const order = await querySession(Order.findById(id), session);
   if (!order) throw httpError(404, "Order not found");
   const requestedStatus = body.status || order.status;
+  if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before changing fulfillment or cash payment");
   if (!canTransitionOrder(order.status, requestedStatus)) throw httpError(409, "Order cannot move from " + order.status + " to " + requestedStatus);
   if (body.isPaid !== undefined && typeof body.isPaid !== "boolean") throw httpError(400, "Payment confirmation must be true or false");
   if (requestedStatus === "cancelled") {
