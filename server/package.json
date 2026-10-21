@@ -1,6 +1,6 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Norda commerce API with catalog, checkout, invoicing, payments and reporting",
   "main": "server.js",
   "type": "commonjs",
@@ -11,13 +11,14 @@
     "test": "node --test",
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
-    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js test/mongoAccount.test.js test/mongoCheckoutRecovery.test.js test/mongoOrderOperations.test.js",
+    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js test/mongoAccount.test.js test/mongoCheckoutRecovery.test.js test/mongoOrderOperations.test.js test/mongoFulfillmentVariants.test.js",
     "setup": "node scripts/setup-env.js",
     "seed:catalog": "node seed/seed.js --catalog-only",
     "acceptance:preflight": "node scripts/acceptance-preflight.js",
     "mail:check": "node scripts/account-mail.js --check",
     "mail:preview": "node scripts/account-mail.js",
-    "reservations:expire": "node scripts/expireReservations.js"
+    "reservations:expire": "node scripts/expireReservations.js",
+    "mail:orders": "node scripts/account-mail.js --orders"
   },
   "engines": {
     "node": ">=22"

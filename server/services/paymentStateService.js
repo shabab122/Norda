@@ -31,7 +31,7 @@ const unsuccessfulInUnit = async (payment, order, outcome, reason, unit) => {
       { $set: { paymentStatus: outcome === "cancelled" ? "cancelled" : "failed" } }, writeOptions(session, { new: true }));
     if (updatedOrder) {
       compensate(async () => { await Order.updateOne({ _id: order._id }, { $set: previousOrder }); await syncInvoicePayment({ ...order.toObject(), ...previousOrder }); });
-      await syncInvoicePayment(updatedOrder, session);
+      await syncInvoicePayment(updatedOrder, session, unit, previousOrder);
     }
   }
   return updatedPayment;
@@ -95,7 +95,7 @@ const captureInUnit = async (payment, order, result, validationId, unit) => {
   } }, writeOptions(session, { new: true }));
   if (!updatedOrder) throw httpError(409, "Order record changed");
   compensate(async () => { await Order.updateOne({ _id: order._id }, { $set: previousOrder }); await syncInvoicePayment({ ...order.toObject(), ...previousOrder }); });
-  await syncInvoicePayment(updatedOrder, session);
+  await syncInvoicePayment(updatedOrder, session, unit, previousOrder);
   return { ok: true, review, order: updatedOrder };
 };
 const validateAndCapture = async (transactionId, validationId) => {

@@ -1,11 +1,12 @@
+const { shipmentFields, normalizeShipment } = require("./shipmentService");
+const { selection, reserveItem, restoreItem } = require("./inventoryService");
 const Cart = require("../models/Cart");
 const Invoice = require("../models/Invoice");
 const Order = require("../models/Order");
-const Product = require("../models/Product");
 const User = require("../models/User");
 const store = require("../config/store");
 const httpError = require("../utils/httpError");
-const { cleanText, effectivePrice, isPositiveInteger } = require("../utils/validation");
+const { cleanText, isPositiveInteger } = require("../utils/validation");
 const { createInvoiceForOrder, syncInvoicePayment } = require("./invoiceService");
 const { insertDocument, querySession, withDatabaseUnit, writeOptions } = require("./databaseUnit");
 const { withOperationLock } = require("./operationLock");
@@ -71,7 +72,8 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
       const product = item.product;
       if (!product || product.isArchived) throw httpError(409, "An item is no longer available. Remove it from your cart before checkout.");
       if (!isPositiveInteger(item.quantity)) throw httpError(400, "Invalid quantity for " + product.name);
-      return { product: product._id, name: product.name, quantity: Number(item.quantity), price: effectivePrice(product), image: product.images?.[0] || "" };
+      const { stock, ...selected } = selection(product, item.variantId);
+      return { product: product._id, name: product.name, quantity: Number(item.quantity), ...selected };
     });
     const totals = calculateTotals(items);
     if (paymentMethod === "sslcommerz" && (totals.totalAmount < 10 || totals.totalAmount > 500000)) {
@@ -79,22 +81,14 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     }
     // Register each successful write immediately; exceptions on the next item
     // therefore compensate all prior decrements on standalone MongoDB too.
-    for (const item of items) {
-      const reserved = await Product.findOneAndUpdate(
-        { _id: item.product, isArchived: { $ne: true }, stock: { $gte: item.quantity } },
-        { $inc: { stock: -item.quantity } }, writeOptions(session, { new: true })
-      );
-      if (!reserved) throw httpError(409, "Not enough stock for " + item.name);
-      compensate(() => Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } }));
-    }
+    for (const item of items) await reserveItem(item, unit);
     const order = await insertDocument(Order, {
       user: user._id, items, shippingAddress: address, ...totals, currency: store.currency,
       paymentMethod, paymentChannel, paymentStatus: "pending",
       ...(paymentMethod !== "cod" ? { reservationExpiresAt: nextReservationDeadline() } : {}), ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
-    const invoice = await createInvoiceForOrder(order, session);
-    compensate(() => Invoice.deleteOne({ _id: invoice._id }));
+    const invoice = await createInvoiceForOrder(order, session, unit);
     const previousAddress = user.address?.toObject ? user.address.toObject() : user.address;
     const updatedUser = await User.findByIdAndUpdate(user._id, { $set: { address } }, writeOptions(session, { new: true }));
     if (!updatedUser) throw httpError(401, "Your account is no longer available");
@@ -120,10 +114,7 @@ const cancelInUnit = async (order, reason, unit, options = {}) => {
   }
   if (order.isPaid || order.paymentStatus === "review") throw httpError(409, "This payment needs to be resolved before cancellation");
   if (!["pending", "processing"].includes(order.status)) throw httpError(409, "Only pending or processing unpaid orders can be cancelled");
-  for (const item of order.items) {
-    const restored = await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } }, writeOptions(session));
-    if (restored.matchedCount) compensate(() => Product.updateOne({ _id: item.product }, { $inc: { stock: -item.quantity } }));
-  }
+  for (const item of order.items) await restoreItem(item, unit, Boolean(item.variantId));
   const previous = {
     status: order.status, paymentStatus: order.paymentStatus, stockRestored: order.stockRestored || false,
     cancelledAt: order.cancelledAt || null, cancelReason: order.cancelReason || "",
@@ -139,7 +130,7 @@ const cancelInUnit = async (order, reason, unit, options = {}) => {
     await Order.updateOne({ _id: order._id }, { $set: previous });
     await syncInvoicePayment({ ...order.toObject(), ...previous });
   });
-  await syncInvoicePayment(updated, session);
+  await syncInvoicePayment(updated, session, unit, previous);
   return updated;
 };
 
@@ -149,11 +140,13 @@ const cancelOrderAndRestoreStock = (order, reason = "") => withOperationLock("or
   return cancelInUnit(fresh, reason, unit);
 }));
 
-const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () => withDatabaseUnit(async (unit) => {
+const updateOrderWorkflow = (id, body, actor = null) => withOperationLock("order:" + id, () => withDatabaseUnit(async (unit) => {
   const { session, compensate } = unit;
   const order = await querySession(Order.findById(id), session);
   if (!order) throw httpError(404, "Order not found");
-  const requestedStatus = body.status || order.status;
+  const input = body.shipment ? normalizeShipment(body.shipment) : undefined;
+  const eventStatus = input && { shipped: "shipped", in_transit: "shipped", out_for_delivery: "shipped", delivery_attempted: "shipped", delivered: "delivered" }[input.event];
+  const requestedStatus = eventStatus || body.status || order.status;
   if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before changing fulfillment or cash payment");
   if (!canTransitionOrder(order.status, requestedStatus)) throw httpError(409, "Order cannot move from " + order.status + " to " + requestedStatus);
   if (body.isPaid !== undefined && typeof body.isPaid !== "boolean") throw httpError(400, "Payment confirmation must be true or false");
@@ -166,8 +159,10 @@ const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () =>
   }
   if (body.isPaid === false && order.isPaid) throw httpError(409, "A paid order cannot be marked unpaid");
   if (body.isPaid === true && order.paymentMethod !== "cod") throw httpError(409, "Online payments are confirmed by validated gateway callbacks");
-  const previous = { status: order.status, isPaid: order.isPaid, paymentStatus: order.paymentStatus, paidAt: order.paidAt || null };
-  const fields = { status: requestedStatus };
+  const shipping = await shipmentFields(order, requestedStatus, input, unit, actor);
+  if (shipping.replay) return order;
+  const previous = { status: order.status, isPaid: order.isPaid, paymentStatus: order.paymentStatus, paidAt: order.paidAt || null, shipment: order.shipment?.toObject ? order.shipment.toObject() : order.shipment || {} };
+  const fields = { status: requestedStatus, ...(shipping.shipment ? { shipment: shipping.shipment } : {}) };
   if (body.isPaid === true || (requestedStatus === "delivered" && order.paymentMethod === "cod")) {
     Object.assign(fields, { isPaid: true, paymentStatus: "paid", paidAt: order.paidAt || new Date() });
   }
@@ -177,7 +172,8 @@ const updateOrderWorkflow = (id, body) => withOperationLock("order:" + id, () =>
     await Order.updateOne({ _id: id }, { $set: previous });
     await syncInvoicePayment({ ...order.toObject(), ...previous });
   });
-  await syncInvoicePayment(updated, session);
+  await syncInvoicePayment(updated, session, unit, previous);
+  if (shipping.record && !["shipped", "delivered"].includes(shipping.record.event) && updated.status === "shipped") await require("./notificationService").queueMessage(updated, "tracking", String(shipping.record._id), unit, [shipping.record.location, shipping.record.note].filter(Boolean).join(" — "));
   return updated;
 }));
 

@@ -125,3 +125,7 @@ Before real payment use, repeat on your own public sandbox host:
 The implementation uses the documented SSLCOMMERZ refund initiation/query API and unique `refund_trans_id`. Your merchant account must permit refunds; live APIs require the merchant public IP to be allowlisted. Existing credentials are reused. Automated provider responses are fixtures: actual merchant permissions, sandbox/public callback reachability, refund settlement timing and visible browser/device acceptance require your environment. No real money or user database was used in release verification.
 
 Official API reference: [SSLCOMMERZ version 4 integration documentation](https://developer.sslcommerz.com/doc/v4/).
+
+## Compatibility with 2.8
+
+Courier tracking and order email now follow these same fulfillment/request/refund guards. SKU items restore/reserve the purchased option through cancellation, expiry/review recovery and physical return receipt; historical invoice labels remain snapshots. See [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md) and [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md).

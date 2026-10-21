@@ -1,4 +1,4 @@
-# NORDA 2.7.0 acceptance checklist
+# NORDA 2.8.0 acceptance checklist
 
 ## Recorded status
 
@@ -12,6 +12,9 @@
 | Reservation expiry and same-order retry | Automated HTTP, race/fault-injection and both native MongoDB topology checks pass | Follow [checkout recovery acceptance](CHECKOUT_RECOVERY.md#update-and-acceptance), including public sandbox retry |
 | Customer cancellation, whole-order return and refunds | HTTP/fault-injection/frontend checks and real MongoDB pass on both topologies | Follow [operations acceptance](ORDER_OPERATIONS.md#reliability-and-acceptance), including real merchant refund confirmation |
 | Admin review and audit privacy | Verified-charge/risk/additional-refund rules, owner/admin API isolation and net revenue tests pass | Repeat review and two-browser-profile checks on the deployment |
+| Courier history/customer tracking | Guarded HTTP and real MongoDB checks pass; repeated/backwards/unsafe updates checked | Inspect visible courier pages and supplied carrier link |
+| Transactional order email | Commit activation, bounded retry/claims, isolated SMTP delivery and actual automatic worker/file preview pass | Test the owner's actual SMTP inbox/Spam and links |
+| SKU options and independent stock | Cart/checkout/snapshot/race/rollback/expiry/return checks pass on both MongoDB topologies; frontend guards pass | Create real options/photos and inspect browser/mobile/invoice printing |
 | Configuration and credentials | Read-only preflight; no credential/seed changes; additive demo fields need no migration | Retain your working `.env` and uploads |
 
 ## Before starting
@@ -55,6 +58,10 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 3. Process a test COD order through processing → shipped → delivered. Confirm order and invoice become paid. Leave a review from its purchasing customer.
 4. Place a separate unpaid test order, cancel it and check exact stock restoration. Repeat cancellation and confirm stock does not increase again.
 5. Verify customers cannot open management APIs or another customer's order/invoice. Automated native tests already cover these restrictions.
+
+## Courier, email and variants
+
+Follow [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md#acceptance) and [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md#acceptance). The update does not auto-convert your catalog or automatically book a carrier. Use an administrator-created variant product, real uploaded option photos and test orders. Keep current SMTP credentials, verify received mail/Spam and inspect owner-only links after login. Complete desktop/mobile/keyboard/print checks below.
 
 ## Requests, returns and refund acceptance
 

@@ -1,5 +1,12 @@
 # Future NORDA development
 
+## Completed in 2.8.0
+
+- Courier name/tracking number/link, administrator dispatch/progress, append-only history and a customer tracking view. Carrier API booking/polling/webhooks are separate future integration work.
+- Queued order confirmation/payment/shipping/delivery/cancellation email through current SMTP, retries/worker recovery and admin delivery status/retry. Existing account mail and private previews remain compatible.
+- Size/color SKU variants with independent price/photos/stock, guest/cart continuity, immutable order/invoice snapshots and selected-SKU stock through cancellation, expiry/retry and received returns.
+- See [delivery/email setup](DELIVERY_NOTIFICATIONS.md) and [variant guide](PRODUCT_VARIANTS.md). Actual inbox placement, browser/device acceptance and merchant settlement still require the deployment environment.
+
 ## Completed in 2.7.0
 
 - Admin payment review: transaction/reason history, fresh gateway verification, risk acknowledgement, retained-charge selection, additional-charge refunds, approval/refunded closure and private audit notes.
@@ -58,14 +65,14 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 2 — order operations
 
-- Courier integration, tracking number and customer-visible fulfillment history
-- Order/payment/shipping/cancellation/refund email or SMS notifications
+- Carrier-specific booking, labels, rates, authenticated webhooks/polling and delivery-exception/return-to-sender workflows
+- Refund-specific email, SMS, email bounce/webhook handling, delivery monitoring and notification preferences
 - Item-level returns, exchanges, configurable return window, refund deductions and formal credit-note/accounting integration
 - Customer management, operational search and optional finer-grained staff permissions
 
 ## Phase 3 — catalog and experience
 
-- Size/color/SKU variants with independent stock
+- Bulk SKU inventory import/export, per-SKU low-stock alerts and optional multiple warehouses
 - Coupons, wishlist and optional guest cart/checkout
 - Store settings, banners, contact details, FAQ and policies
 - Sales reports, optional comparison/recently viewed products

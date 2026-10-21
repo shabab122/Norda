@@ -1,4 +1,5 @@
 const express = require("express");
+const { getTracking, updateShipment } = require("../controllers/deliveryController");
 const router = express.Router();
 const {
   createOrder,
@@ -13,6 +14,8 @@ const { protect, adminOnly } = require("../middleware/auth");
 router.post("/", protect, createOrder);
 router.get("/my", protect, getMyOrders);
 router.get("/", protect, adminOnly, getAllOrders);
+router.get("/:id/tracking", protect, getTracking);
+router.post("/:id/shipment", protect, adminOnly, updateShipment);
 router.get("/:id", protect, getOrder);
 router.get("/:id/operations", protect, operations.getCustomerOperations);
 router.post("/:id/requests", protect, operations.createCustomerRequest);

@@ -34,7 +34,7 @@ function mailConfiguration() {
   };
 }
 
-async function sendAccountMail({ to, subject, text, kind, actionUrl }) {
+async function sendAccountMail({ to, subject, text, kind, actionUrl, messageId }) {
   const config = mailConfiguration();
   if (config.transport === "file") {
     const directory = localMailDirectory();
@@ -49,10 +49,10 @@ async function sendAccountMail({ to, subject, text, kind, actionUrl }) {
       if (stat && Date.now() - stat.mtimeMs > 86400000) await fs.unlink(file).catch(() => {});
     }
     const file = path.join(directory, Date.now() + "-" + crypto.randomBytes(8).toString("hex") + ".json");
-    await fs.writeFile(file, JSON.stringify({ to, subject, text, kind, actionUrl, createdAt: new Date().toISOString() }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
+    await fs.writeFile(file, JSON.stringify({ to, subject, text, kind, actionUrl, messageId, createdAt: new Date().toISOString() }, null, 2) + "\n", { mode: 0o600, flag: "wx" });
     return { delivery: "local" };
   }
-  const result = await nodemailer.createTransport(config.options).sendMail({ from: config.from, to, subject, text });
+  const result = await nodemailer.createTransport(config.options).sendMail({ from: config.from, to, subject, text, ...(messageId ? { messageId } : {}) });
   if (!result.accepted?.length) throw httpError(503, "Email service did not accept the message");
   return { delivery: "smtp" };
 }

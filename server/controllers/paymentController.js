@@ -70,7 +70,7 @@ const initiateSslcommerz = async (req, res, next) => {
             const updated = await Order.findOneAndUpdate({ _id: order._id, isPaid: false }, { $set: { paymentStatus: "failed" } }, writeOptions(unit.session, { new: true }));
             if (!updated) return;
             unit.compensate(async () => { await Order.updateOne({ _id: order._id }, { $set: previous }); await syncInvoicePayment({ ...current.toObject(), ...previous }); });
-            await syncInvoicePayment(updated, unit.session);
+            await syncInvoicePayment(updated, unit.session, unit, current);
           }));
       await recordFailure.catch((failure) => console.error("Payment initialization state update failed:", failure.message));
     }

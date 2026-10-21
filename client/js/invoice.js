@@ -55,7 +55,7 @@ function renderInvoice(invoice) {
           <tbody>
             ${invoice.items
               .map(
-                (item) => `<tr><td>${escapeHtml(item.name)}</td><td>${item.quantity}</td><td>${money(item.unitPrice)}</td><td>${money(item.lineTotal)}</td></tr>`
+                (item) => `<tr><td>${escapeHtml(item.name)}${item.variantId ? `<br /><small>${escapeHtml(variantLabel(item))}</small>` : ""}</td><td>${item.quantity}</td><td>${money(item.unitPrice)}</td><td>${money(item.lineTotal)}</td></tr>`
               )
               .join("")}
           </tbody>

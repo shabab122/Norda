@@ -1,34 +1,36 @@
-# Verification results — NORDA 2.7.0
+# Verification results — NORDA 2.8.0
 
-Prepared 2026-10-21 (Asia/Dhaka) from the latest `Norda-Main-v2.6.0.zip`. Runtime: Node.js 24.19.0/npm 11.9.0 and native MongoDB 7.0.45 on isolated standalone and replica-set instances.
+Prepared 2026-10-21 (Asia/Dhaka) from the latest `Norda-Main-v2.7.0.zip`. Runtime: Node.js 24.19.0/npm 11.9.0, native MongoDB 7.0.45 and an isolated local SMTP listener.
 
 | Check | Result |
 |---|---|
-| Baseline before changes | 188 regression passes, 0 failures, 4 opt-in native skips |
-| Clean dependency install | `npm ci` passed; no dependency added/removed/upgraded |
-| JavaScript syntax | All 142 JavaScript files passed |
-| Final default regression suite | 253 reported: 248 passed, 0 failed, 5 opt-in native entry points skipped without a test URI |
-| Native MongoDB standalone | 69 reported, 69 passed, 0 failed/skipped; transaction detection false |
-| Native MongoDB replica set | 69 reported, 69 passed, 0 failed/skipped; transaction detection true |
-| Customer requests | Eligibility, ownership, replay/concurrency, pending cancellation shipment/retry guards, reject/unpaid/paid approval and public decision messages |
-| Returns and inventory | Whole-order paid-delivery eligibility; approval without restock; physical receipt; damaged/non-restocked choice; exact-once inventory and refund; stock/audit/invoice rollback |
-| Payment review | Fresh captured-charge verification, real risky initial payment, acknowledgement, retained-charge selection, extra captures, expired-stock recovery and manually cancelled-order guards |
-| Refund ledger | Source-bank amount caps, partial refunds, replay, queued/accepted/confirmed states, cash receipts, simulation, unknown submissions, reference recovery and duplicate-reference protection |
-| Refund worker and provider contract | Startup sweep; queued/config-missing and interrupted submitting recovery; existing-reference query; documented refund transaction/amount fields; redacted gateway failures |
-| Financial history | Original invoice identity/totals preserved; pending/completed/extra refund metadata; review funds excluded; net revenue/CSV; private audit projection |
-| Frontend behavior | Escaped notes/references, eligibility/receipt/risk controls, double-click guards, timeout intent preservation, account-change isolation and invoice refund display |
-| Prior full flow | Account email/reset/verification/addresses; catalog/cart/login continuity; admin permissions/inventory; COD and online checkout/invoice/fulfillment/reviews/reports/uploads; simulation, reservation expiry and same-order retry |
-| Dependency audit | Current `npm audit --json`: 0 vulnerabilities; all non-root dependency lock entries retained |
-| Configuration preservation | Input `server/.env` byte-for-byte preserved; no owner database, seed, account, password or credential changes made |
-| Source preservation | No baseline files deleted; catalog/seed/AI photos/brand assets/base CSS, account-recovery/address-book source and unrelated handlers retained |
-| Browser/device visual acceptance | Not performed; frontend VM/static/resource checks passed; target browser/mobile/keyboard/print checks remain manual |
-| External SMTP inbox | Not retested; retain the working SMTP settings configured on the laptop |
-| Public SSLCOMMERZ/refund settlement | Automated responses are controlled fixtures; merchant permissions/IP allowlisting, public callback acceptance and actual provider-confirmed sandbox repayment remain target-environment checks |
+| Baseline before changes | 248 regression passes, zero failures, five opt-in native skips |
+| Dependency install | Clean `npm ci` passed; no dependency package added/removed/upgraded |
+| JavaScript syntax | All 159 JavaScript files passed |
+| Final default regression suite | 298 reported: 292 passed, zero failed, six native entry points skipped without an explicit test URI |
+| Native MongoDB standalone | 87 reported, 87 passed, zero failed/skipped; compensation path |
+| Native MongoDB replica set | 87 reported, 87 passed, zero failed/skipped; transaction path |
+| Variant catalog | Unique/case-normalized SKU, duplicate/invalid options, safe price/stock totals, identity retention, inactive public stock, expected-stock edit conflicts and legacy conversion guards |
+| Database SKU constraint | Two concurrent native product inserts with the same SKU: one succeeds, one receives unique-index error 11000 |
+| Selected inventory | Distinct cart lines, live selected prices/stock/photos, immutable invoice labels, final-unit SKU race, partial rollback, inactive historical restock, expiry/retry and received returns |
+| Courier tracking | Owner/admin permissions, metadata/dispatch/progress/attempt/delivery, COD invoice synchronization, replay/conflicts, unsafe/backwards/closed guards and public paginated history |
+| Email outbox | Held-until-commit, rollback, state coalescing, queued activation, atomic claims, bounded backoff, stable Message-ID, stale claim recovery and admin retry/privacy |
+| Actual SMTP protocol | Existing account message and order message accepted by an isolated SMTP listener; explicit Message-ID retained; production TLS checks retained |
+| Actual API lifecycle | Separate real MongoDB: server/index initialization, variant checkout, automatic worker delivery to a private file preview with invoice reference, graceful worker/server shutdown |
+| Frontend behavior | Exact-option card/picker, guest continuity, selected-stock controls, escaped invoice/notes, owner account-change guard, shipment timeout/replay guard, email status truth and partial photo upload retry |
+| Previous full flow | Account reset/verification/SMTP/addresses; cart/catalog/admin/checkout; COD/online simulation/gateway state fixtures; invoices/reviews/reports/uploads; reservation expiry/retry; payment review/cancellation/returns/refunds |
+| Dependency audit | Current `npm audit --json`: zero vulnerabilities; dependency lock entries retained except project version |
+| Configuration preservation | Input `server/.env` byte-for-byte preserved; database/JWT/admin/SMTP/gateway credentials unchanged; no owner database or seed changed |
+| Source/assets preservation | No baseline files deleted; catalog/seed/AI images, branding/base CSS, auth/account-recovery/address-book source and unrelated configuration retained |
+| Browser/mobile visual acceptance | Frontend VM/static/resource checks pass; actual target browser/mobile/keyboard/print inspection remains manual |
+| External inbox/Spam | Not contacted; use the owner's working SMTP settings and check actual inbox/Spam and login links |
+| Carrier automation | Store-entered tracking/history implemented; carrier API booking, polling, labels and webhooks not included |
+| Public SSLCOMMERZ/refund settlement | Controlled provider fixtures in tests; merchant/public callback/refund acceptance remains target-environment work |
 
-Default tests exercise the actual Express routes with an isolated, fault-injectable model adapter. Five native entry points exercise real Mongoose/MongoDB persistence and HTTP on both topologies. Each creates and removes only a new random `norda_test_*` database on the isolated server. The owner's configured NORDA database is not used.
+Default tests exercise actual Express routes with an isolated fault-injectable model adapter, services, frontend handlers and local SMTP protocol. Six native entry points exercise real Mongoose/MongoDB persistence and HTTP on standalone and replica-set paths. Each creates and drops only a new random `norda_test_*` database on an isolated test server. The runtime smoke check also uses a new isolated test database and file-mode mail. The owner's configured NORDA database is never used.
 
-`npm run verify` intentionally skips five native entry points without `NORDA_TEST_MONGO_URI`; all were explicitly run and passed in both modes. Expected injected-failure diagnostics can appear in passing tests. Provider fixtures verify application decisions/protocol fields, not merchant permission, bank settlement or public reachability. SMTP fixtures verify protocol behavior, not external sender reputation/inbox placement. No real money was transferred.
+`npm run verify` intentionally skips six native entry points without `NORDA_TEST_MONGO_URI`; all were explicitly run in both modes. Expected fault-injection/rollback diagnostics can appear in passing tests. SMTP acceptance and local previews do not establish actual external inbox placement. Provider fixtures do not establish merchant permissions, public callback reachability or bank settlement. No real money was transferred and no actual courier was contacted.
 
-The archive retains its input configuration. SMTP edits made afterward only on the laptop are not available in the source ZIP. Preserve the working `.env` and uploads when applying this update; no setup, seed or manual migration is needed. Existing overdue unpaid reservations remain eligible for the normal expiry worker. The refund worker resumes only saved eligible refunds and never blindly resubmits an uncertain transfer.
+The update keeps existing products as they are; variant records are created through the admin editor when the owner chooses. Startup initializes additive indexes and background workers. Existing overdue unpaid reservations and queued refunds continue their established recovery behavior. Order email is queued only for new changes, not mass-generated for all historical orders.
 
-See [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md) for policy/API/manual acceptance, [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md) for expiry/retry, [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md) for email/address setup and [ACCEPTANCE_CHECKLIST.md](ACCEPTANCE_CHECKLIST.md) for environment checks.
+Retain the working local `.env` and uploads during update, especially SMTP changes made later only on the laptop. No setup, reseed or manual migration is required. For usage and acceptance see [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md), [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md) and [ACCEPTANCE_CHECKLIST.md](ACCEPTANCE_CHECKLIST.md).

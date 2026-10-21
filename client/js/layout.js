@@ -170,14 +170,15 @@ function requireAdmin() {
 
 // A visitor may choose an item before signing in. Keep one short-lived intent,
 // not a guest cart; apply it once after successful login/registration.
-function rememberCartIntent(productId, quantity) {
-  try { sessionStorage.setItem("norda_pending_cart", JSON.stringify({ productId, quantity, createdAt: Date.now() })); } catch { /* Sign in and add again if browser storage is disabled. */ }
+function rememberCartIntent(productId, quantity, variantId) {
+  try { sessionStorage.setItem("norda_pending_cart", JSON.stringify({ productId, quantity, ...(variantId ? { variantId } : {}), createdAt: Date.now() })); } catch { /* Sign in and add again if browser storage is disabled. */ }
 }
 function takeCartIntent() {
   try {
     const value = JSON.parse(sessionStorage.getItem("norda_pending_cart") || "null");
     sessionStorage.removeItem("norda_pending_cart");
     if (!value || !/^[a-f0-9]{24}$/i.test(value.productId) || !Number.isSafeInteger(value.quantity) || value.quantity < 1 || !Number.isFinite(value.createdAt) || Date.now() - value.createdAt < 0 || Date.now() - value.createdAt > 15 * 60 * 1000) return null;
+    if (value.variantId !== undefined && !/^[a-f0-9]{24}$/i.test(value.variantId)) return null;
     return value;
   } catch { return null; }
 }
@@ -191,17 +192,18 @@ function enqueueCartWrite(work) {
   cartWriteQueue = next.catch(() => {});
   return next;
 }
-async function addProductToCart(productId, quantity = 1) {
+async function addProductToCart(productId, quantity = 1, variantId) {
+  if (variantId !== undefined && !/^[a-f0-9]{24}$/i.test(variantId)) throw new Error("Choose a valid product option.");
   if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error("Choose a positive whole-number quantity.");
-  if (!Api.isLoggedIn()) { rememberCartIntent(productId, quantity); requireLogin(); return false; }
-  await enqueueCartWrite(() => Api.post("/cart", { productId, quantity }));
+  if (!Api.isLoggedIn()) { rememberCartIntent(productId, quantity, variantId); requireLogin(); return false; }
+  await enqueueCartWrite(() => Api.post("/cart", { productId, quantity, ...(variantId ? { variantId } : {}) }));
   return true;
 }
 async function finishCartIntent() {
   const pending = takeCartIntent();
   if (!pending) return false;
   let message = "Your selected product was added to your cart."; let type = "success";
-  try { await addProductToCart(pending.productId, pending.quantity); }
+  try { await addProductToCart(pending.productId, pending.quantity, pending.variantId); }
   catch (error) { message = error.message + " Review your cart before adding the item again."; type = "warning"; }
   try { sessionStorage.setItem("norda_cart_notice", JSON.stringify({ message, type })); } catch { /* Optional feedback. */ }
   return true;
@@ -336,3 +338,5 @@ function paymentNote(value) {
   return String(value || "").replace(/^Demo payment failed; no money was charged$/, "Payment failed; no money was charged")
     .replace(/^Demo checkout cancelled; no money was charged$/, "Checkout cancelled; no money was charged");
 }
+
+function variantLabel(item) { return [item.size, item.color, item.sku ? "SKU: " + item.sku : ""].filter(Boolean).join(" · "); }

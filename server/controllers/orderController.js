@@ -74,7 +74,7 @@ const getAllOrders = async (req, res, next) => {
 };
 
 const updateOrderStatus = async (req, res, next) => {
-  try { res.json(await updateOrderWorkflow(req.params.id, req.body)); }
+  try { res.json(await updateOrderWorkflow(req.params.id, req.body, req.user)); }
   catch (error) { next(error); }
 };
 

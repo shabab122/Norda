@@ -76,6 +76,7 @@ function openModal(product = null) {
   document.getElementById("product-active").checked = !product?.isArchived;
   document.getElementById("product-image-file").value = "";
   document.getElementById("product-modal").dataset.busy = "false";
+  initVariantEditor(product);
   renderImages(); openDialog("product-modal"); document.getElementById("product-name").focus();
 }
 function releaseDraftPreviews() { for (const image of imagesDraft) if (image.preview) URL.revokeObjectURL(image.preview); }
@@ -105,6 +106,7 @@ async function saveProduct(event) {
       const data = new FormData(); data.append("image", image.file);
       image.url = (await Api.post("/uploads", data, { isForm: true })).url; image.file = null;
     }
+    const variants = await variantPayload();
     const id = document.getElementById("product-id").value;
     const stock = Number(document.getElementById("product-stock").value);
     const payload = {
@@ -116,6 +118,12 @@ async function saveProduct(event) {
       images: imagesDraft.map((image) => image.url),
       ...(!id || stock !== editedProduct.stock ? { stock, ...(id ? { expectedStock: editedProduct.stock } : {}) } : {}),
     };
+    if (variants) {
+      const active = variants.filter((v) => v.isActive !== false);
+      const cheapest = [...(active.length ? active : variants)].sort((a, b) => (a.discountPrice || a.price) - (b.discountPrice || b.price))[0];
+      Object.assign(payload, { variants, price: cheapest.price, discountPrice: cheapest.discountPrice || 0, stock: variants.reduce((n, v) => n + v.stock, 0) });
+      delete payload.expectedStock;
+    }
     if (id) await Api.put("/products/" + id, payload); else await Api.post("/products", payload);
     modal.dataset.busy = "false"; closeModal(); showTopAlert("Product saved.", "success"); await loadProducts();
   } catch (error) { showTopAlert(error.message, "error"); }

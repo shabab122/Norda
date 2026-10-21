@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const variantSchema = new mongoose.Schema({
+  sku: { type: String, required: true, uppercase: true, trim: true, maxlength: 64 },
+  size: { type: String, default: "", maxlength: 40 }, color: { type: String, default: "", maxlength: 40 },
+  price: { type: Number, required: true, min: 0.01 }, discountPrice: { type: Number, default: 0, min: 0 },
+  stock: { type: Number, required: true, min: 0 }, images: [String], isActive: { type: Boolean, default: true },
+});
 const productSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -9,6 +15,8 @@ const productSchema = new mongoose.Schema(
     discountPrice: { type: Number, default: 0, min: 0 },
     stock: { type: Number, required: true, default: 0, min: 0 },
     images: [{ type: String }],
+    variants: { type: [variantSchema], default: [] },
+    inventoryVersion: { type: Number, default: 0 },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     // Keep a readable brand snapshot while linking new records to managed brands.
     brand: { type: String, default: "Generic", trim: true },
@@ -20,6 +28,8 @@ const productSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+productSchema.index({ "variants.sku": 1 }, { unique: true, partialFilterExpression: { "variants.sku": { $type: "string" } } });
 
 productSchema.index({ name: "text", description: "text" });
 productSchema.index({ category: 1, brandRef: 1, createdAt: -1 });

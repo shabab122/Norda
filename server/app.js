@@ -86,6 +86,7 @@ app.use("/api/store", storeRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/operations", require("./routes/orderOperationsRoutes"));
+app.use("/api/admin/notifications", require("./routes/notificationRoutes"));
 
 app.use(express.static(path.join(__dirname, "..", "client"), { extensions: ["html"], maxAge: 0 }));
 app.use(notFound);

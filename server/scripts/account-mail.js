@@ -10,15 +10,16 @@ async function main() {
     return;
   }
   if (process.env.NODE_ENV === "production") throw new Error("Local email preview is disabled in production");
+  const orders = process.argv.includes("--orders");
   const recipient = process.argv.find((value, index) => index > 1 && value.includes("@"))?.toLowerCase();
   const files = await fs.readdir(localMailDirectory()).catch((error) => { if (error.code === "ENOENT") return []; throw error; });
   const messages = [];
   for (const name of files.filter((value) => /^[\d-]+-[a-f\d]+\.json$/.test(value)).sort().reverse()) {
     const message = JSON.parse(await fs.readFile(path.join(localMailDirectory(), name), "utf8"));
-    if (Date.now() - new Date(message.createdAt).getTime() <= 86400000 && (!recipient || message.to.toLowerCase() === recipient)) messages.push(message);
+    if ((orders ? String(message.kind).startsWith("order_") : !String(message.kind).startsWith("order_")) && Date.now() - new Date(message.createdAt).getTime() <= 86400000 && (!recipient || message.to.toLowerCase() === recipient)) messages.push(message);
     if (messages.length === 5) break;
   }
-  if (!messages.length) { console.log("No recent local account emails. Request a reset or verification link first."); return; }
+  if (!messages.length) { console.log(orders ? "No recent local order emails. Place or update an order and let the email queue run first." : "No recent local account emails. Request a reset or verification link first."); return; }
   console.log("Private local email preview. Do not share or commit these one-use links.\n");
   for (const message of messages) console.log("To: " + message.to + "\nSubject: " + message.subject + "\nSent: " + message.createdAt + "\n\n" + message.text + "\n");
 }

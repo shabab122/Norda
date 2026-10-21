@@ -35,14 +35,14 @@ function productCardHtml(product) {
         </div>
         <a class="product-name" href="product-detail.html?id=${encodeURIComponent(product._id)}">${escapeHtml(product.name)}</a>
         <div class="product-price">
-          <span class="price-now">${money(displayedPrice)}</span>
+          <span class="price-now">${product.hasVariants || product.variants?.length ? "From " : ""}${money(displayedPrice)}</span>
           ${discounted ? `<span class="price-old">${money(product.price)}</span>` : ""}
         </div>
         <div class="product-card-meta">
           <span class="rating">${product.ratingCount ? "★ " + Number(product.ratingAverage).toFixed(1) + " (" + product.ratingCount + ")" : "New arrival"}</span>
           ${stock}
         </div>
-        <div class="product-footer"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">View details ↗</a><button type="button" data-quick-cart="${escapeHtml(product._id)}" ${product.stock === 0 ? "disabled" : ""}>${product.stock === 0 ? "Sold out" : "+ Add to cart"}</button></div>
+        <div class="product-footer"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">View details ↗</a>${product.hasVariants || product.variants?.length ? `<a class="variant-choose" href="product-detail.html?id=${encodeURIComponent(product._id)}">Choose options</a>` : `<button type="button" data-quick-cart="${escapeHtml(product._id)}" ${product.stock === 0 ? "disabled" : ""}>${product.stock === 0 ? "Sold out" : "+ Add to cart"}</button>`}</div>
       </div>
     </article>
   `;

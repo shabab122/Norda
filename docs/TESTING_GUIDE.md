@@ -1,6 +1,6 @@
-# NORDA 2.7 testing and acceptance
+# NORDA 2.8 testing and acceptance
 
-Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Existing accounts and credentials need no migration.
+Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Courier/email acceptance is in [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), and SKU inventory acceptance is in [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md). Existing accounts and credentials need no migration.
 
 ## Automated verification
 
@@ -12,7 +12,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The five real database test entry points are intentionally skipped without an explicit test URI:
+The six real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
@@ -107,6 +107,16 @@ Use separate test orders for each row. The same flows are automated with the tes
 
 For public merchant acceptance, allowlist the refund API source IP as required by the provider and check the merchant's refund permission. Record actual query-confirmed sandbox repayment, not only a successful initiation. A simulated refund is not evidence of a bank transfer. See [the detailed workflow and uncertain-refund recovery](ORDER_OPERATIONS.md).
 
+## Additional 2.8 acceptance
+
+- Create size/color options, choose the exact SKU through guest login/cart/checkout, inspect its photo/price/quantity limit and original invoice labels.
+- Race the final unit of one SKU from two customer accounts; another option's stock must remain untouched. Repeat cancellation, expiry/retry and physical return receipt on variant orders.
+- Save a stale administrator stock edit after a purchase; require a conflict. Retire an option; old history/restock must remain valid while new purchases are blocked.
+- Add courier details, dispatch, record progress/attempt/delivery and inspect owner-only paginated history. Retry the same key and reject unsafe URLs/backwards/closed updates.
+- Verify queued confirmation/payment/shipping/delivery/cancellation mail. Actual SMTP acceptance, local preview and inbox placement must remain distinguishable. Fail SMTP in isolated tests; saved order/payment/stock must remain intact and email retries must be bounded.
+- Check admin email privacy/retry permissions, account-change guards and interrupted variant-photo upload recovery.
+- Run the actual API startup/shutdown with an isolated MongoDB and file-mode transport; confirm the automatic worker writes a private order confirmation after checkout.
+
 ## Browser and responsive checklist
 
 - Current Chrome/Chromium, Firefox and Safari/WebKit equivalents
@@ -135,12 +145,12 @@ For public merchant acceptance, allowlist the refund API source IP as required b
 
 ## Branch and release procedure
 
-1. Apply this ZIP on a new branch such as `feat/order-operations`. Preserve the existing environment and uploads.
+1. Apply this ZIP on a new branch such as `feat/tracking-notifications-variants`. Preserve the existing environment and uploads.
 2. Review `git diff --check`, dependency lockfile, tests and this checklist.
 3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
-6. Tag the accepted merge (for example `v2.7.0`) and update `CHANGELOG.md`.
+6. Tag the accepted merge (for example `v2.8.0`) and update `CHANGELOG.md`.
 
 ## Additional 2.2 acceptance
 
