@@ -33,7 +33,7 @@ function renderInvoice(invoice) {
       <div class="invoice-meta">
         <div><span>Issued</span><strong>${formatDate(invoice.issuedAt)}</strong></div>
         <div><span>Payment</span><strong class="status-pill payment-${escapeHtml(invoice.paymentStatus)}">${escapeHtml(paymentLabel(invoice.paymentStatus))}</strong>${invoice.order?.paymentMethod === "demo" ? `<small class="payment-context">Simulated payment · No real charge</small>` : ""}</div>
-        <div><span>Order status</span><strong>${escapeHtml(invoice.order?.status || "pending")}</strong></div>
+        <div><span>Order status</span><strong>${escapeHtml(invoice.order?.status || "pending")}</strong>${invoice.returnStatus && invoice.returnStatus !== "none" ? `<small class="payment-context">Return: ${escapeHtml(invoice.returnStatus)}</small>` : ""}</div>
       </div>
       <div class="invoice-addresses">
         <div>
@@ -64,7 +64,11 @@ function renderInvoice(invoice) {
       <div class="invoice-totals">
         <div><span>Subtotal</span><strong>${money(invoice.subtotal)}</strong></div>
         <div><span>Delivery</span><strong>${invoice.shippingFee ? money(invoice.shippingFee) : "Free"}</strong></div>
-        <div class="grand-total"><span>Total</span><strong>${money(invoice.totalAmount)}</strong></div>
+        ${invoice.refundStatus && invoice.refundStatus !== "none" ? `<div><span>Refund status</span><strong>${escapeHtml(invoice.refundStatus.replace(/_/g, " "))}</strong></div>` : ""}
+        ${invoice.refundedAmount ? `<div><span>Order refund completed</span><strong>${money(invoice.refundedAmount)}</strong></div><div><span>Net after order refund</span><strong>${money(Math.max(0, invoice.totalAmount - invoice.refundedAmount))}</strong></div>` : ""}
+        ${invoice.refundPendingAmount ? `<div><span>Order refund pending</span><strong>${money(invoice.refundPendingAmount)}</strong></div>` : ""}
+        ${invoice.extraRefundedAmount ? `<div><span>Additional payment refunded</span><strong>${money(invoice.extraRefundedAmount)}</strong></div>` : ""}
+        <div class="grand-total"><span>${invoice.refundStatus && invoice.refundStatus !== "none" ? "Original total" : "Total"}</span><strong>${money(invoice.totalAmount)}</strong></div>
       </div>
       <footer class="invoice-foot">
         <p>Thank you for shopping with Norda.</p>

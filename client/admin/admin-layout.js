@@ -12,6 +12,7 @@ function renderAdminShell(activePage) {
       <a href="categories.html" class="${activePage === "categories" ? "active" : ""}">${icon("grid")} Categories</a>
       <a href="brands.html" class="${activePage === "brands" ? "active" : ""}">${icon("shield")} Brands</a>
       <a href="orders.html" class="${activePage === "orders" ? "active" : ""}">${icon("bag")} Orders</a>
+      <a href="operations.html" class="${activePage === "operations" ? "active" : ""}">${icon("shield")} Requests & payments</a>
       <a href="invoices.html" class="${activePage === "invoices" ? "active" : ""}">${icon("box")} Invoices</a>
     </nav>
     <div class="admin-sidebar-foot">

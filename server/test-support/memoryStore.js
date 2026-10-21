@@ -42,7 +42,7 @@ const apply = (row, update, inserted = false) => {
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -140,7 +140,7 @@ const installMemoryStore = () => {
       const counts = new Map(); for (const row of rows) counts.set(row.status, (counts.get(row.status) || 0) + 1);
       return [...counts].map(([status, count]) => ({ _id: status, count }));
     }
-    return [{ _id: null, total: rows.reduce((sum, row) => sum + row.totalAmount, 0) }];
+    return [{ _id: null, total: rows.reduce((sum, row) => sum + (group.total?.$sum?.$max ? Math.max(0, row.totalAmount - (row.refundedAmount || 0)) : row.totalAmount), 0) }];
   });
   patch("Review", "aggregate", async (pipeline) => {
     const rows = [...records.Review.values()].filter((row) => matches(row, pipeline[0].$match));

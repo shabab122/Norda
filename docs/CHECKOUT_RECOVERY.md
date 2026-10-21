@@ -83,7 +83,7 @@ This is display/eligibility data; the POST always rechecks ownership, stock, pay
 - Remote gateway calls run outside database transactions. A transaction/session history query must succeed before opening another charge. A pending session without a recoverable hosted URL stays blocked for store assistance.
 - An old failure notification cannot overwrite a newer retry's order or invoice state.
 - Duplicate success/IPN delivery is idempotent. Success on a second attempt, or a distinct validated bank charge on the same attempt, creates a sticky review while retaining the first paid time and existing inventory state.
-- Risk/review outcomes block online fulfillment. This release does not issue refunds, reverse bank transfers or automatically resolve reviews.
+- Risk/review outcomes block online fulfillment. NORDA 2.7 adds an administrator review/refund workflow; review is never silently auto-approved. See [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md).
 - Gateway credentials and session URLs stay on the server; the client receives only the current hosted checkout link after authorization.
 
 Implementation follows the provider's [official SSLCOMMERZ v4 transaction-query and validation API documentation](https://developer.sslcommerz.com/doc/v4/). Merchant sandbox acceptance still requires your real provider configuration and publicly reachable callbacks. Automated gateway responses are controlled test fixtures, not external provider certification.

@@ -27,7 +27,9 @@ const createInvoiceForOrder = (order, session = null) => insertDocument(Invoice,
 
 const syncInvoicePayment = (order, session = null) => Invoice.findOneAndUpdate(
   { order: order._id },
-  { $set: { paymentStatus: order.paymentStatus, paidAt: order.isPaid ? order.paidAt || new Date() : null } },
+  { $set: { paymentStatus: order.paymentStatus, paidAt: order.isPaid ? order.paidAt || new Date() : null,
+    refundStatus: order.refundStatus || "none", refundedAmount: order.refundedAmount || 0,
+    refundPendingAmount: order.refundPendingAmount || 0, extraRefundedAmount: order.extraRefundedAmount || 0, returnStatus: order.returnStatus || "none" } },
   writeOptions(session, { new: true })
 );
 

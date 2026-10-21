@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#214c3b" />
+  <title>Requests & payments — Norda Admin</title>
+  <link rel="icon" type="image/png" href="../assets/brand/norda-mark.png" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/branding.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/operations.css" />
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar" id="admin-sidebar"></aside>
+    <main class="admin-main">
+      <div class="admin-topbar"><div><span class="eyebrow">Customer care</span><h1>Requests & payments</h1><p>Review payments, decide order requests and follow refunds through confirmation.</p></div><span id="admin-topbar-user"></span></div>
+      <div class="operations-tabs" role="group" aria-label="Operation queues"><button class="btn btn-outline is-active" type="button" data-operations-mode="requests">Customer requests</button><button class="btn btn-outline" type="button" data-operations-mode="reviews">Payment reviews</button><button class="btn btn-outline" type="button" data-operations-mode="refunds">Refunds</button></div>
+      <div class="admin-filters"><select id="operations-status" aria-label="Filter operations by status"><option value="">All states</option></select><button class="btn btn-outline btn-sm" id="operations-refresh" type="button">Refresh queue</button></div>
+      <div id="operations-alert" class="operations-alert" role="status" aria-live="polite"></div>
+      <section class="admin-panel" id="operations-list" aria-label="Operations queue"><span class="spinner">Loading queue…</span></section>
+      <section class="operations-detail" id="operations-detail" aria-label="Order operations" hidden></section>
+    </main>
+  </div>
+  <script src="../js/config.js"></script><script src="../js/api.js"></script><script src="../js/layout.js"></script><script src="admin-layout.js"></script><script src="operations.js"></script>
+</body>
+</html>

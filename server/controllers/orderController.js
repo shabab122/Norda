@@ -21,7 +21,7 @@ const createOrder = async (req, res, next) => {
       checkoutKey: req.body.checkoutKey,
     });
     res.status(result.replayed ? 200 : 201).json({
-      ...result.order.toObject(),
+      ...orderView(result.order),
       invoiceNumber: result.invoice.invoiceNumber,
     });
   } catch (error) {
@@ -47,7 +47,7 @@ const getOrder = async (req, res, next) => {
     if (!isOwner && req.user.role !== "admin") {
       return res.status(403).json({ message: "Not authorized to view this order" });
     }
-    res.json(orderView(order));
+    res.json(orderView(order, { includeInternal: req.user.role === "admin" }));
   } catch (error) {
     next(error);
   }
@@ -67,7 +67,7 @@ const getAllOrders = async (req, res, next) => {
         .limit(limit),
       Order.countDocuments(filter),
     ]);
-    res.json({ orders: orders.map(orderView), total, page, pages: Math.ceil(total / limit) || 1 });
+    res.json({ orders: orders.map((order) => orderView(order, { includeInternal: true })), total, page, pages: Math.ceil(total / limit) || 1 });
   } catch (error) {
     next(error);
   }

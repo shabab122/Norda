@@ -1,4 +1,4 @@
-# NORDA 2.6.0 acceptance checklist
+# NORDA 2.7.0 acceptance checklist
 
 ## Recorded status
 
@@ -10,6 +10,8 @@
 | Desktop/mobile layout, keyboard and print | Responsive/print rules and static/VM checks are present | Actual browser/device acceptance pending |
 | Gateway success/failure/cancel/IPN state handling | Controlled provider responses + real MongoDB pass | Public SSLCOMMERZ sandbox acceptance pending |
 | Reservation expiry and same-order retry | Automated HTTP, race/fault-injection and both native MongoDB topology checks pass | Follow [checkout recovery acceptance](CHECKOUT_RECOVERY.md#update-and-acceptance), including public sandbox retry |
+| Customer cancellation, whole-order return and refunds | HTTP/fault-injection/frontend checks and real MongoDB pass on both topologies | Follow [operations acceptance](ORDER_OPERATIONS.md#reliability-and-acceptance), including real merchant refund confirmation |
+| Admin review and audit privacy | Verified-charge/risk/additional-refund rules, owner/admin API isolation and net revenue tests pass | Repeat review and two-browser-profile checks on the deployment |
 | Configuration and credentials | Read-only preflight; no credential/seed changes; additive demo fields need no migration | Retain your working `.env` and uploads |
 
 ## Before starting
@@ -32,7 +34,7 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 2. Add products, sign in and checkout using **Mobile Banking / bKash**. On the demo page choose successful payment. Confirm a processing order with a simulation note, paid invoice with a simulation note, cleared cart and one stock decrement; real revenue stays unchanged.
 3. Repeat with **Card / Bank**. Check the selected category, order total, result, invoice and compact simulation/no-charge notes.
 4. For each category, start a separate demo and choose failed payment; repeat with cancel. Both orders must be cancelled, stock restored once, and payment/invoice statuses must match the outcome. No real money moves.
-5. Leave a pending demo, return to My Orders and use Resume or cancel payment. Existing items are reserved until you finish/cancel or an admin cancels; automatic expiry is not implemented.
+5. Leave a pending demo, return to My Orders and use Resume or cancel payment. Existing items are reserved until completion/cancellation or automatic expiry (30 minutes by default); startup/periodic sweeps restore stock once.
 6. Refresh after completion; do not create another order/invoice or repeat stock updates. Another customer must not access/finish this demo. Browser/mobile/keyboard/print checks still need the visible inspection below.
 
 ## Customer browser journey
@@ -44,7 +46,7 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 5. Complete an order with cash on delivery. Check the order, invoice, shipping address and cleared cart. Try the same checkout key only in the isolated automated test; never create duplicate real orders to test a retry.
 6. Sign out and use a second browser profile/customer. Its dashboard, cart, orders and invoices must belong to that account. Return to the first account and confirm its history remains.
 7. In two tabs of the same browser profile, sign out/switch accounts. The other tab should refresh and show the current account rather than the old identity. Use separate browser profiles for simultaneous independent accounts because cookies are shared within one browser profile.
-8. Change your display name in Profile and confirm the header/profile refresh. Existing password changes still require the current password; no password reset is performed by this update.
+8. Change your display name in Profile and confirm the header/profile refresh. Existing password changes still require the current password; the update itself does not reset any password. Forgot/reset password and email verification remain available through the existing account workflow.
 
 ## Admin browser journey
 
@@ -53,6 +55,12 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 3. Process a test COD order through processing → shipped → delivered. Confirm order and invoice become paid. Leave a review from its purchasing customer.
 4. Place a separate unpaid test order, cancel it and check exact stock restoration. Repeat cancellation and confirm stock does not increase again.
 5. Verify customers cannot open management APIs or another customer's order/invoice. Automated native tests already cover these restrictions.
+
+## Requests, returns and refund acceptance
+
+Follow the matrix in [TESTING_GUIDE.md](TESTING_GUIDE.md#order-operations-acceptance-27) and [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). At minimum, use separate orders to reject a cancellation and ship, approve an unpaid cancellation, approve a paid online cancellation and observe a query-confirmed refund, and return a paid delivered order with receipt/restock. Confirm cash repayment requires a receipt and that local simulated refunds remain clearly simulated.
+
+Inspect pending/unknown refund messages and the provider-reference recovery form without submitting a second refund. Use two customer profiles to verify private note/payment-reference isolation. Compare invoice totals, refund metadata, net dashboard sales and CSV. Repeat actions to verify stock and refunds do not duplicate.
 
 ## Desktop/mobile/keyboard/print
 
@@ -77,7 +85,7 @@ Requires your own sandbox merchant credentials and a public reachable callback h
 4. Complete separate failure and customer-cancel cases. Confirm unpaid status and matching invoice state. Administratively cancel eligible unpaid orders and verify one stock restoration.
 5. Replay success/IPN for the same test transaction. Confirm one order/invoice, one stock decrement and stable paid state.
 6. Replay failure/cancel after a successful validation. Confirm it remains paid. Exercise tampered amount/transaction/currency only on isolated test fixtures; it must not be accepted as paid.
-7. Confirm a valid late payment after admin cancellation appears as payment review without re-consuming inventory; resolve it through your store's payment support process.
+7. Confirm a valid late payment after admin cancellation appears as payment review without re-consuming inventory; resolve it through **Requests & payments**, with fresh verification, a recorded decision and provider-confirmed refunds where required.
 8. Save the observed results against the matrix before enabling live payments.
 
 Official integration reference: https://developer.sslcommerz.com/doc/v4/ . This release checks application behaviour with controlled responses and has not completed these public-provider steps.

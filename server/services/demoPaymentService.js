@@ -1,3 +1,4 @@
+const { hasBlockingOperation } = require("./orderOperationStore");
 const crypto = require("node:crypto");
 const mongoose = require("mongoose");
 const Order = require("../models/Order");
@@ -86,6 +87,7 @@ const completeDemo = async (user, id, outcome) => {
     let order = await ownedOrder(user, id, session);
     order = await expireInUnit(order, unit);
     if (order.reservationExpiredAt) return { reservationExpired: true };
+    if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before completing payment");
     let payment = await querySession(Payment.findOne({ order: order._id, gateway: "demo", user: user._id }), session);
     const invoice = await querySession(Invoice.findOne({ order: order._id }), session);
     if (!invoice) throw httpError(409, "Payment records need store review");

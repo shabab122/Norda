@@ -1,6 +1,6 @@
-# NORDA 2.6 testing and acceptance
+# NORDA 2.7 testing and acceptance
 
-Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Existing accounts and credentials need no migration.
+Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Existing accounts and credentials need no migration.
 
 ## Automated verification
 
@@ -12,13 +12,13 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The four real database test entry points are intentionally skipped without an explicit test URI:
+The five real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
 ```
 
-Each entry point creates a new random `norda_test_*` database and removes only that new database. Set `NORDA_EXPECT_TRANSACTIONS=1` when testing a replica set. Both topologies run in CI. Native HTTP checks cover the 24-product seed, asset serving, cookie login, multi-category cart, real totals, one invoice, cancellation, final-unit races, same-cart replay, injected invoice failure and upload validation. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
+Each entry point creates a new random `norda_test_*` database and removes only that new database. Set `NORDA_EXPECT_TRANSACTIONS=1` when testing a replica set. Both topologies run in CI. Native HTTP checks cover the 24-product seed, asset serving, cookie login, multi-category cart, real totals, one invoice, cancellation, final-unit races, same-cart replay, injected invoice failure and upload validation. Native operations checks also cover cancellation decisions, return receipt, cash/gateway/simulated refund persistence, private audit projections, risky review, extra charges and net revenue. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
 
 ## Current verification limits
 
@@ -84,6 +84,29 @@ Requirements: sandbox credentials, HTTPS `SERVER_URL`, HTTPS `CLIENT_APP_URL`, a
 
 Do not test live payment credentials from a developer machine. Rotate sandbox credentials if they appear in logs or screenshots.
 
+## Order operations acceptance (2.7)
+
+Use separate test orders for each row. The same flows are automated with the test adapter and both native MongoDB topologies; repeat the visible/provider steps in your own environment.
+
+| Scenario | Expected result |
+|---|---|
+| Customer requests cancellation before shipment | One saved request; pending request blocks fulfillment and payment retry |
+| Administrator rejects it with a decision message | Message visible to owner; stock/payment unchanged; normal shipment available |
+| Approve unpaid cancellation twice | One cancellation; exact stock restored once; no refund invented |
+| Approve paid online cancellation | One refund against verified captured balance; provider acceptance remains pending |
+| Query confirmed provider repayment | Ledger completes; same original invoice gains refund metadata; request completes |
+| Request return after paid delivery and approve | Delivered history retained; stock unchanged before receipt |
+| Receive the whole return and choose restock | Exact stock restored once; remaining refund queued; replay does not repeat either |
+| Receive damaged return without restock | Refund proceeds; no increase in sellable stock |
+| Confirm COD refund without acknowledgement/receipt | Rejected; proper confirmation requires actual repayment and its receipt |
+| Submit duplicate/partial/over-limit refunds | Saved keys replay; changed intents/over-refunds rejected; pending/unknown balance reserved |
+| Interrupt refund initiation | Unknown/submitting state never causes a blind second transfer; reconcile existing reference |
+| Approve risky or duplicate-payment review | Fresh verification, risk acknowledgement and completed additional-charge refunds required |
+| Two customer profiles | Each sees only own requests/refunds; private audit/payment references remain admin-only |
+| Invoice, dashboard and CSV after refund | Original total retained; confirmed refund/net sales and extra-charge amounts correct |
+
+For public merchant acceptance, allowlist the refund API source IP as required by the provider and check the merchant's refund permission. Record actual query-confirmed sandbox repayment, not only a successful initiation. A simulated refund is not evidence of a bank transfer. See [the detailed workflow and uncertain-refund recovery](ORDER_OPERATIONS.md).
+
 ## Browser and responsive checklist
 
 - Current Chrome/Chromium, Firefox and Safari/WebKit equivalents
@@ -112,12 +135,12 @@ Do not test live payment credentials from a developer machine. Rotate sandbox cr
 
 ## Branch and release procedure
 
-1. Apply this ZIP on a new branch such as `improve/norda-ui-reliability`. Preserve the existing environment and uploads.
+1. Apply this ZIP on a new branch such as `feat/order-operations`. Preserve the existing environment and uploads.
 2. Review `git diff --check`, dependency lockfile, tests and this checklist.
 3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
-6. Tag the accepted merge (for example `v2.3.0`) and update `CHANGELOG.md`.
+6. Tag the accepted merge (for example `v2.7.0`) and update `CHANGELOG.md`.
 
 ## Additional 2.2 acceptance
 

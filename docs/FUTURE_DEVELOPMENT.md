@@ -1,11 +1,18 @@
 # Future NORDA development
 
+## Completed in 2.7.0
+
+- Admin payment review: transaction/reason history, fresh gateway verification, risk acknowledgement, retained-charge selection, additional-charge refunds, approval/refunded closure and private audit notes.
+- Customer cancellation requests with admin decisions, one-time stock restoration and captured-payment refund coordination.
+- Whole-order returns with physical receipt/restock decisions, real gateway/COD/simulated refund status, partial monetary refunds, uncertain-result reconciliation and original invoice synchronization.
+- See [order operations](ORDER_OPERATIONS.md). Live merchant permissions, public sandbox/refund settlement and browser/device acceptance still require the owner's environment.
+
 ## Completed in 2.6.0
 
 - Unpaid online/simulated reservation expiry, startup catch-up and automatic stock release with one existing invoice.
 - Same-order real SSLCOMMERZ retry, gateway-history reconciliation and pending-session resume. Expired orders re-reserve stock; snapshot prices, addresses and newer carts are retained.
 - Late/duplicate payment review, old-attempt callback protection, customer/admin recovery messages and tests on both MongoDB topologies.
-- See [checkout recovery policy, setup and acceptance](CHECKOUT_RECOVERY.md). Public merchant sandbox checks and refunds/review resolution remain separate work.
+- See [checkout recovery policy, setup and acceptance](CHECKOUT_RECOVERY.md). Public merchant sandbox checks remain environment-specific; refunds/review resolution are included in 2.7.0.
 
 ## Completed in 2.5.0
 
@@ -51,11 +58,10 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 2 — order operations
 
-- Customer cancellation requests
-- Return/refund workflow and payment-review resolution
-- Courier information, tracking number and fulfillment history
-- Order/payment/shipping email or SMS notifications
-- Customer management and a dedicated payment review workspace
+- Courier integration, tracking number and customer-visible fulfillment history
+- Order/payment/shipping/cancellation/refund email or SMS notifications
+- Item-level returns, exchanges, configurable return window, refund deductions and formal credit-note/accounting integration
+- Customer management, operational search and optional finer-grained staff permissions
 
 ## Phase 3 — catalog and experience
 

@@ -33,8 +33,8 @@ const dashboardSummary = async (req, res, next) => {
       Order.countDocuments({ paymentStatus: "review" }),
       Product.find({ stock: { $lte: 5 }, isArchived: { $ne: true } }).select("name stock").sort({ stock: 1 }).limit(10),
       Order.aggregate([
-        { $match: { isPaid: true, status: { $ne: "cancelled" }, paymentMethod: { $ne: "demo" } } },
-        { $group: { _id: null, total: { $sum: "$totalAmount" } } },
+        { $match: { isPaid: true, paymentStatus: "paid", status: { $ne: "cancelled" }, paymentMethod: { $ne: "demo" } } },
+        { $group: { _id: null, total: { $sum: { $max: [0, { $subtract: ["$totalAmount", { $ifNull: ["$refundedAmount", 0] }] }] } } } },
       ]),
       Order.aggregate([{ $group: { _id: "$status", count: { $sum: 1 } } }]),
       Order.find()

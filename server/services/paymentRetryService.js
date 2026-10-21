@@ -15,7 +15,9 @@ const { insertDocument, querySession, withDatabaseUnit, writeOptions } = require
 const { withOperationLock } = require("./operationLock");
 
 const createTransactionId = () => "NOR" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(8).toString("hex").toUpperCase();
+const { hasBlockingOperation } = require("./orderOperationStore");
 const assertRecoverable = (order) => {
+  if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before retrying payment");
   if (order.paymentMethod !== "sslcommerz") throw httpError(409, "This order does not use SSLCOMMERZ");
   if (order.paymentStatus === "review") throw httpError(409, "This payment needs store review before another attempt");
   if (["shipped", "delivered"].includes(order.status) || (order.status === "cancelled" && !order.reservationExpiredAt)) throw httpError(409, "This order cannot be reopened for payment");
