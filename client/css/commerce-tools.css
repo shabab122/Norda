@@ -1,0 +1,47 @@
+/* Commerce workspaces follow Norda's existing type, color and spacing system. */
+.tools-intro { display:flex; justify-content:space-between; align-items:start; gap:24px; margin-bottom:28px; }
+.tools-intro p,.tools-muted { color:var(--text-muted,#667168); }
+.tools-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:20px; }
+.tool-card { background:var(--white,#fff); border:1px solid var(--border,#dedfd8); border-radius:18px; padding:26px; }
+.tool-card h2 { margin:0 0 12px; font-size:1.35rem; }
+.coupon-code { display:inline-block; font-family:monospace; font-size:1.25rem; font-weight:700; letter-spacing:.08em; padding:10px 16px; background:#edf3ec; color:#214c3b; border:1px dashed #8aa593; border-radius:9px; margin:14px 0; overflow-wrap:anywhere; }
+.tool-actions { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:18px 0; }
+.tools-form { display:grid; gap:18px; }
+.tools-form .field { margin:0; min-width:0; }
+.tools-form textarea { min-height:100px; }
+.tools-form input[type=checkbox] { width:auto; }
+.tools-form .check-label { display:flex; align-items:center; gap:10px; }
+.tools-split { display:grid; grid-template-columns:minmax(0,1fr) minmax(300px,1fr); gap:24px; align-items:start; }
+.tools-filter { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin:20px 0; }
+.tools-filter input[type=search] { min-width:220px; }
+.tools-pager { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:20px 0; }
+.tools-preview { max-height:360px; overflow:auto; margin:18px 0; }
+.stock-low-pill { display:inline-block; background:#fff0d6; color:#805410; padding:5px 10px; border-radius:20px; font-size:.8rem; white-space:nowrap; }
+.stock-out-pill { background:#fbe8e5; color:#9a3126; }
+.stock-good-pill { color:#214c3b; }
+.import-status { overflow-wrap:anywhere; }
+.faq-editor-row { border:1px solid #dedfd8; border-radius:12px; padding:18px; display:grid; gap:12px; }
+.policy-text { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.8; }
+.help-layout { display:grid; grid-template-columns:minmax(200px,260px) minmax(0,1fr); gap:28px; align-items:start; }
+.help-nav { display:grid; gap:10px; }
+.help-nav a { padding:10px 0; }
+.help-content { display:grid; gap:24px; }
+.help-content section { scroll-margin-top:25px; }
+.help-content details { padding:16px 0; border-top:1px solid #e2e5dd; }
+.help-content summary { font-weight:600; cursor:pointer; }
+.help-content details p { margin-top:12px; white-space:pre-wrap; }
+.wishlist-item { min-width:0; }
+.wishlist-remove { margin-top:10px; }
+.coupon-entry { border-top:1px solid #dedfd8; padding:18px 0; margin-top:18px; }
+.coupon-entry label { display:block; font-weight:600; margin-bottom:8px; }
+.coupon-entry-controls { display:flex; gap:8px; }
+.coupon-entry-controls input { min-width:0; flex:1; text-transform:uppercase; }
+.coupon-feedback { margin-top:8px; font-size:.86rem; }
+.coupon-discount { color:#214c3b; }
+#store-contact a { overflow-wrap:anywhere; }
+@media(max-width:960px) { .tools-split { grid-template-columns:1fr; } }
+@media(max-width:640px) { .tools-intro { flex-direction:column; } .help-layout { grid-template-columns:1fr; } .help-nav { grid-template-columns:repeat(2,minmax(0,1fr)); } .tool-card { padding:20px; } .tools-filter { align-items:stretch; } .tools-filter input[type=search] { min-width:0; width:100%; } .tools-pager { flex-wrap:wrap; } }
+
+#checkout-discount-row[hidden] { display:none; }
+
+#remove-coupon[hidden] { display:none; }

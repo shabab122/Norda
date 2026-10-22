@@ -28,6 +28,7 @@ function productCardHtml(product) {
             : `<div class="product-fallback"><span>${escapeHtml(initials)}</span><small>${escapeHtml(category)}</small></div>`
         }
       </a>
+      <button type="button" class="wishlist-toggle" data-wishlist="${escapeHtml(product._id)}" aria-label="Save ${escapeHtml(product.name)} to wishlist" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M20.5 4.6a5.5 5.5 0 0 0-7.8 0L12 5.3l-.7-.7a5.5 5.5 0 0 0-7.8 7.8L12 21l8.5-8.6a5.5 5.5 0 0 0 0-7.8Z"/></svg></button>
       <div class="product-info">
         <div class="product-eyebrow">
           <span>${escapeHtml(category)}</span>

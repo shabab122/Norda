@@ -63,6 +63,7 @@ function renderInvoice(invoice) {
       </div>
       <div class="invoice-totals">
         <div><span>Subtotal</span><strong>${money(invoice.subtotal)}</strong></div>
+        ${invoice.discountAmount > 0 ? `<div><span>Coupon ${escapeHtml(invoice.coupon?.code || "")}</span><strong>−${money(invoice.discountAmount)}</strong></div>` : ""}
         <div><span>Delivery</span><strong>${invoice.shippingFee ? money(invoice.shippingFee) : "Free"}</strong></div>
         ${invoice.refundStatus && invoice.refundStatus !== "none" ? `<div><span>Refund status</span><strong>${escapeHtml(invoice.refundStatus.replace(/_/g, " "))}</strong></div>` : ""}
         ${invoice.refundedAmount ? `<div><span>Order refund completed</span><strong>${money(invoice.refundedAmount)}</strong></div><div><span>Net after order refund</span><strong>${money(Math.max(0, invoice.totalAmount - invoice.refundedAmount))}</strong></div>` : ""}

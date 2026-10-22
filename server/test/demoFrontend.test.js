@@ -35,9 +35,11 @@ for (const method of ["demo_mobile_banking", "demo_card_bank", "sslcommerz", "co
     scope.document.querySelector = () => ({ value: method });
     const writes = []; scope.Api.post = async (url, body) => { writes.push({ url, body }); return { checkoutUrl: "demo-payment.html?orderId=example", _id: "placed-order", invoiceNumber: "invoice" }; };
     for (const [id, value] of Object.entries({ "address-line": "Road", "address-line-2": "", city: "Dhaka", district: "Dhaka", postcode: "1207", country: "Bangladesh", phone: "01712345678" })) get(id).value = value;
+    vm.runInContext('checkoutOwner = "buyer"; checkoutQuote = { subtotal: 1000, discountAmount: 100, shippingFee: 120, totalAmount: 1020 }; checkoutCouponCode = "SAVE10";', scope);
     scope.bindCheckoutForm(); await get("checkout-form").submit({ preventDefault() {} });
     assert.equal(writes.length, 1);
     assert.equal(writes[0].url, method.startsWith("demo_") ? "/payments/demo/initiate" : method === "sslcommerz" ? "/payments/sslcommerz/initiate" : "/orders");
+    assert.equal(writes[0].body.couponCode, "SAVE10"); assert.equal(writes[0].body.expectedTotals.totalAmount, 1020);
     assert.ok(writes[0].body.checkoutKey); assert.equal(writes[0].body.shippingAddress.city, "Dhaka");
     if (method.startsWith("demo_")) { assert.equal(writes[0].body.channel, method.slice(5)); assert.match(scope.window.location.href, /demo-payment/); }
     await get("checkout-form").submit({ preventDefault() {} }); assert.equal(writes.length, 1);

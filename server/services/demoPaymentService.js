@@ -45,11 +45,11 @@ const createDemoPayment = async (order, user, unit) => {
   return payment;
 };
 
-const initiateDemo = async ({ user, shippingAddress, checkoutKey, channel }) => {
+const initiateDemo = async ({ user, shippingAddress, checkoutKey, channel, couponCode, expectedTotals }) => {
   requireDemo();
   if (!["mobile_banking", "card_bank"].includes(channel)) throw httpError(400, "Choose Mobile Banking/bKash or Card/Bank");
   return withOperationLock("payment-init:" + user._id, async () => {
-    const { order, invoice } = await createOrderFromCart({ user, shippingAddress, checkoutKey, paymentMethod: "demo", paymentChannel: channel });
+    const { order, invoice } = await createOrderFromCart({ user, shippingAddress, checkoutKey, paymentMethod: "demo", paymentChannel: channel, couponCode, expectedTotals });
     try {
       return await withOperationLock("order:" + order._id, () => withDatabaseUnit(async (unit) => {
         const current = await expireInUnit(await querySession(Order.findById(order._id), unit.session), unit);

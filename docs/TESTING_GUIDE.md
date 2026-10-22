@@ -1,5 +1,9 @@
 # NORDA 2.8 testing and acceptance
 
+## Coupons, wishlist, inventory and store content — 2.9.0
+
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+
 Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Courier/email acceptance is in [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), and SKU inventory acceptance is in [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md). Existing accounts and credentials need no migration.
 
 ## Automated verification
@@ -150,7 +154,7 @@ For public merchant acceptance, allowlist the refund API source IP as required b
 3. Push your reviewed update branch and open a pull request into `main`.
 4. Record environment acceptance evidence in the pull request.
 5. Merge to `main` only after approval and a rollback plan.
-6. Tag the accepted merge (for example `v2.8.0`) and update `CHANGELOG.md`.
+6. Tag the accepted merge (for example `v2.9.0`) and update `CHANGELOG.md`.
 
 ## Additional 2.2 acceptance
 

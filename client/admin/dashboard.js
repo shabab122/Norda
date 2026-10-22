@@ -27,7 +27,7 @@ async function loadDashboard() {
           <div class="status-breakdown">${statuses.map((status) => `<div><span class="status-pill status-${status}">${status}</span><strong>${summary.orderStatusCounts?.[status] || 0}</strong></div>`).join("")}</div>
         </section>
         <section class="admin-panel">
-          <div class="panel-heading"><div><span class="eyebrow">Inventory</span><h2>Low stock</h2></div><a href="products.html" class="text-link">View products →</a></div>
+          <div class="panel-heading"><div><span class="eyebrow">Inventory</span><h2>Low stock</h2></div><a href="inventory.html?low=true" class="text-link">View SKU alerts →</a></div>
           ${summary.lowStockProducts.length ? `<div class="compact-list">${summary.lowStockProducts.map((product) => `<div><span>${escapeHtml(product.name)}</span><strong class="${product.stock === 0 ? "danger-text" : ""}">${product.stock} left</strong></div>`).join("")}</div>` : `<p>Nothing is running low right now.</p>`}
         </section>
       </div>

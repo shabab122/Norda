@@ -1,5 +1,13 @@
 # Future NORDA development
 
+## Completed in 2.9.0
+
+- Coupon center and guarded fixed/percentage checkout discounts with limits and immutable invoice/payment/refund snapshots.
+- Account wishlists and safe cart continuation, including exact variant selection.
+- Product/SKU stock CSV export/preview/import, durable results and individual low-stock thresholds/alerts.
+- Admin storefront banner/announcement/contact/FAQ/policy/delivery settings and public help pages.
+- See [the complete feature guide](COMMERCE_TOOLS.md). Bulk creation of new catalog/SKU identities, stock-email subscriptions and multi-warehouse tooling remain separate future scope.
+
 ## Completed in 2.8.0
 
 - Courier name/tracking number/link, administrator dispatch/progress, append-only history and a customer tracking view. Carrier API booking/polling/webhooks are separate future integration work.
@@ -72,9 +80,8 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 3 — catalog and experience
 
-- Bulk SKU inventory import/export, per-SKU low-stock alerts and optional multiple warehouses
-- Coupons, wishlist and optional guest cart/checkout
-- Store settings, banners, contact details, FAQ and policies
+- Optional bulk creation of new catalog/SKU records, warehouse inventory and low-stock email subscriptions
+- Optional full guest cart/checkout
 - Sales reports, optional comparison/recently viewed products
 - SEO metadata, sitemap and product structured data
 

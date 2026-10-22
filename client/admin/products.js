@@ -71,6 +71,7 @@ function openModal(product = null) {
   document.getElementById("product-price").value = product?.price ?? "";
   document.getElementById("product-discount").value = product?.discountPrice ?? "";
   document.getElementById("product-stock").value = product?.stock ?? "";
+  document.getElementById("product-low-stock").value = product?.lowStockThreshold ?? 5;
   document.getElementById("product-description").value = product?.description || "";
   document.getElementById("product-featured").checked = Boolean(product?.isFeatured);
   document.getElementById("product-active").checked = !product?.isArchived;
@@ -110,6 +111,7 @@ async function saveProduct(event) {
     const id = document.getElementById("product-id").value;
     const stock = Number(document.getElementById("product-stock").value);
     const payload = {
+      lowStockThreshold: Number(document.getElementById("product-low-stock").value),
       name: document.getElementById("product-name").value.trim(), category: document.getElementById("product-category").value,
       brandRef: document.getElementById("product-brand").value, price: Number(document.getElementById("product-price").value),
       discountPrice: Number(document.getElementById("product-discount").value) || 0,

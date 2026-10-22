@@ -1,5 +1,9 @@
 # Norda 2.8 — Architecture and Data Model
 
+## Coupons, wishlist, inventory and store content — 2.9.0
+
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+
 ## System view
 
 ```mermaid

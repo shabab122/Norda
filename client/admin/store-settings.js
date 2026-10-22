@@ -1,0 +1,46 @@
+let settingsOwner, editedSettings, settingsBusy = false, faqDraft = [], settingsRead = 0;
+document.addEventListener("DOMContentLoaded", async () => { await Api.ready; if (!requireAdmin()) return; settingsOwner = Api.getUser()._id; renderAdminShell("store-settings"); await loadSettings(); });
+function settingsAlert(message, type = "success") { document.getElementById("tools-alert").innerHTML = `<div class="alert alert-${type}">${escapeHtml(message)}</div>`; }
+function settingsInput(id, label, value, max, type = "text") { return `<div class="field"><label for="setting-${id}">${label}</label><input type="${type}" id="setting-${id}" maxlength="${max}" value="${escapeHtml(value ?? "")}" ${type === "number" ? 'min="0" max="10000000" step="0.01"' : ""} /></div>`; }
+async function loadSettings() {
+  const read = ++settingsRead;
+  try { const store = await Api.get("/admin/store-settings"); if (read !== settingsRead || Api.getUser()?._id !== settingsOwner) return; editedSettings = store; renderSettings(); }
+  catch (error) { settingsAlert(error.message, "error"); }
+}
+function renderSettings() {
+  const s = editedSettings; faqDraft = (s.faq || []).map((r) => ({ ...r }));
+  document.getElementById("tools-root").innerHTML = `<form class="tools-form" id="settings-form"><section class="admin-panel"><div class="panel-heading"><h2>Contact & delivery pricing</h2><a class="text-link" href="../help.html" target="_blank" rel="noopener">View help page ↗</a></div><div class="form-grid two">${settingsInput("supportEmail", "Support email", s.supportEmail, 254, "email")}${settingsInput("supportPhone", "Support phone", s.supportPhone, 40)}${settingsInput("address", "Store / contact address", s.address, 500)}${settingsInput("supportHours", "Support hours", s.supportHours, 160)}${settingsInput("freeShippingThreshold", "Free delivery from (BDT, after discount)", s.freeShippingThreshold, 20, "number")}${settingsInput("flatShippingFee", "Delivery charge below threshold (BDT)", s.flatShippingFee, 20, "number")}</div><p class="tools-muted">New orders use these prices. Existing orders and invoices retain their original totals.</p></section><section class="admin-panel"><h2>Announcement</h2><label class="check-label"><input type="checkbox" id="setting-announcement-visible" ${s.announcement.visible ? "checked" : ""} /> Show a custom announcement</label><div class="form-grid two">${settingsInput("announcement-text", "Announcement text", s.announcement.text, 180)}${settingsInput("announcement-url", "Optional link (/path or HTTPS)", s.announcement.url, 500)}</div></section><section class="admin-panel"><h2>Homepage banner</h2><label class="check-label"><input type="checkbox" id="setting-hero-visible" ${s.hero.visible ? "checked" : ""} /> Show the homepage banner</label><div class="form-grid two">${[["eyebrow", "Small heading", 80], ["title", "Title", 160], ["description", "Description", 600], ["buttonLabel", "Button label", 60], ["buttonUrl", "Button link (/path or HTTPS)", 500], ["imageUrl", "Banner image URL", 500]].map(([key, label, max]) => settingsInput("hero-" + key, label, s.hero[key], max)).join("")}</div><div class="field"><label for="setting-banner-file">Or upload a banner image (up to 5 MB)</label><input id="setting-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/gif" /></div><img id="setting-banner-preview" src="${escapeHtml(resolveImage(s.hero.imageUrl))}" alt="Current banner preview" style="max-width:100%;max-height:200px;object-fit:contain;border-radius:12px" /></section><section class="admin-panel"><div class="panel-heading"><h2>Frequently asked questions</h2><button class="btn btn-outline btn-sm" type="button" id="setting-add-faq">Add question</button></div><div id="settings-faq" class="tools-form"></div></section><section class="admin-panel"><h2>Store policies</h2><p class="tools-muted">Plain text is displayed safely on the help page. Set the policies that apply to your own store; HTML is not rendered.</p><div class="form-grid two">${[["delivery", "Delivery policy"], ["returns", "Returns & refunds"], ["privacy", "Privacy policy"], ["terms", "Terms of shopping"]].map(([key, label]) => `<div class="field"><label for="setting-policy-${key}">${label}</label><textarea id="setting-policy-${key}" rows="8" maxlength="12000">${escapeHtml(s.policies[key])}</textarea></div>`).join("")}</div></section><div class="tool-actions"><button class="btn btn-primary" id="settings-save">Save store settings</button><button class="btn btn-outline" type="button" id="settings-reload">Reload saved settings</button></div></form>`;
+  renderFaqEditor();
+  document.getElementById("setting-add-faq").addEventListener("click", () => { collectFaq(); if (faqDraft.length >= 20) return settingsAlert("Use up to 20 FAQ entries.", "error"); faqDraft.push({ question: "", answer: "" }); renderFaqEditor(); });
+  document.getElementById("settings-reload").addEventListener("click", loadSettings);
+  document.getElementById("settings-form").addEventListener("submit", saveSettingsForm);
+  document.getElementById("setting-banner-file").addEventListener("change", uploadSettingsBanner);
+  document.getElementById("setting-hero-imageUrl").addEventListener("change", (event) => document.getElementById("setting-banner-preview").src = resolveImage(event.target.value));
+}
+function collectFaq() { faqDraft = [...document.querySelectorAll("[data-faq-question]")].map((input, i) => ({ question: input.value, answer: document.getElementById("faq-answer-" + i).value })); }
+function renderFaqEditor() {
+  document.getElementById("settings-faq").innerHTML = faqDraft.length ? faqDraft.map((row, i) => `<div class="faq-editor-row"><div class="field"><label for="faq-question-${i}">Question ${i + 1}</label><input id="faq-question-${i}" data-faq-question="${i}" maxlength="180" required value="${escapeHtml(row.question)}" /></div><div class="field"><label for="faq-answer-${i}">Answer</label><textarea id="faq-answer-${i}" maxlength="2000" required>${escapeHtml(row.answer)}</textarea></div><button type="button" class="text-button" data-faq-remove="${i}">Remove question</button></div>`).join("") : `<p>No FAQ entries yet.</p>`;
+  document.querySelectorAll("[data-faq-remove]").forEach((button) => button.addEventListener("click", () => { collectFaq(); faqDraft.splice(Number(button.dataset.faqRemove), 1); renderFaqEditor(); }));
+}
+function settingsControls(busy) { settingsBusy = busy; document.querySelectorAll("#settings-form input, #settings-form textarea, #settings-form button").forEach((f) => f.disabled = busy); }
+async function uploadSettingsBanner(event) {
+  const file = event.target.files[0]; if (!file || settingsBusy) return;
+  if (file.size > 5 * 1024 * 1024 || !["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { settingsAlert("Choose a JPG, PNG, WebP or GIF image up to 5 MB.", "error"); event.target.value = ""; return; }
+  settingsControls(true);
+  try { const body = new FormData(); body.append("image", file); const result = await Api.post("/uploads", body, { isForm: true }); if (Api.getUser()?._id !== settingsOwner) return; document.getElementById("setting-hero-imageUrl").value = result.url; document.getElementById("setting-banner-preview").src = resolveImage(result.url); settingsAlert("Banner uploaded. Save settings to publish it."); }
+  catch (error) { settingsAlert(error.message, "error"); }
+  finally { event.target.value = ""; settingsControls(false); }
+}
+async function saveSettingsForm(event) {
+  event.preventDefault(); if (settingsBusy || Api.getUser()?._id !== settingsOwner) return; collectFaq();
+  const value = (key) => document.getElementById("setting-" + key).value.trim();
+  const body = { revision: editedSettings.revision, faq: faqDraft, announcement: { visible: document.getElementById("setting-announcement-visible").checked, text: value("announcement-text"), url: value("announcement-url") }, hero: { visible: document.getElementById("setting-hero-visible").checked }, policies: {} };
+  for (const key of ["supportEmail", "supportPhone", "address", "supportHours"]) body[key] = value(key);
+  for (const key of ["freeShippingThreshold", "flatShippingFee"]) body[key] = Number(value(key));
+  for (const key of ["eyebrow", "title", "description", "buttonLabel", "buttonUrl", "imageUrl"]) body.hero[key] = value("hero-" + key);
+  for (const key of ["delivery", "returns", "privacy", "terms"]) body.policies[key] = value("policy-" + key);
+  settingsControls(true);
+  try { const saved = await Api.put("/admin/store-settings", body); if (Api.getUser()?._id !== settingsOwner) return; editedSettings = saved; settingsAlert("Store settings published. Refresh the storefront to see the changes."); }
+  catch (error) { settingsAlert(error.message, "error"); }
+  finally { settingsControls(false); }
+}

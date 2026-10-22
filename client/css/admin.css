@@ -17,3 +17,7 @@ body{background:#f4f5ee}.admin-layout{display:grid;grid-template-columns:235px m
 @media(max-width:500px){.admin-topbar{display:block}.admin-topbar-actions{justify-content:flex-start;margin-top:19px}.stat-grid{gap:11px}.stat-card{min-height:145px;padding:17px}.stat-value{font-size:1.8rem}.stat-card small{font-size:.6rem}.stat-label{font-size:.59rem}.status-breakdown{grid-template-columns:repeat(3,minmax(0,1fr))}.admin-panel{padding:16px}.panel-heading{align-items:start}.panel-heading a{font-size:.65rem}.admin-pagination{align-items:flex-start;flex-direction:column}.admin-filters{padding:13px}.modal-box{padding:23px;max-height:93vh}.modal-box h2{font-size:1.3rem}.image-editor{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 #product-form{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}#product-form>.field:has(#product-name),#product-form>.field:has(#product-image-file),#product-form>.field:has(#product-description),#product-form>.check-field,#product-form>.modal-actions{grid-column:1/-1}@media(max-width:500px){#product-form{grid-template-columns:1fr}}
+
+/* Keep every workspace link reachable as the admin navigation grows. */
+.admin-sidebar { overflow-y:auto; min-height:0; }
+.admin-sidebar nav, .admin-sidebar-foot, .admin-sidebar>.admin-logo { flex-shrink:0; }

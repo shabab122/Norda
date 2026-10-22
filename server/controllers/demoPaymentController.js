@@ -1,7 +1,7 @@
 const demo = require("../services/demoPaymentService");
 
 const initiate = async (req, res, next) => {
-  try { res.status(201).json(await demo.initiateDemo({ user: req.user, shippingAddress: req.body.shippingAddress, checkoutKey: req.body.checkoutKey, channel: req.body.channel })); }
+  try { res.status(201).json(await demo.initiateDemo({ user: req.user, shippingAddress: req.body.shippingAddress, checkoutKey: req.body.checkoutKey, channel: req.body.channel, couponCode: req.body.couponCode, expectedTotals: req.body.expectedTotals })); }
   catch (error) {
     if (error.orderId) return res.status(error.statusCode || 503).json({ message: "Your order was saved. Check My Orders before trying again.", orderId: error.orderId });
     next(error);

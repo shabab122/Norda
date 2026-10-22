@@ -9,6 +9,9 @@ function renderAdminShell(activePage) {
       <span class="admin-nav-label">Workspace</span>
       <a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">${icon("grid")} Overview</a>
       <a href="products.html" class="${activePage === "products" ? "active" : ""}">${icon("box")} Products</a>
+      <a href="inventory.html" class="${activePage === "inventory" ? "active" : ""}">${icon("box")} Inventory tools</a>
+      <a href="coupons.html" class="${activePage === "coupons" ? "active" : ""}">${icon("bag")} Coupon center</a>
+      <a href="store-settings.html" class="${activePage === "store-settings" ? "active" : ""}">${icon("sliders")} Store settings</a>
       <a href="categories.html" class="${activePage === "categories" ? "active" : ""}">${icon("grid")} Categories</a>
       <a href="brands.html" class="${activePage === "brands" ? "active" : ""}">${icon("shield")} Brands</a>
       <a href="orders.html" class="${activePage === "orders" ? "active" : ""}">${icon("bag")} Orders</a>
