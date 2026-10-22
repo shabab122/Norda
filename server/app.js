@@ -46,6 +46,7 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   contentSecurityPolicy: { directives: { "img-src": ["'self'", "https:", "data:", "blob:", ...(process.env.NODE_ENV === "production" ? [] : ["http:"])] } },
 }));
+app.use((req, res, next) => { req.requestId = require("node:crypto").randomUUID(); res.setHeader("X-Request-ID", req.requestId); next(); });
 app.use(cookieParser());
 app.use(express.json({ limit: "1mb", verify(req, res, buffer) { if (req.originalUrl.split("?")[0] === "/api/mail/delivery-events") req.rawMailBody = Buffer.from(buffer); } }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
@@ -70,10 +71,13 @@ app.get("/api/health", (req, res) => res.json({ status: "ok", service: "norda-ap
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
 app.use("/api", apiLimiter);
+app.use("/api", require("./services/maintenanceService").writeMiddleware);
 app.use("/api", (req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
 
+app.get("/uploads/:filename", require("./services/mediaService").legacyRedirect);
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { fallthrough: false }));
 app.post("/api/mail/delivery-events", async (req, res, next) => { try { const s = require("./services/notificationDeliveryService"); s.verifyWebhook(req); res.json(await s.recordDelivery(req.body)); } catch (e) { next(e); } });
+app.use("/api", require("./routes/productionToolsRoutes"));
 app.use("/api/auth", authRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -92,6 +96,8 @@ app.use("/api/admin", require("./routes/managementRoutes"));
 app.use("/api/admin/operations", require("./routes/orderOperationsRoutes"));
 app.use("/api/admin/notifications", require("./routes/notificationRoutes"));
 
+app.use(require("./services/seoService").privateRobots);
+app.use(require("./services/seoService").router);
 app.use(express.static(path.join(__dirname, "..", "client"), { extensions: ["html"], maxAge: 0 }));
 app.use(notFound);
 app.use(errorHandler);

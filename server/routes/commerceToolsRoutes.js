@@ -1,3 +1,4 @@
+const { guard: mediaGuard } = require("../services/mediaService");
 const express = require("express");
 const { protect, authorize } = require("../middleware/auth");
 const c = require("../controllers/commerceToolsController");
@@ -13,7 +14,7 @@ router.get("/admin/coupons", protect, authorize("marketing"), c.listCoupons);
 router.post("/admin/coupons", protect, authorize("marketing"), c.saveCoupon);
 router.put("/admin/coupons/:id", protect, authorize("marketing"), c.saveCoupon);
 router.get("/admin/store-settings", protect, authorize("settings"), c.getConfig);
-router.put("/admin/store-settings", protect, authorize("settings"), c.saveConfig);
+router.put("/admin/store-settings", protect, authorize("settings"), mediaGuard(c.saveConfig));
 router.get("/admin/inventory", protect, authorize("inventory"), c.listInventory);
 router.get("/admin/inventory/export.csv", protect, authorize("inventory"), c.exportInventory);
 router.post("/admin/inventory/preview", protect, authorize("inventory"), c.previewInventory);

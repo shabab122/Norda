@@ -19,17 +19,10 @@ const uploadImage = async (req, res, next) => {
       await fs.unlink(req.file.path).catch(() => {});
       return res.status(400).json({ message: "Uploaded file content is not a supported image" });
     }
-    const upload = await Upload.create({
-      uploadedBy: req.user._id,
-      originalName: path.basename(req.file.originalname).slice(0, 255),
-      filename: req.file.filename,
-      url: filePath,
-      mimeType: req.file.mimetype,
-      size: req.file.size,
-    });
+    const upload = await require("../services/mediaService").persistUpload(req.file, req.user);
     res.status(201).json({ _id: upload._id, url: upload.url });
   } catch (error) {
-    await fs.unlink(req.file.path).catch(() => {});
+    if (!error.keepUploadFile) await fs.unlink(req.file.path).catch(() => {});
     next(error);
   }
 };

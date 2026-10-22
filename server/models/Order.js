@@ -19,6 +19,7 @@ const orderSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     items: [orderItemSchema],
     shippingAddress: {
+      thana: String, area: String,
       line1: String,
       line2: String,
       city: String,

@@ -21,6 +21,7 @@ const invoiceSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     items: { type: [invoiceItemSchema], required: true },
     shippingAddress: {
+      thana: String, area: String,
       line1: String,
       line2: String,
       city: String,

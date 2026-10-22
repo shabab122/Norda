@@ -1,8 +1,8 @@
-> Current version: 2.10.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+> Current version: 2.11.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). The optional eCourier API, SEO, Cloudinary media and backup/monitoring tools are now implemented in 2.11; see [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for configuration and live-account acceptance. Existing credentials/data are preserved.
 
 # Norda — Project Requirements
 
@@ -258,3 +258,15 @@ Detailed execution steps are in [TESTING_GUIDE.md](TESTING_GUIDE.md).
 - **EXCHANGE-01** Equal-price same-product replacement SKUs shall reserve on approval, release on withdrawal and ship only after original receipt; original invoice totals remain intact.
 
 Policies, APIs and acceptance examples: [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md).
+
+## Production tools — 2.11 requirements
+
+| ID | Implemented requirement | Acceptance boundary |
+|---|---|---|
+| OPS-01 | Scoped eCourier booking, package charges, labels, automatic polling and exceptions | Merchant sandbox credentials, address/collection contract and real parcel acceptance |
+| SEO-01 | Initial product metadata, canonical/OG, escaped structured data and paginated sitemaps | Final HTTPS origin, Rich Results/Search Console checks |
+| MEDIA-01 | Optional Cloudinary uploads/migration and explicit reference-safe cleanup | Actual account permissions and durable provider availability |
+| OPS-02 | Encrypted BSON/media backup, authenticated verify and new-target restore | Owner key/private disk, upgraded writers and secure off-host copy policy |
+| OPS-03 | Readiness, redacted incident history and optional bounded alerts | Owner SMTP/HTTPS receiver plus external uptime monitor |
+
+Existing requirements remain in force. See [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) and [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md).

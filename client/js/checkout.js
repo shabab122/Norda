@@ -61,6 +61,8 @@ async function loadCheckout() {
                 <label for="district">District</label>
                 <input type="text" id="district" required maxlength="60" autocomplete="address-level1" value="${escapeHtml(address.district || "Dhaka")}" />
               </div>
+              <div class="field"><label for="courier-thana">Thana <span>Optional courier detail</span></label><input id="courier-thana" type="text" maxlength="40" value="${escapeHtml(address.thana || "")}" /></div>
+              <div class="field"><label for="courier-area">Area <span>Optional courier detail</span></label><input id="courier-area" type="text" maxlength="40" value="${escapeHtml(address.area || "")}" /></div>
               <div class="field">
                 <label for="postcode">Postal code</label>
                 <input type="text" id="postcode" required maxlength="20" autocomplete="postal-code" value="${escapeHtml(address.postCode || "")}" placeholder="1207" />
@@ -143,13 +145,15 @@ function bindCheckoutAddressSelection() {
   if (!select) return;
   select.addEventListener("change", () => {
     const address = checkoutAddresses.find((entry) => entry._id === select.value) || {};
-    const fields = { "address-line": "line1", "address-line-2": "line2", city: "city", district: "district", postcode: "postCode", phone: "phone", country: "country" };
+    const fields = { "courier-thana": "thana", "courier-area": "area", "address-line": "line1", "address-line-2": "line2", city: "city", district: "district", postcode: "postCode", phone: "phone", country: "country" };
     for (const [id, key] of Object.entries(fields)) document.getElementById(id).value = address[key] || (key === "country" ? "Bangladesh" : "");
   });
 }
 
 function shippingPayload() {
   return {
+    ...(document.getElementById("courier-thana")?.value?.trim() ? { thana: document.getElementById("courier-thana").value.trim() } : {}),
+    ...(document.getElementById("courier-area")?.value?.trim() ? { area: document.getElementById("courier-area").value.trim() } : {}),
     line1: document.getElementById("address-line").value.trim(),
     line2: document.getElementById("address-line-2").value.trim(),
     city: document.getElementById("city").value.trim(),

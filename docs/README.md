@@ -1,10 +1,12 @@
 # Documentation index
 
+- [Production tools](PRODUCTION_TOOLS.md) — v2.11 eCourier, SEO, Cloudinary media, encrypted backup/restore and monitoring.
+
 - [Management, devices and item returns](MANAGEMENT_RETURNS.md) — 2.10 workflows, permission scopes, reports, preferences/outcomes, device revocation, returns/exchanges and credit notes.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). The optional eCourier API, SEO, Cloudinary media and backup/monitoring tools are now implemented in 2.11; see [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for configuration and live-account acceptance. Existing credentials/data are preserved.
 
 - [Courier tracking and order email](DELIVERY_NOTIFICATIONS.md) — 2.8 workflow, SMTP reuse, queue/retry and acceptance.
 - [Product variants](PRODUCT_VARIANTS.md) — 2.8 SKU editor, option selection, inventory and compatibility.
