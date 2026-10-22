@@ -45,7 +45,7 @@ const startReservationWorker = () => {
   let stopped = false;
   const tick = () => {
     if (stopped || running) return;
-    running = expireReservations().catch((error) => console.error("Reservation sweep failed:", error.message)).finally(() => { running = null; });
+    running = require("./maintenanceService").withWriteLease(expireReservations).catch((error) => console.error("Reservation sweep failed:", error.message)).finally(() => { running = null; });
   };
   const timer = setInterval(tick, sweepSeconds() * 1000);
   timer.unref();

@@ -1,5 +1,8 @@
 # Norda — Visual Asset Notes
 
+> Current extension: v2.11 adds optional eCourier booking/tracking, Cloudinary media and backup/monitoring. See [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md). Existing workflows below remain supported.
+
+
 ## Version 2.2 product photography
 
 `client/assets/products/photos/` contains 24 distinct AI-generated photorealistic product images. Each is an optimized 800×800 WebP; their combined size is 1,160,128 bytes. They use warm neutral studio backgrounds and unbranded products. `AI_ASSETS.json` in that directory records every final prompt, generation method, processing and demonstration-use disclosure. These illustrate products and are not photographs of verified merchant stock.

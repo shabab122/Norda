@@ -1,8 +1,8 @@
-# Norda 2.10 — Architecture and Data Model
+# Norda 2.11 — Architecture and Data Model
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). The optional eCourier API, SEO, Cloudinary media and backup/monitoring tools are now implemented in 2.11; see [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for configuration and live-account acceptance. Existing credentials/data are preserved.
 
 ## System view
 
@@ -144,3 +144,11 @@ Products embed retained size/color options. A partial unique multikey SKU index 
 `AuthSession` stores session IDs, expiry/version, revocation and masked device metadata; legacy tokens are adopted by hash. `StaffAudit` records full-admin grants. `ItemReturnCase` records immutable selected lines/unit ordinals, decisions, receipt and replacement shipment. `CreditNote` records invoice adjustments without replacing original totals. Refund `awaiting_return` holds reserve the source balance until physical receipt. `NotificationDeliveryEvent` is an append-only provider/manual outcome history, separate from SMTP acceptance; preferences are checked before staging/sending.
 
 Item cases/refunds/exchanges share the existing `order:<id>` lock and database unit. Access grants plus audit and sign-out-other-session rotations also use transaction/compensation units. No external SMTP/gateway call runs inside a database transaction. See [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md) for report definitions and policy boundaries.
+
+## Production operations — 2.11
+
+New `CourierBooking` and `CourierEvent` records coordinate one external parcel with existing order locks, transaction/compensation units, fulfillment, COD payment, invoice snapshots and notification outbox. External create/cancel uncertainty remains durable and reconciles by the original reference. Booking metadata does not imply pickup.
+
+The `Upload` record retains local identities while tracking optional Cloudinary ownership/lifecycle. Guarded catalog/settings writes and cleanup share a reference lock. SEO HTML is generated before static hosting without changing browser product behavior.
+
+`MaintenanceGate` coordinates mutation/worker leases across upgraded application processes; backup drains writers before BSON/media capture. `BackupRun` records outcomes; `.ndb` authenticated archives restore only into a new target. `OperationalEvent` stores bounded redacted incidents/alert claims, and readiness separates liveness from database/maintenance status. See [production boundaries](PRODUCTION_TOOLS.md) for other writers, media recovery, provider contracts and off-host operations.

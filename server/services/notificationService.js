@@ -103,7 +103,7 @@ const retryNotification = async (id) => {
 };
 const startNotificationWorker = () => {
   let running, stopped = false;
-  const tick = () => { if (running || stopped) return; running = sweepNotifications().catch(() => console.error("Order email queue needs attention")).finally(() => { running = null; }); };
+  const tick = () => { if (running || stopped) return; running = require("./maintenanceService").withWriteLease(sweepNotifications).catch(() => console.error("Order email queue needs attention")).finally(() => { running = null; }); };
   const timer = setInterval(tick, 15000); timer.unref(); tick();
   return async () => { stopped = true; clearInterval(timer); if (running) await running; };
 };

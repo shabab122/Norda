@@ -1,7 +1,7 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.10.0",
-  "description": "Norda commerce API with catalog, checkout, invoicing, payments and reporting",
+  "version": "2.11.0",
+  "description": "Norda commerce API with catalog, payments, fulfillment, reporting and production tools",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {
@@ -11,14 +11,17 @@
     "test": "node --test",
     "check": "node scripts/check.js",
     "verify": "npm run check && npm test",
-    "test:integration": "node --test test/mongoIntegration.test.js test/mongoHttp.test.js test/mongoAccount.test.js test/mongoCheckoutRecovery.test.js test/mongoOrderOperations.test.js test/mongoFulfillmentVariants.test.js test/mongoCommerceTools.test.js test/mongoManagement.test.js",
+    "test:integration": "node --test --test-concurrency=1 test/mongoIntegration.test.js test/mongoHttp.test.js test/mongoAccount.test.js test/mongoCheckoutRecovery.test.js test/mongoOrderOperations.test.js test/mongoFulfillmentVariants.test.js test/mongoCommerceTools.test.js test/mongoManagement.test.js test/mongoProductionTools.test.js test/mongoBackup.test.js",
     "setup": "node scripts/setup-env.js",
     "seed:catalog": "node seed/seed.js --catalog-only",
     "acceptance:preflight": "node scripts/acceptance-preflight.js",
     "mail:check": "node scripts/account-mail.js --check",
     "mail:preview": "node scripts/account-mail.js",
     "reservations:expire": "node scripts/expireReservations.js",
-    "mail:orders": "node scripts/account-mail.js --orders"
+    "mail:orders": "node scripts/account-mail.js --orders",
+    "backup:create": "node scripts/backup.js create",
+    "backup:verify": "node scripts/backup.js verify",
+    "backup:restore": "node scripts/backup.js restore"
   },
   "engines": {
     "node": ">=22"

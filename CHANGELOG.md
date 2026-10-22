@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.11.0 — 2026-10-22
+
+- Add optional eCourier REST v5.5 booking, package charges, trusted PDF labels, opt-in automatic booking, authenticated tracking and audited exception review. Preserve manual tracking for orders without active API parcels.
+- Add durable one-booking intents, same-reference uncertainty recovery, carrier/order cancellation guards and existing COD/invoice/notification synchronization. Booking alone never confirms pickup.
+- Add server-rendered product metadata, canonical/Open Graph tags, escaped Product/variant JSON-LD, public sitemaps and private-page robots protection.
+- Add optional server-authenticated Cloudinary storage, legacy URL migration, uncertain-result reconciliation and explicit reference-locked unused-media cleanup.
+- Add encrypted raw BSON/index/local/cloud-media backup, authenticated verification, isolated new-target restore, maintenance leases and optional scheduling.
+- Add minimal readiness, safe request IDs/error events, full-admin system status, bounded optional alerts and three scoped administration screens.
+- Extend protocol, HTTP, frontend and native standalone/replica tests; retain existing credentials, dependencies, branding/catalog assets and earlier features. New integrations use an optional private configuration file.
+
 ## 2.10.0 — 2026-10-22
 
 - Add Dhaka daily/monthly paid-order cohort reports, product/SKU rankings, coupon savings, confirmed refunds/net revenue and CSV export.

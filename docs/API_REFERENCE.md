@@ -1,8 +1,8 @@
-# Norda 2.10 — API Reference
+# Norda 2.11 — API Reference
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). The optional eCourier API, SEO, Cloudinary media and backup/monitoring tools are now implemented in 2.11; see [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for configuration and live-account acceptance. Existing credentials/data are preserved.
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
@@ -268,3 +268,9 @@ CSV query parameters: `status`, `paymentStatus`, `from=YYYY-MM-DD` and `to=YYYY-
 - Logout invalidates the signed-in account's JWT version as well as clearing its cookie (other sessions of that account sign out).
 - Cart reads return current prices and an `unavailable` flag without saving over concurrent cart mutations.
 - Gateway callback routes accept cross-origin form posts, while success still requires gateway validation.
+
+## Production tools — 2.11
+
+See [the route table and request semantics](PRODUCTION_TOOLS.md#api-additions). New `/api/admin/courier` routes require the `orders` scope, media read/reconcile requires `catalog`, and migration/cleanup/system history requires full administrator access. Owner-scoped carrier tracking is at `GET /api/orders/:id/courier`. Readiness is `GET /api/health/ready`. Backup data is CLI-only.
+
+Checkout shipping addresses accept optional trimmed `thana` and `area`; old address shapes remain compatible. During a consistent backup, API mutations temporarily return 503 with `Retry-After: 30`; retry the same idempotency/request key.

@@ -14,3 +14,9 @@ server/.local-mail/
 # Legacy credential filename
 .envy
 server/.envy
+
+# Optional production integrations and encrypted archives
+!.env.integrations.example
+server/.backups/
+*.ndb
+norda_restore_*/

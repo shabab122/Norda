@@ -45,6 +45,7 @@ const restoreStock = async (order, unit) => {
   for (const item of order.items) await require("./inventoryService").restoreItem(item, unit);
 };
 const cancelForOperations = async (order, reason, unit) => {
+  await require("./courierService").assertNoActiveBooking(order._id, unit.session);
   if (!["pending", "processing", "cancelled"].includes(order.status)) throw httpError(409, "A shipped or delivered order cannot be cancelled");
   if (!order.stockRestored) await restoreStock(order, unit);
   return patchOrder(order, { status: "cancelled", stockRestored: true, cancelledAt: order.cancelledAt || new Date(), cancelReason: reason.slice(0, 300), reservationExpiredAt: null,

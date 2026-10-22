@@ -1,5 +1,15 @@
 # Future NORDA development
 
+## Completed in 2.11.0
+
+- Optional eCourier REST booking, package charges, labels, opt-in automatic submission, authenticated polling, uncertainty recovery and exception review.
+- Initial product metadata, canonicals/Open Graph, safe Product/variant structured data, public sitemaps and private-page robots rules.
+- Optional Cloudinary storage, migration preserving old image URLs and explicit reference-checked unused-media cleanup.
+- Encrypted raw BSON/index/local/cloud-media backup, authenticated verification, isolated restore, shared maintenance leases and optional scheduling.
+- Readiness, request IDs/redacted incidents, full-admin system status and optional bounded SMTP/HTTPS alerts.
+- See [configuration and operational limits](PRODUCTION_TOOLS.md) and [measured verification](VERIFICATION_RESULTS.md). Real account/deployment acceptance, secure off-host replication/retention and external uptime monitoring remain operator work.
+
+
 ## Completed in 2.10.0
 
 - Daily/monthly sales reports, top products/SKUs, coupon savings and confirmed refund/net revenue cohorts.
@@ -19,7 +29,7 @@
 
 ## Completed in 2.8.0
 
-- Courier name/tracking number/link, administrator dispatch/progress, append-only history and a customer tracking view. Carrier API booking/polling/webhooks are separate future integration work.
+- Courier name/tracking number/link, administrator dispatch/progress, append-only history and a customer tracking view. eCourier API booking/labels/authenticated polling are added in 2.11; other carriers/webhooks remain optional.
 - Queued order confirmation/payment/shipping/delivery/cancellation email through current SMTP, retries/worker recovery and admin delivery status/retry. Existing account mail and private previews remain compatible.
 - Size/color SKU variants with independent price/photos/stock, guest/cart continuity, immutable order/invoice snapshots and selected-SKU stock through cancellation, expiry/retry and received returns.
 - See [delivery/email setup](DELIVERY_NOTIFICATIONS.md) and [variant guide](PRODUCT_VARIANTS.md). Actual inbox placement, browser/device acceptance and merchant settlement still require the deployment environment.
@@ -82,7 +92,7 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 2 — order operations
 
-- Carrier-specific booking, labels, rates, authenticated webhooks/polling and delivery-exception/return-to-sender workflows
+- Additional courier adapters, authenticated provider webhooks, reverse pickup and broader address/fractional-collection contracts
 - Optional SMS provider, provider-specific mail adapters and delivery/complaint remediation tooling
 - Price-difference exchanges, partial-parcel receipt, discretionary refund deductions and external credit-note/accounting integration
 - Optional staff MFA, invitation lifecycle and organization-specific permission expansion
@@ -92,13 +102,13 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 - Optional bulk creation of new catalog/SKU records, warehouse inventory and low-stock email subscriptions
 - Optional full guest cart/checkout
 - Bank settlement/cash-flow reconciliation reports, optional comparison/recently viewed products
-- SEO metadata, sitemap and product structured data
+- Dedicated category landing pages, final-domain SEO validation and Search Console follow-up
 
 ## Phase 4 — public operations
 
-- Durable object storage and unused image cleanup
-- Database/media backups and restore drills
-- Monitoring, redacted logs and operational alerts
+- Actual Cloudinary account acceptance and optional additional object-storage adapters
+- Secure off-host backup replication/retention, scheduled owner restore drills and production recovery promotion
+- Actual alert receiver acceptance, external uptime checks and operational response policies
 - Deployment/HTTPS configuration, release automation and rollback planning
 
 Dates and exact priorities can be decided in the next development session.
