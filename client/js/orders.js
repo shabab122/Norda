@@ -71,6 +71,7 @@ function renderOrder(order) {
           <div><span>Payment method</span><strong>${escapeHtml(paymentMethodLabel(order))}</strong></div>
           <div><span>Deliver to</span><strong>${escapeHtml([address.city, address.district].filter(Boolean).join(", ") || "Saved address")}</strong></div>
           <div><span>Subtotal</span><strong>${money(order.subtotal)}</strong></div>
+          ${order.discountAmount > 0 ? `<div><span>Coupon ${escapeHtml(order.coupon?.code || "")}</span><strong>−${money(order.discountAmount)}</strong></div>` : ""}
           <div><span>Delivery</span><strong>${order.shippingFee ? money(order.shippingFee) : "Free"}</strong></div>
           <div class="order-total"><span>Total</span><strong>${money(order.totalAmount)}</strong></div>
           ${order.paymentMethod === "demo" ? `<p class="payment-context">Simulated payment · No real charge</p>${!order.isPaid && order.status !== "cancelled" ? `<a class="btn btn-primary btn-sm btn-block" href="demo-payment.html?orderId=${encodeURIComponent(order._id)}">Resume or cancel payment</a>` : ""}` : ""}

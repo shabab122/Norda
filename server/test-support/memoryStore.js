@@ -48,7 +48,7 @@ const apply = (row, update, inserted = false, filter = {}) => {
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -75,7 +75,7 @@ const installMemoryStore = () => {
       const selection = typeof specification === "string" ? null : specification.select;
       if (key === "items.product") doc.items.forEach((item) => { item.product = clone(records.Product.get(String(item.product?._id || item.product)) || null); });
       else {
-        const target = { user: "User", order: "Order", category: "Category", brandRef: "Brand" }[key];
+        const target = { user: "User", order: "Order", product: "Product", category: "Category", brandRef: "Brand" }[key];
         if (target && doc[key]) {
           const value = clone(records[target].get(String(doc[key]?._id || doc[key])) || null);
           doc[key] = value && selection ? Object.fromEntries(["_id", ...selection.split(" ")].filter((field) => value[field] !== undefined).map((field) => [field, value[field]])) : value;
@@ -112,7 +112,11 @@ const installMemoryStore = () => {
       if (name === "Payment") Object.assign(row, { status: "initiated", ...row });
       if (name === "Cart") row.items.forEach((item) => { item._id ||= (++sequence).toString(16).padStart(24, "0"); });
       const duplicate = records[name].has(String(row._id)) || (name === "Order" && row.checkoutKey && [...records[name].values()].some((item) => equal(item.user, row.user) && item.checkoutKey === row.checkoutKey));
-      if (duplicate) { const error = new Error("Duplicate record"); error.code = 11000; throw error; }
+      const uniqueConflict = (name === "Coupon" && [...records[name].values()].some((v) => v.code === row.code)) ||
+        (name === "CouponRedemption" && [...records[name].values()].some((v) => equal(v.order, row.order))) ||
+        (name === "WishlistItem" && [...records[name].values()].some((v) => equal(v.user, row.user) && equal(v.product, row.product))) ||
+        (name === "InventoryImport" && [...records[name].values()].some((v) => v.requestKey === row.requestKey));
+      if (duplicate || uniqueConflict) { const error = new Error("Duplicate record"); error.code = 11000; throw error; }
       records[name].set(String(row._id), row); return document(name, row);
     });
     patch(name, "findOneAndUpdate", async (filter, update, options = {}) => {

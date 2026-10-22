@@ -9,7 +9,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadStoreConfig() {
   try {
-    const store = await Api.get("/store/config");
+    const store = await getStoreConfig();
+    if (typeof applyStoreHero === "function") applyStoreHero(store.hero);
     document.getElementById("free-delivery-threshold").textContent =
       "Free delivery from " + money(store.freeShippingThreshold);
   } catch {
@@ -73,6 +74,7 @@ async function loadHomeProducts() {
     const products = distinctHomeProducts(result.value.products || [], ids, covers);
     element.innerHTML = products.length ? products.map(productCardHtml).join("")
       : `<div class="empty-state">${index ? "More new arrivals will appear here soon." : "No featured products are available yet."}</div>`;
+    if (typeof refreshWishlistButtons === "function") refreshWishlistButtons();
   }
 }
 

@@ -30,7 +30,9 @@ const parseVariants = async (input, current) => {
     if (row.images !== undefined && (!Array.isArray(row.images) || row.images.length > 6)) throw httpError(400, "Each variant supports up to six images");
     const images = row.images === undefined ? [...(previous?.images || [])] : row.images.map((url) => cleanAssetUrl(url));
     if (images.some((url) => !url)) throw httpError(400, "Use valid upload or HTTP image URLs");
-    return { _id, sku, size, color, price, discountPrice, stock, images, isActive: row.isActive ?? previous?.isActive ?? true };
+    const lowStockThreshold = row.lowStockThreshold ?? previous?.lowStockThreshold ?? 5;
+    if (!Number.isSafeInteger(lowStockThreshold) || lowStockThreshold < 0 || lowStockThreshold > 1000000) throw httpError(400, "Low-stock threshold must be a whole number from 0 to 1,000,000");
+    return { _id, sku, size, color, price, discountPrice, stock, images, lowStockThreshold, isActive: row.isActive ?? previous?.isActive ?? true };
   });
   if (old.some((v) => !ids.has(String(v._id)))) throw httpError(409, "Existing variants cannot be deleted. Deactivate them to preserve inventory and history.");
   if (variants.length && await Product.exists({ ...(current ? { _id: { $ne: current._id } } : {}), "variants.sku": { $in: [...skus] } })) throw httpError(409, "A SKU is already used by another product");
@@ -52,6 +54,7 @@ const publicProduct = (value) => {
   }
   if (product.isArchived) { product.stock = 0; product.variants = (product.variants || []).map((v) => ({ ...v, stock: 0 })); }
   delete product.inventoryVersion;
+  delete product.lastInventoryImport;
   return product;
 };
 module.exports = { parseVariants, variantSummary, publicProduct };

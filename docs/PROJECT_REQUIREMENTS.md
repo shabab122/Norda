@@ -1,4 +1,8 @@
-> Current version: 2.8.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+> Current version: 2.9.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+
+## Coupons, wishlist, inventory and store content — 2.9.0
+
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
 
 # Norda — Project Requirements
 
@@ -223,7 +227,7 @@ Included: physical-product catalog, one currency, flat/free delivery rule, one s
 
 Included since the baseline: account recovery/email verification, multiple saved addresses, local payment simulation, reservation expiry/same-order retry, payment review resolution, customer cancellation requests, whole-order return portal, provider-confirmed/refund-ledger workflows, manual courier history/customer tracking, queued transactional order email and independent SKU variants.
 
-Deferred: coupons, tax engine, carrier API booking/labels/webhooks, per-SKU alert/bulk tooling, wish lists, item-level returns/exchanges, configurable return policies, split shipments, multiple warehouses, customer deletion, refund-specific email, SMS, formal credit notes/accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
+Deferred: tax engine, carrier API booking/labels/webhooks, bulk creation of new product/SKU identities, warehouse tooling, item-level returns/exchanges, configurable return policies, split shipments, multiple warehouses, customer deletion, refund-specific email, SMS, formal credit notes/accounting integration, cloud media storage, recommendation engine, translations, multiple currencies and marketplace sellers.
 
 ## 8. Release acceptance summary
 

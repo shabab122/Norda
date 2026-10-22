@@ -11,6 +11,9 @@ const { createInvoiceForOrder, syncInvoicePayment } = require("./invoiceService"
 const { insertDocument, querySession, withDatabaseUnit, writeOptions } = require("./databaseUnit");
 const { withOperationLock } = require("./operationLock");
 
+const coupons = require("./couponService");
+const { getSettings } = require("./storeSettingsService");
+
 const { nextReservationDeadline } = require("../config/reservations");
 
 const { hasBlockingOperation } = require("./orderOperationStore");
@@ -36,8 +39,11 @@ const calculateTotals = (items, options = {}) => {
   const threshold = options.freeShippingThreshold ?? store.freeShippingThreshold;
   const flatFee = options.flatShippingFee ?? store.flatShippingFee;
   const subtotal = Number(items.reduce((sum, item) => sum + Number(item.price) * Number(item.quantity), 0).toFixed(2));
-  const shippingFee = subtotal >= threshold ? 0 : Number(Number(flatFee).toFixed(2));
-  const totalAmount = Number((subtotal + shippingFee).toFixed(2));
+  const discountAmount = options.discountAmount ?? 0;
+  if (!Number.isFinite(discountAmount) || discountAmount < 0 || discountAmount > subtotal || Math.abs(discountAmount * 100 - Math.round(discountAmount * 100)) > 0.00001) throw httpError(400, "Invalid order discount");
+  const netSubtotal = Number((subtotal - discountAmount).toFixed(2));
+  const shippingFee = netSubtotal >= threshold ? 0 : Number(Number(flatFee).toFixed(2));
+  const totalAmount = Number((netSubtotal + shippingFee).toFixed(2));
   if (![subtotal, shippingFee, totalAmount].every((value) => Number.isFinite(value) && value >= 0 && Number.isSafeInteger(Math.round(value * 100)))) {
     throw httpError(400, "The order amount is outside the supported range");
   }
@@ -50,17 +56,19 @@ const normalizeCheckoutKey = (value) => {
   return value;
 };
 
-const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "" }) => {
+const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "", couponCode = "", expectedTotals }) => {
   if (!["cod", "sslcommerz", "demo"].includes(paymentMethod)) throw httpError(400, "Unsupported payment method");
   if (paymentMethod === "demo" && !["mobile_banking", "card_bank"].includes(paymentChannel)) throw httpError(400, "Choose a payment channel");
   const address = normalizeShippingAddress(shippingAddress);
   const key = normalizeCheckoutKey(checkoutKey);
-  return withOperationLock("cart:" + user._id, () => withDatabaseUnit(async (unit) => {
+  const code = coupons.normalizeCode(couponCode);
+  return withOperationLock("cart:" + user._id, () => coupons.withCouponLock(code, () => withDatabaseUnit(async (unit) => {
     const { session, compensate } = unit;
     if (key) {
       const existing = await querySession(Order.findOne({ user: user._id, checkoutKey: key }), session);
       if (existing) {
         if (existing.paymentMethod !== paymentMethod || (paymentMethod === "demo" && existing.paymentChannel !== paymentChannel)) throw httpError(409, "This checkout was already created with a different payment method");
+        if ((existing.coupon?.code || "") !== code) throw httpError(409, "This checkout was already created with a different coupon");
         const invoice = await querySession(Invoice.findOne({ order: existing._id }), session);
         if (!invoice) throw httpError(409, "This order needs store review before checkout can be repeated");
         return { order: existing, invoice, replayed: true };
@@ -75,7 +83,11 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
       const { stock, ...selected } = selection(product, item.variantId);
       return { product: product._id, name: product.name, quantity: Number(item.quantity), ...selected };
     });
-    const totals = calculateTotals(items);
+    const config = await getSettings(session);
+    const subtotal = calculateTotals(items, config).subtotal;
+    const quote = await coupons.quoteCoupon(code, subtotal, user._id, session);
+    const totals = { ...calculateTotals(items, { ...config, discountAmount: quote.discountAmount }), discountAmount: quote.discountAmount };
+    if (expectedTotals !== undefined && (!expectedTotals || typeof expectedTotals !== "object" || Array.isArray(expectedTotals) || ["subtotal", "shippingFee", "discountAmount", "totalAmount"].some((key) => expectedTotals[key] !== totals[key]))) throw httpError(409, "Prices, discount or delivery changed. Refresh checkout before placing the order.");
     if (paymentMethod === "sslcommerz" && (totals.totalAmount < 10 || totals.totalAmount > 500000)) {
       throw httpError(400, "Online checkout accepts totals from ৳10 to ৳500,000. Your cart has been kept.");
     }
@@ -83,11 +95,12 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     // therefore compensate all prior decrements on standalone MongoDB too.
     for (const item of items) await reserveItem(item, unit);
     const order = await insertDocument(Order, {
-      user: user._id, items, shippingAddress: address, ...totals, currency: store.currency,
+      user: user._id, items, shippingAddress: address, ...totals, ...(quote.coupon ? { coupon: quote.coupon } : {}), currency: store.currency,
       paymentMethod, paymentChannel, paymentStatus: "pending",
       ...(paymentMethod !== "cod" ? { reservationExpiresAt: nextReservationDeadline() } : {}), ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
+    await coupons.recordRedemption(order, unit);
     const invoice = await createInvoiceForOrder(order, session, unit);
     const previousAddress = user.address?.toObject ? user.address.toObject() : user.address;
     const updatedUser = await User.findByIdAndUpdate(user._id, { $set: { address } }, writeOptions(session, { new: true }));
@@ -97,7 +110,7 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     const cleared = await Cart.updateOne({ _id: cart._id }, { $set: { items: [] }, $inc: { __v: 1 } }, writeOptions(session));
     if (!cleared.matchedCount) throw httpError(409, "Your cart changed. Please review it again.");
     return { order, invoice, replayed: false };
-  }));
+  })));
 };
 
 const ORDER_TRANSITIONS = {

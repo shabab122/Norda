@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.4.2</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.9.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,13 +32,13 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.4.2** |
+| Application version | **2.9.0** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and administrator workspace |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Core commerce flows implemented; further features and public-release acceptance remain planned |
+| Development status | Core commerce, recovery, order operations, SKU variants, coupons, wishlist, inventory tools and editable store content implemented; public-release acceptance remains |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
@@ -55,7 +55,9 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 ### Customer Accounts and Dashboard
 
 - Customer registration, sign-in, sign-out and cookie-backed session restoration.
-- Profile/name and default delivery-address updates.
+- Profile/name updates and up to 10 saved delivery addresses with add/edit/delete/default actions and a checkout picker.
+- Forgot/reset password with expiring one-use links, hashed tokens and session revocation; signup email verification and resend from Profile.
+- SMTP account email with a private local preview when developing without SMTP.
 - Password changes that verify the current password and invalidate previous sessions.
 - A personal dashboard with the signed-in identity, cart quantity, order counts, recent orders, invoice links and delivery details.
 - Separate visitor, customer and administrator navigation, with account-change and cached-page refresh guards.
@@ -78,6 +80,9 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - Separate local Mobile Banking/bKash and Card/Bank simulation choices.
 - Simulated success, failure and cancellation, plus unfinished-session recovery from My Orders.
 - Stock restoration for failed/cancelled local simulations, with repeat-request protection.
+- Automatic unpaid reservation expiry and stock release, plus eligible same-order real payment retry that keeps one invoice and the original totals.
+- Admin payment review with transaction history, verification, private notes and guarded resolution.
+- Customer cancellation requests, whole-order returns after physical receipt, partial monetary refunds and provider/manual refund confirmation.
 - SSLCOMMERZ hosted-session initiation, callbacks, IPN handling and server-side transaction validation.
 - Explicit review handling for risky or late validated provider payments.
 - Shared operation locks, checkout request keys and conditional stock updates to handle overlapping requests.
@@ -95,6 +100,23 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - Invoice register and access to customer/order billing records.
 - Dashboard totals, paid revenue excluding local simulations, low-stock products and payment exceptions.
 - Order CSV export with date/status filters and spreadsheet-formula protection.
+
+### Coupons, Wishlist and Inventory Tools
+
+- Admin **Coupon center** supports fixed/percentage savings, minimum subtotals, maximum discounts, scheduling, public/private offers and total/per-account limits.
+- Checkout calculates discounts from current product/SKU prices on the server. Orders, invoices, confirmation email and CSV reports retain the discount snapshot.
+- A successfully created order consumes one coupon use; cancellation, expiry, refunds and payment retry retain that use. Failed order creation rolls it back. One code applies per order.
+- Personal wishlist with up to 200 products, save/remove actions, live price/availability and existing cart actions. Variant products require an exact size/color choice.
+- Admin **Inventory tools** exports stock CSVs, previews edits and imports existing product/SKU stock and low-stock thresholds with stale-stock checks and durable replay/recovery results.
+- Per-SKU low-stock alerts include sold-out options and exclude retired/archived inventory. CSV imports update each product atomically and report conflicts separately.
+
+### Courier, Notifications and Store Content
+
+- Admin **Delivery tracking** records courier, tracking number/link and shipment events; customers view their own tracking history.
+- Confirmation, payment, shipment, delivery, cancellation and tracking email use the existing SMTP through a durable retry queue; admin can inspect status/retry failed mail.
+- Size/color variants have retained unique SKUs, individual prices/photos and independent stock throughout cart, checkout, cancellation, expiry/retry and return restocking.
+- Admin **Store settings** publishes a homepage banner, announcement, support contact, FAQs and delivery/return/privacy/terms text to the storefront and help page.
+- Editable delivery charges apply to new checkouts after coupon savings. Existing orders/invoices retain recorded totals.
 
 ## Technology Stack
 
@@ -119,6 +141,7 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 | Database topology | Standalone supported for local development; use a replica set for public-store transaction guarantees |
 | Browser | JavaScript enabled; manual desktop/mobile acceptance is still required |
 | Git | Needed for repository-based contribution; optional when running an extracted ZIP |
+| SMTP service | Required for actual account/order inbox delivery; private file previews are available in development |
 | External payment account | Required only for actual SSLCOMMERZ hosted checkout; unnecessary for COD or the local simulator |
 
 Norda defaults to port **5000**. Startup rejects ports **3000** and **3002**, which are reserved for the existing GitStack/Gitea services. Docker is optional; this application does not require those services or their PostgreSQL databases.
@@ -153,7 +176,7 @@ If MongoDB is exposed on a different host port, use that port. For example, a Do
 MONGO_URI=mongodb://127.0.0.1:27018/norda_db
 ```
 
-MongoDB must be running before seeding or starting the API. Existing installations should retain their working URI and database name.
+MongoDB must be running before seeding or starting the API. Existing installations should retain their working URI and database name, including a working MongoDB Atlas URI. The application does not require replacing an existing Atlas/shared database with a local database.
 
 ### 3. Initialize a Fresh Database and Start
 
@@ -178,14 +201,17 @@ Open **[http://localhost:5000](http://localhost:5000)**. Express serves the webs
 | Customer dashboard | `/dashboard.html` | Signed-in customer |
 | Cart and checkout | `/cart.html`, `/checkout.html` | Signed-in customer |
 | Orders and invoices | `/orders.html`, `/invoice.html?orderId=…` | Owner; administrators may access permitted records |
+| Wishlist and offers | `/wishlist.html`, `/coupons.html` | Wishlist requires sign-in; offers are public |
+| Help and policies | `/help.html` | Public |
 | Admin workspace | `/admin/dashboard.html` | Administrator |
+| Coupon, inventory and settings tools | `/admin/coupons.html`, `/admin/inventory.html`, `/admin/store-settings.html` | Administrator |
 | API health | `/api/health` | Public |
 
 Register normally to create a customer. For administrator access, use the private `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your environment after seeding. No shared administrator password is bundled. A normal customer sign-in opens the personal dashboard; a pending shopping destination takes priority.
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.4.2 update requires **no setup, reseed or database migration**:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.9.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -225,11 +251,17 @@ The complete template is [`server/.env.example`](server/.env.example). Configure
 | `SSLCOMMERZ_STORE_ID` | Private merchant ID; optional until using the actual provider |
 | `SSLCOMMERZ_STORE_PASSWORD` | Private merchant password; optional until using the actual provider |
 | `SSLCOMMERZ_IS_LIVE` | Provider environment; `false` for sandbox |
+| `MAIL_TRANSPORT` | `auto`, `smtp` or private development `file` delivery |
+| `MAIL_FROM` | Verified sender address/name for SMTP |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Existing mail server and TLS configuration |
+| `SMTP_USER`, `SMTP_PASS` | Private SMTP authentication; retain working values |
+| `PAYMENT_RESERVATION_MINUTES` | Optional unpaid online reservation window; default 30 minutes |
+| `RESERVATION_SWEEP_SECONDS` | Optional expiry worker interval; default 30 seconds |
 | `ADMIN_NAME` | Display name for a newly seeded administrator |
 | `ADMIN_EMAIL` | Email for the seed administrator |
 | `ADMIN_PASSWORD` | Private password for creating a seed administrator; minimum 12 characters |
 
-The currency is BDT. With default pricing, delivery costs **৳120 below ৳5,000** and is free from **৳5,000**. Keep credentials and runtime uploads out of commits; preserve existing working values during updates.
+The currency is BDT. Without a saved store override, delivery defaults to **৳120 below ৳5,000** and is free from **৳5,000**. Admin **Store settings** can change these amounts; the free-delivery threshold uses the product subtotal after coupons. Existing orders keep their original charges. Keep credentials and runtime uploads out of commits; preserve existing working values during updates.
 
 ## Payments
 
@@ -249,10 +281,10 @@ Select Mobile Banking/bKash or Card/Bank at checkout. The payment page requests 
 | Begin payment | One pending order/invoice; stock reserved |
 | Complete a successful simulation | Simulated payment marked paid; order moves to processing; invoice synchronized |
 | Fail or cancel the simulation | Order cancelled; payment/invoice reflect the outcome; stock restored once |
-| Leave the page | Session remains resumable/cancellable through My Orders |
+| Leave the page | Resume/cancel through My Orders until automatic reservation expiry releases stock |
 | Repeat a completed request | Existing result preserved; no duplicate invoice or stock update |
 
-The simulator uses inventory in the configured development database. Successful simulations retain their stock reservation; unfinished sessions remain reserved until completed or cancelled. **Automatic reservation expiry is planned.** Use development inventory for simulations. They are excluded from administrator revenue and include compact no-charge information.
+The simulator uses inventory in the configured development database. Successful simulations retain their stock reservation; unfinished unpaid reservations expire after 30 minutes by default, with one-time stock restoration and a synchronized invoice. Use development inventory for simulations. They are excluded from administrator revenue and include compact no-charge information.
 
 The simulator is always disabled when `NODE_ENV=production`, including when `PAYMENT_DEMO_ENABLED=true`. Existing internal `demo` identifiers and URLs remain compatible with earlier versions.
 
@@ -266,7 +298,7 @@ https://your-api-host/api/payments/sslcommerz/ipn
 
 The provider option appears when the application's configuration checks pass. Successful notifications require server validation of transaction details; a configuration flag or browser return URL does not establish payment success. Risky or valid late payments after cancellation enter review without reopening cancelled fulfillment or consuming restored stock again.
 
-Failed/abandoned provider attempts remain visible for investigation and eligible administrative cancellation. Retrying an actual provider payment on an existing order and automated refunds remain planned. A successful local simulation does not verify SSLCOMMERZ or direct bKash connectivity.
+Failed/abandoned provider attempts remain visible. Eligible orders can retry/resume real payment on the same order and invoice; expired orders re-check stock. Admin review, cancellation requests and whole-order return/refund workflows are implemented. Gateway refunds wait for provider confirmation; cash refunds require a repayment reference. A successful local simulation does not verify SSLCOMMERZ or direct bKash connectivity.
 
 See the [payment guide](docs/DEMO_PAYMENTS.md) and [acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md).
 
@@ -295,7 +327,7 @@ On replica sets, database units use transactions. Standalone local MongoDB uses 
 | `server/app.js` | Middleware, routes and static website hosting |
 | `server/routes/`, `server/controllers/` | API routing and HTTP handlers |
 | `server/services/` | Orders, invoices, payments, locks and coordinated database writes |
-| `server/models/` | Users, catalog, carts, orders, invoices, payments, reviews, uploads and operation locks |
+| `server/models/` | Accounts, catalog, variants, commerce/operations ledgers, email outbox, coupons/redemptions, wishlists, inventory imports, settings and locks |
 | `server/middleware/`, `server/utils/` | Authorization, upload/error handling and validation helpers |
 | `server/seed/`, `server/scripts/` | Sample catalog, setup, preflight and syntax checks |
 | `server/test/`, `server/test-support/` | Automated tests and isolated test adapters |
@@ -311,7 +343,7 @@ API base path: **`/api`**. JSON is used for normal requests; uploads use multipa
 |---|---|
 | Health and store settings | `GET /health`, `GET /store/config` |
 | Authentication | `POST /auth/register`, `POST /auth/login`, `POST /auth/logout` |
-| Profile | `GET /auth/profile`, `PUT /auth/profile` |
+| Profile and recovery | `GET/PUT /auth/profile`, forgot/reset password, verification and saved-address routes |
 | Catalog | `GET /products`, `GET /products/:id`, `GET /categories`, `GET /brands` |
 | Admin catalog | Protected create/update/archive/restore operations on products; category and brand management |
 | Cart | `GET/POST/DELETE /cart`, `PUT/DELETE /cart/:itemId` |
@@ -322,6 +354,11 @@ API base path: **`/api`**. JSON is used for normal requests; uploads use multipa
 | Local payment | `POST /payments/demo/initiate`, `GET /payments/demo/:orderId`, `POST /payments/demo/:orderId/complete` |
 | SSLCOMMERZ | `POST /payments/sslcommerz/initiate` and `POST` success/fail/cancel/IPN notifications |
 | Reviews and uploads | `GET /reviews/product/:productId`, `POST /reviews`, `DELETE /reviews/:id`, `POST /uploads` |
+| Coupons | Public `GET /coupons`, protected `POST /coupons/preview`, admin `GET/POST/PUT /admin/coupons` |
+| Wishlist | Protected `GET /wishlist`, `GET /wishlist/ids`, `PUT/DELETE /wishlist/:productId` |
+| Inventory tools | Admin list/export, preview/import and recorded import-result endpoints |
+| Published settings | Public `GET /store/config`, admin `GET/PUT /admin/store-settings` |
+| Operations and delivery | Customer requests/tracking; admin review, returns/refunds, shipment and email queue routes |
 | Administration reports | `GET /admin/dashboard-summary`, `GET /admin/reports/orders.csv` |
 
 Protected endpoints enforce sign-in, role and ownership as appropriate. Invalid input, unauthorized access and conflicting stock/state changes return structured errors. See [`server/routes/`](server/routes/) for the current route definitions and [`docs/API_REFERENCE.md`](docs/API_REFERENCE.md) for detailed baseline examples.
@@ -344,6 +381,10 @@ All commands run from `server/`.
 | `npm run verify` | Run syntax checks and default tests |
 | `npm run test:integration` | Run opt-in native MongoDB tests with an explicit test URI |
 | `npm audit` | Inspect the dependency vulnerability report |
+| `npm run mail:check` | Check SMTP/private preview configuration |
+| `npm run mail:preview -- email@example.com` | Read private development account mail |
+| `npm run mail:orders -- email@example.com` | Read private development order mail |
+| `npm run reservations:expire` | Run a one-shot reservation expiry sweep |
 
 ## Testing
 
@@ -355,19 +396,20 @@ npm run verify
 
 Coverage includes business rules, injected write failures, HTTP authentication/catalog/cart/order journeys, payment-state protection, uploads, frontend VM rendering and static asset/reference checks.
 
-Recorded release evidence, as of **18 October 2026**:
+Recorded release evidence, as of **22 October 2026**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.4.2 | **100 files passed** |
-| Default suite, v2.4.2 | **98 passed, 0 failed, 2 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.4.1 | **27 passed**, transaction path false |
-| Native single-member replica set, v2.4.1 | **27 passed**, transaction path true |
-| Dependencies | Last recorded audit reported **0 vulnerabilities**; dependency versions were unchanged by the subsequent presentation patches |
-| Browser/mobile/keyboard/print | Manual acceptance pending |
-| Public SSLCOMMERZ sandbox | Merchant end-to-end acceptance pending |
+| JavaScript syntax, v2.9.0 | **180 files passed** |
+| Default suite, v2.9.0 | **331 passed, 0 failed, 7 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.9.0 | **112 passed**, compensation path |
+| Native single-member replica set, v2.9.0 | **112 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
+| Frontend | VM behavior, safe rendering, state guards and all 33 pages/local resources checked |
+| Browser/mobile/keyboard/print | Target-device visual acceptance remains manual; browser tooling could not complete the live check |
+| Public SSLCOMMERZ/SMTP/carrier | Actual merchant callbacks/refund settlement, inbox placement and courier-provider acceptance remain environment-specific |
 
-Native tests were not repeated for the v2.4.2 favicon/CSS patch. The recorded checks do not certify real provider connectivity, multi-node failover or every browser layout.
+Tests cover current and previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
 
 ### Native MongoDB Verification
 
@@ -396,45 +438,43 @@ These items are planned work, separate from the implemented features above. Deve
 - [ ] Complete public SSLCOMMERZ sandbox success/failure/cancel/repeated callback/IPN acceptance before accepting real online payments.
 - [ ] Replace sample catalog content with actual merchant inventory and store information before sales.
 
-### Phase 1 — Accounts and Checkout Recovery
+### Completed Development Phases
 
-- [ ] Forgot/reset password and email verification.
-- [ ] Multiple delivery addresses and recipient details.
-- [ ] Automatic reservation expiry and safe stock release for abandoned checkouts.
-- [ ] Actual provider payment retry on an existing eligible order.
-- [ ] Stronger session/device management.
+- [x] Forgot/reset password, email verification and multiple delivery addresses.
+- [x] Reservation expiry/stock release and eligible same-order real payment retry.
+- [x] Admin payment review, customer cancellation requests and whole-order return/refund workflows.
+- [x] Store-entered courier tracking, shipment history and customer tracking view.
+- [x] Queued order/payment/shipping/delivery/cancellation email with retries.
+- [x] Size/color/SKU variants with independent stock, prices and photos.
+- [x] Coupons/promo codes and account wishlists.
+- [x] Product/SKU stock CSV tools and per-option low-stock alerts.
+- [x] Editable storefront banner, contact, FAQs, policies and delivery pricing.
 
-### Phase 2 — Order Operations
+### Next Product and Operations Work
 
-- [ ] Customer cancellation requests for ordinary orders.
-- [ ] Returns, refunds and payment-review resolution workflows.
-- [ ] Courier integration, tracking numbers and fulfillment history.
-- [ ] Order/payment/shipping email or SMS notifications.
-- [ ] Customer-management and dedicated payment-review screens.
-
-### Phase 3 — Catalog and Store Experience
-
-- [ ] Size/color/SKU variants with independent inventory.
-- [ ] Coupons, wishlist and optional full guest cart/checkout.
-- [ ] Store settings, banners, contact information, FAQ and policy pages.
-- [ ] Advanced daily/monthly sales analysis and top-product reporting beyond the existing summary/CSV.
+- [ ] Advanced sales/product/SKU reporting beyond the existing summary and CSV.
+- [ ] Carrier API booking, rates, labels and authenticated tracking automation.
+- [ ] Item-level returns/exchanges, configurable return windows and credit notes.
+- [ ] Refund-specific email, SMS, bounce monitoring and notification preferences.
+- [ ] Customer/staff management and stronger device/session controls.
+- [ ] Optional full guest cart/checkout, comparison and recently viewed products.
 - [ ] SEO metadata, sitemap and product structured data.
-- [ ] Optional comparison and recently viewed products.
-
-### Phase 4 — Public Operations
-
-- [ ] Deployment/HTTPS configuration and production payment acceptance.
-- [ ] Durable image storage and unused-media cleanup.
-- [ ] Database/media backups and restore drills.
-- [ ] Monitoring, redacted logs and operational alerts.
+- [ ] Deployment/HTTPS, durable media storage and unused-image cleanup.
+- [ ] Database/media backups, restore drills, monitoring and operational alerts.
 - [ ] Release automation, rollback planning and ongoing dependency auditing.
 
-Current boundaries include one default address, a sign-in selection intent rather than a full guest cart, manual handling of eligible ordinary-order cancellations, and no automatic abandoned-reservation expiry. Local simulated payment recovery/cancellation is already available.
+Carrier events are currently store-entered. Return requests currently cover whole orders; partial monetary refunds are supported. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
+| [Coupons, wishlist, inventory and store settings](docs/COMMERCE_TOOLS.md) | Setup, policies, API and acceptance for v2.9.0 |
+| [Account recovery and addresses](docs/ACCOUNT_RECOVERY.md) | Email, reset/verification and address book |
+| [Checkout recovery](docs/CHECKOUT_RECOVERY.md) | Reservation expiry and same-order retry |
+| [Order operations](docs/ORDER_OPERATIONS.md) | Payment review, cancellations, returns and refunds |
+| [Delivery and notifications](docs/DELIVERY_NOTIFICATIONS.md) | Courier tracking and order email |
+| [Product variants](docs/PRODUCT_VARIANTS.md) | Size/color SKU inventory |
 | [Run and update commands](RUN_COMMANDS.md) | Local startup and preserving an existing installation |
 | [Catalog guide](docs/CATALOG_GUIDE.md) | Sample inventory, import behavior and adding products |
 | [Payment guide](docs/DEMO_PAYMENTS.md) | Local simulation, states and real-provider boundaries |
@@ -448,7 +488,7 @@ Current boundaries include one default address, a sign-in selection intent rathe
 | [Future development](docs/FUTURE_DEVELOPMENT.md) | Development phases and planned capabilities |
 | [Changelog](CHANGELOG.md) | Version history |
 
-Some supporting documents retain earlier baseline descriptions; this README and the current verification report describe the v2.4.2 application status.
+Historical sections remain labeled by release. This README, the v2.9.0 feature guide and the current verification report describe the latest application status.
 
 ## Contributing
 

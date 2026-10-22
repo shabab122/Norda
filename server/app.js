@@ -83,6 +83,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/store", storeRoutes);
+app.use("/api", require("./routes/commerceToolsRoutes"));
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin/operations", require("./routes/orderOperationsRoutes"));

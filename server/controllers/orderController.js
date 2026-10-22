@@ -18,7 +18,7 @@ const createOrder = async (req, res, next) => {
       user: req.user,
       shippingAddress: req.body.shippingAddress,
       paymentMethod: "cod",
-      checkoutKey: req.body.checkoutKey,
+      checkoutKey: req.body.checkoutKey, couponCode: req.body.couponCode, expectedTotals: req.body.expectedTotals,
     });
     res.status(result.replayed ? 200 : 201).json({
       ...orderView(result.order),

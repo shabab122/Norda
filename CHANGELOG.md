@@ -2,6 +2,15 @@
 
 All notable project changes are recorded here.
 
+## 2.9.0 — Coupons, wishlist, inventory tools and published store settings
+
+- Fixed/percentage coupons with caps, schedules, minimums, global/account limits and guarded checkout usage; recorded discounts reach invoices, mail, CSV, payment retry and refunds.
+- Private account wishlists with current availability, idempotent saves/removal and existing exact-SKU cart actions.
+- Stock CSV export/preview/import, per-option thresholds/alerts, stale-write checks, durable replay/recovery and per-product conflict reporting.
+- Admin banner/announcement/contact/FAQ/policy/delivery settings, public help pages and snapshot-preserving delivery changes.
+- Retains the user's professional README layout and updates its version/features/requirements/roadmap to the actual implementation.
+- Native standalone/replica and frontend/fault-injection tests cover the new and prior flows; no dependency or credential changes.
+
 ## [2.8.0] — 2026-10-21
 
 - Added courier/tracking metadata, administrator shipment updates, append-only history and an owner-protected customer tracking page. Normal fulfillment, payment and cancellation/refund guards still apply; old basic status controls retain compatibility.

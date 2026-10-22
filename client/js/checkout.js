@@ -7,6 +7,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function loadCheckout() {
+  checkoutOwner = Api.getUser()?._id;
   const root = document.getElementById("checkout-root");
   try {
     const [cart, profile, paymentConfig, store] = await Promise.all([
@@ -15,20 +16,24 @@ async function loadCheckout() {
       Api.get("/payments/config"),
       getStoreConfig(),
     ]);
+    if (Api.getUser()?._id !== checkoutOwner) return;
     const items = cart.items || [];
     if (items.some((item) => item.unavailable || !item.product || item.quantity > (item.stock ?? item.product.stock))) {
       root.innerHTML = `<div class="empty-state"><h2>Your cart needs a quick review</h2><p>An item or quantity is no longer available. Your selection has been kept.</p><a class="btn btn-primary" href="cart.html">Review cart</a></div>`;
       return;
     }
-    checkoutSignature = JSON.stringify(items.map((item) => [item.product._id, item.variantId || "", item.quantity, item.price]));
+    checkoutCartSignature = JSON.stringify(items.map((item) => [item.product._id, item.variantId || "", item.quantity, item.price]));
+    checkoutSignature = checkoutCartSignature;
+    checkoutCouponCode = "";
     if (!items.length) {
       root.innerHTML = `<div class="empty-state spacious"><h2>Your cart is empty</h2><p>Add at least one product before checkout.</p><a class="btn btn-primary" href="products.html">Browse products</a></div>`;
       return;
     }
 
-    const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const subtotal = Number(items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2));
     const shipping = subtotal >= store.freeShippingThreshold ? 0 : store.flatShippingFee;
-    const total = subtotal + shipping;
+    const total = Number((subtotal + shipping).toFixed(2));
+    checkoutQuote = { subtotal, shippingFee: shipping, discountAmount: 0, totalAmount: total };
     const address = profile.address || {};
     checkoutAddresses = profile.addresses || [];
 
@@ -107,9 +112,11 @@ async function loadCheckout() {
               )
               .join("")}
           </div>
-          <div class="summary-row"><span>Subtotal</span><span>${money(subtotal)}</span></div>
-          <div class="summary-row"><span>Delivery</span><span>${shipping ? money(shipping) : "Free"}</span></div>
-          <div class="summary-row summary-total"><span>Total</span><span>${money(total)}</span></div>
+          <div class="coupon-entry"><form id="coupon-entry-form"><label for="checkout-coupon">Coupon code</label><div class="coupon-entry-controls"><input id="checkout-coupon" maxlength="32" autocomplete="off" placeholder="Enter your code" /><button type="submit" class="btn btn-outline btn-sm" id="apply-coupon">Apply</button></div></form><div id="coupon-feedback" class="coupon-feedback" role="status" aria-live="polite"></div><button type="button" class="text-button" id="remove-coupon" hidden>Remove coupon</button><p><a href="coupons.html" class="text-link">Explore current offers</a></p></div>
+          <div class="summary-row"><span>Subtotal</span><span id="checkout-subtotal">${money(subtotal)}</span></div>
+          <div class="summary-row coupon-discount" id="checkout-discount-row" hidden><span id="checkout-discount-label">Coupon discount</span><span id="checkout-discount"></span></div>
+          <div class="summary-row"><span>Delivery</span><span id="checkout-shipping">${shipping ? money(shipping) : "Free"}</span></div>
+          <div class="summary-row summary-total"><span>Total</span><span id="checkout-total">${money(total)}</span></div>
           <button type="submit" form="checkout-form" class="btn btn-primary btn-block" id="place-order-btn">Continue securely</button>
           <p class="summary-note">By continuing, you confirm that the delivery details are correct.</p>
         </aside>
@@ -118,6 +125,9 @@ async function loadCheckout() {
 
     bindCheckoutAddressSelection();
     bindCheckoutForm();
+    bindCheckoutCoupon();
+    const offeredCode = new URLSearchParams(window.location.search).get("coupon");
+    if (offeredCode) { document.getElementById("checkout-coupon").value = offeredCode.slice(0, 32); await updateCheckoutCoupon(offeredCode); }
   } catch (error) {
     root.innerHTML = `<div class="empty-state"><h2>Checkout unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="cart.html">Return to cart</a></div>`;
   }
@@ -169,7 +179,8 @@ function bindCheckoutForm() {
   document.getElementById("checkout-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = document.getElementById("place-order-btn");
-    if (button.disabled) return;
+    if (button.disabled || couponBusy || checkoutSubmitting || Api.getUser()?._id !== checkoutOwner) return;
+    checkoutSubmitting = true;
     const alert = document.getElementById("checkout-alert");
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
     button.disabled = true;
@@ -180,7 +191,7 @@ function bindCheckoutForm() {
       if (paymentMethod.startsWith("demo_")) {
         const result = await Api.post("/payments/demo/initiate", {
           shippingAddress: shippingPayload(), channel: paymentMethod.slice(5),
-          checkoutKey: checkoutKey(paymentMethod),
+          checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
         });
         clearCheckoutKey();
         window.location.assign(result.checkoutUrl);
@@ -189,7 +200,7 @@ function bindCheckoutForm() {
       if (paymentMethod === "sslcommerz") {
         const result = await Api.post("/payments/sslcommerz/initiate", {
           shippingAddress: shippingPayload(),
-          checkoutKey: checkoutKey(paymentMethod),
+          checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
         });
         clearCheckoutKey();
         window.location.assign(result.alreadyPaid ? "orders.html" : result.checkoutUrl);
@@ -198,7 +209,7 @@ function bindCheckoutForm() {
       const order = await Api.post("/orders", {
         shippingAddress: shippingPayload(),
         paymentMethod: "cod",
-        checkoutKey: checkoutKey(paymentMethod),
+        checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
       });
       clearCheckoutKey();
       const query = new URLSearchParams({
@@ -216,6 +227,7 @@ function bindCheckoutForm() {
       } else {
         alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)}</div>`;
       }
+      checkoutSubmitting = false;
       button.disabled = false;
       button.textContent = checkoutButtonLabel(paymentMethod);
       alert.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -223,6 +235,7 @@ function bindCheckoutForm() {
   });
 }
 
+let checkoutCouponCode = "", checkoutQuote, checkoutCartSignature = "", checkoutOwner, couponBusy = false, checkoutSubmitting = false;
 let checkoutSignature = "";
 let memoryCheckout;
 function checkoutKey(method) {
@@ -239,4 +252,37 @@ function clearCheckoutKey() { memoryCheckout = null; try { sessionStorage.remove
 
 function checkoutButtonLabel(method) {
   return method.startsWith("demo_") ? "Continue to payment" : method === "sslcommerz" ? "Continue to secure payment" : "Place cash-on-delivery order";
+}
+
+function bindCheckoutCoupon() {
+  document.getElementById("coupon-entry-form").addEventListener("submit", (event) => { event.preventDefault(); updateCheckoutCoupon(document.getElementById("checkout-coupon").value); });
+  document.getElementById("remove-coupon").addEventListener("click", () => updateCheckoutCoupon(""));
+}
+function renderCheckoutQuote() {
+  document.getElementById("checkout-subtotal").textContent = money(checkoutQuote.subtotal);
+  document.getElementById("checkout-shipping").textContent = checkoutQuote.shippingFee ? money(checkoutQuote.shippingFee) : "Free";
+  document.getElementById("checkout-total").textContent = money(checkoutQuote.totalAmount);
+  document.getElementById("checkout-discount-row").hidden = !checkoutQuote.discountAmount;
+  document.getElementById("checkout-discount-label").textContent = "Coupon " + checkoutCouponCode;
+  document.getElementById("checkout-discount").textContent = "−" + money(checkoutQuote.discountAmount);
+  document.getElementById("remove-coupon").hidden = !checkoutCouponCode;
+}
+async function updateCheckoutCoupon(code) {
+  if (couponBusy || checkoutSubmitting || Api.getUser()?._id !== checkoutOwner) return;
+  couponBusy = true;
+  const ids = ["apply-coupon", "remove-coupon", "checkout-coupon", "place-order-btn"];
+  ids.forEach((id) => document.getElementById(id).disabled = true);
+  const feedback = document.getElementById("coupon-feedback"); feedback.textContent = "Checking your current cart…";
+  try {
+    const quote = await Api.post("/coupons/preview", { code: code.trim() });
+    if (Api.getUser()?._id !== checkoutOwner) return;
+    if (quote.cartSignature !== checkoutCartSignature) throw new Error("Your cart or prices changed. Refresh checkout to review the current items.");
+    checkoutCouponCode = quote.coupon?.code || "";
+    checkoutQuote = Object.fromEntries(["subtotal", "shippingFee", "discountAmount", "totalAmount"].map((key) => [key, quote[key]]));
+    checkoutSignature = checkoutCartSignature + "|coupon=" + checkoutCouponCode;
+    document.getElementById("checkout-coupon").value = checkoutCouponCode;
+    feedback.textContent = checkoutCouponCode ? checkoutCouponCode + " applied. You save " + money(quote.discountAmount) + "." : "No coupon applied.";
+    renderCheckoutQuote();
+  } catch (error) { feedback.textContent = error.message + (checkoutCouponCode ? " Current coupon: " + checkoutCouponCode + "." : ""); }
+  finally { couponBusy = false; if (Api.getUser()?._id === checkoutOwner) ids.forEach((id) => document.getElementById(id).disabled = false); }
 }

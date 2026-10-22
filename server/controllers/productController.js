@@ -54,8 +54,10 @@ const parseProductPayload = async (body, currentProduct = null) => {
     }
   }
 
+  const lowStockThreshold = body.lowStockThreshold ?? currentProduct?.lowStockThreshold ?? 5;
+  if (!Number.isSafeInteger(lowStockThreshold) || lowStockThreshold < 0 || lowStockThreshold > 1000000) throw httpError(400, "Low-stock threshold must be a whole number from 0 to 1,000,000");
   return {
-    name,
+    lowStockThreshold, name,
     description,
     price,
     discountPrice,
@@ -184,7 +186,7 @@ const updateProduct = async (req, res, next) => {
       // Only set fields intentionally edited by the form. In particular, an
       // unrelated product edit must not overwrite a concurrent stock change.
       const fields = {};
-      for (const key of ["name", "description", "price", "discountPrice", "stock", "category", "images", "isFeatured", "isArchived"]) {
+      for (const key of ["name", "description", "price", "discountPrice", "stock", "category", "images", "isFeatured", "isArchived", "lowStockThreshold"]) {
         if (req.body[key] !== undefined) fields[key] = payload[key];
       }
       if (req.body.brandRef !== undefined || req.body.brand !== undefined) { fields.brandRef = payload.brandRef; fields.brand = payload.brand; }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const couponSnapshotSchema = new mongoose.Schema({ _id: mongoose.Schema.Types.ObjectId, code: String, title: String, type: String, value: Number, minSubtotal: Number, maxDiscount: Number }, { _id: false });
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -33,6 +34,8 @@ const orderSchema = new mongoose.Schema(
     },
     subtotal: { type: Number, required: true, min: 0, default: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
+    discountAmount: { type: Number, min: 0, default: 0 },
+    coupon: { type: couponSnapshotSchema, default: undefined },
     paymentMethod: { type: String, enum: ["cod", "sslcommerz", "demo"], default: "cod" },
     paymentChannel: { type: String, enum: ["", "mobile_banking", "card_bank"], default: "" },
     totalAmount: { type: Number, required: true },

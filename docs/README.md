@@ -1,5 +1,9 @@
 # Documentation index
 
+## Coupons, wishlist, inventory and store content — 2.9.0
+
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+
 - [Courier tracking and order email](DELIVERY_NOTIFICATIONS.md) — 2.8 workflow, SMTP reuse, queue/retry and acceptance.
 - [Product variants](PRODUCT_VARIANTS.md) — 2.8 SKU editor, option selection, inventory and compatibility.
 - [Order operations](ORDER_OPERATIONS.md) — 2.7 payment review, cancellation requests, whole-order returns, refunds and acceptance.

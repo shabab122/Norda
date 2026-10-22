@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.7.0 to 2.8.0
+## Update from 2.2–2.8.0 to 2.9.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -18,11 +18,21 @@ npm run dev
 
 Open **http://localhost:5000**. Standard customer login/signup now opens `/dashboard.html`; administrator login keeps `/admin/dashboard.html`. A shopping return URL or pending cart selection still takes priority.
 
-The preflight is read only. It shows the selected database host/port and record counts, with all secrets hidden. Your current local database was exposed at `127.0.0.1:27018/norda_db`; keep that working URI in your own `.env`. NORDA stays on port 5000 and leaves GitStack/Gitea ports 3000/3002 alone.
+The preflight is read only. It shows the selected database host/port and record counts, with all secrets hidden. Keep your currently working local MongoDB or Atlas URI and database name in your own `.env`. NORDA stays on port 5000 and leaves GitStack/Gitea ports 3000/3002 alone.
 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Coupons, wishlist, inventory and store settings
+
+- Admin: **Coupon center**, **Inventory tools**, **Store settings** in the sidebar.
+- Customers: **Offers**, **Wishlist**, checkout coupon field and **Contact & help** in the footer.
+- No new environment variables, database reset, setup or reseed are needed. New collections/indexes are additive and initialized at startup; existing catalog/account/order records are retained.
+- Preserve your working local/Atlas URI and later laptop-only SMTP values. Do not overwrite your working `.env` with an older archive copy.
+- CSV edits apply to existing inventory only. Preview first; retain expectedStock/inventoryVersion and the exact exported header. Each product is atomic; review any conflict/uncertain result before another import.
+
+See [docs/COMMERCE_TOOLS.md](docs/COMMERCE_TOOLS.md) for the complete usage and acceptance guide.
 
 ## Delivery tracking, order email and variants
 

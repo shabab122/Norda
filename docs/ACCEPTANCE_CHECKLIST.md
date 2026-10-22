@@ -1,4 +1,8 @@
-# NORDA 2.8.0 acceptance checklist
+# NORDA 2.9.0 acceptance checklist
+
+## Coupons, wishlist, inventory and store content — 2.9.0
+
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
 
 ## Recorded status
 
@@ -19,7 +23,7 @@
 
 ## Before starting
 
-Keep your current `server/.env` exactly as configured. Your working local MongoDB is exposed at `127.0.0.1:27018/norda_db`; use the same URI. Keep NORDA on port 5000. Applying this update does not require setup or reseeding.
+Keep your current `server/.env` exactly as configured. Retain your currently working MongoDB URI/database, including Atlas or your existing local port. Keep NORDA on port 5000. Applying this update does not require setup or reseeding.
 
 ```bash
 cd server

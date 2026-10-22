@@ -1,0 +1,36 @@
+let couponOwner, couponPage = 1, couponRead = 0, couponRows = [], editedCoupon;
+document.addEventListener("DOMContentLoaded", async () => {
+  await Api.ready; if (!requireAdmin()) return; couponOwner = Api.getUser()._id; renderAdminShell("coupons");
+  document.getElementById("tools-root").innerHTML = `<div class="tools-split"><section class="admin-panel"><div class="panel-heading"><h2>All coupons</h2><button class="btn btn-primary btn-sm" id="new-coupon">New coupon</button></div><div id="coupon-list"></div></section><section class="admin-panel" id="coupon-editor"></section></div>`;
+  document.getElementById("new-coupon").addEventListener("click", () => editCoupon());
+  editCoupon(); await loadCoupons();
+});
+async function loadCoupons() {
+  const read = ++couponRead;
+  try {
+    const data = await Api.get("/admin/coupons?page=" + couponPage + "&limit=20"); if (read !== couponRead || Api.getUser()?._id !== couponOwner) return;
+    couponRows = data.items;
+    document.getElementById("coupon-list").innerHTML = data.items.length ? `<div class="table-wrap"><table class="data-table"><thead><tr><th>Code / offer</th><th>Uses</th><th>Status</th><th></th></tr></thead><tbody>${data.items.map((row) => `<tr><td><strong>${escapeHtml(row.code)}</strong><small>${escapeHtml(row.title)}</small><small>${row.type === "percentage" ? escapeHtml(row.value) + "%" : money(row.value)} off</small></td><td>${row.usedCount} / ${row.usageLimit || "Unlimited"}</td><td>${!row.isActive ? "Inactive" : new Date(row.endsAt) <= new Date() ? "Expired" : new Date(row.startsAt) > new Date() ? "Scheduled" : "Active"}${!row.isPublic ? " · Private" : ""}</td><td><button class="btn btn-outline btn-sm" data-edit-coupon="${escapeHtml(row._id)}">Edit</button></td></tr>`).join("")}</tbody></table></div><nav class="tools-pager" aria-label="Coupon pages"><button id="coupon-prev" class="btn btn-outline btn-sm" ${data.page <= 1 ? "disabled" : ""}>Previous</button><span>${data.page} / ${data.pages}</span><button id="coupon-next" class="btn btn-outline btn-sm" ${data.page >= data.pages ? "disabled" : ""}>Next</button></nav>` : `<p>No coupons yet. Create your first offer.</p>`;
+    document.querySelectorAll("[data-edit-coupon]").forEach((button) => button.addEventListener("click", () => editCoupon(couponRows.find((r) => r._id === button.dataset.editCoupon))));
+    document.getElementById("coupon-prev")?.addEventListener("click", () => { couponPage--; loadCoupons(); }); document.getElementById("coupon-next")?.addEventListener("click", () => { couponPage++; loadCoupons(); });
+  } catch (error) { couponAlert(error.message, "error"); }
+}
+function localDateInput(value) { const d = new Date(value); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16); }
+function editCoupon(row) {
+  editedCoupon = row;
+  const v = row || { code: "", title: "", type: "percentage", value: 10, minSubtotal: 0, maxDiscount: 0, usageLimit: 0, perUserLimit: 1, isActive: true, isPublic: true, startsAt: Date.now() - 60000, endsAt: Date.now() + 7 * 86400000 };
+  document.getElementById("coupon-editor").innerHTML = `<h2>${row ? "Edit coupon" : "New coupon"}</h2><form id="coupon-form" class="tools-form"><div class="field"><label for="coupon-code">Code</label><input id="coupon-code" required minlength="3" maxlength="32" pattern="[A-Za-z0-9][A-Za-z0-9_-]{2,31}" ${row ? "readonly" : ""} value="${escapeHtml(v.code)}" /></div><div class="field"><label for="coupon-title">Offer title</label><input id="coupon-title" required maxlength="100" value="${escapeHtml(v.title)}" /></div><div class="form-grid two"><div class="field"><label for="coupon-type">Discount type</label><select id="coupon-type"><option value="percentage" ${v.type === "percentage" ? "selected" : ""}>Percentage (%)</option><option value="fixed" ${v.type === "fixed" ? "selected" : ""}>Fixed amount (BDT)</option></select></div><div class="field"><label for="coupon-value">Value</label><input id="coupon-value" type="number" min="0.01" max="10000000" step="0.01" required value="${v.value}" /></div>${[["minSubtotal", "Minimum subtotal (BDT)"], ["maxDiscount", "Maximum discount (0 = uncapped)"], ["usageLimit", "Total uses (0 = unlimited)"], ["perUserLimit", "Uses per account (0 = unlimited)"]].map(([key, label]) => `<div class="field"><label for="coupon-${key}">${label}</label><input id="coupon-${key}" type="number" min="0" max="10000000" step="${key.includes("Limit") ? "1" : "0.01"}" required value="${v[key]}" /></div>`).join("")}<div class="field"><label for="coupon-start">Starts (your local time)</label><input id="coupon-start" type="datetime-local" required value="${localDateInput(v.startsAt)}" /></div><div class="field"><label for="coupon-end">Ends (your local time)</label><input id="coupon-end" type="datetime-local" required value="${localDateInput(v.endsAt)}" /></div></div><label class="check-label"><input id="coupon-active" type="checkbox" ${v.isActive ? "checked" : ""} /> Active</label><label class="check-label"><input id="coupon-public" type="checkbox" ${v.isPublic ? "checked" : ""} /> Show in public offers</label><p class="tools-muted">A use is recorded once when an order is created. Cancellation, expiry, refunds and payment retries keep that use and the original discount. One code per order.</p><button class="btn btn-primary" id="coupon-save">${row ? "Save changes" : "Create coupon"}</button><button class="btn btn-outline" type="button" id="coupon-reload">Reload coupons</button></form>`;
+  document.getElementById("coupon-reload").addEventListener("click", async () => { await loadCoupons(); if (row) editCoupon(couponRows.find((r) => r._id === row._id) || row); });
+  document.getElementById("coupon-form").addEventListener("submit", saveCouponForm);
+}
+function couponAlert(message, type = "success") { document.getElementById("tools-alert").innerHTML = `<div class="alert alert-${type}" role="status">${escapeHtml(message)}</div>`; }
+async function saveCouponForm(event) {
+  event.preventDefault(); const form = event.currentTarget, button = document.getElementById("coupon-save"); if (button.disabled || Api.getUser()?._id !== couponOwner) return;
+  const get = (key) => document.getElementById("coupon-" + key);
+  const body = { code: get("code").value.trim().toUpperCase(), title: get("title").value.trim(), type: get("type").value, value: Number(get("value").value), startsAt: new Date(get("start").value).toISOString(), endsAt: new Date(get("end").value).toISOString(), isActive: get("active").checked, isPublic: get("public").checked, ...(editedCoupon ? { revision: editedCoupon.revision } : {}) };
+  for (const key of ["minSubtotal", "maxDiscount", "usageLimit", "perUserLimit"]) body[key] = Number(get(key).value);
+  const fields = [...form.elements]; fields.forEach((f) => f.disabled = true);
+  try { const saved = await (editedCoupon ? Api.put("/admin/coupons/" + editedCoupon._id, body) : Api.post("/admin/coupons", body)); if (Api.getUser()?._id !== couponOwner) return; couponAlert("Coupon saved. Existing orders keep their recorded discount."); await loadCoupons(); editCoupon(saved); }
+  catch (error) { couponAlert(error.message, "error"); }
+  finally { fields.forEach((f) => f.disabled = false); }
+}

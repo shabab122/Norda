@@ -1,36 +1,36 @@
-# Verification results — NORDA 2.8.0
+# Verification results — NORDA 2.9.0
 
-Prepared 2026-10-21 (Asia/Dhaka) from the latest `Norda-Main-v2.7.0.zip`. Runtime: Node.js 24.19.0/npm 11.9.0, native MongoDB 7.0.45 and an isolated local SMTP listener.
+Prepared 2026-10-22 (Asia/Dhaka) from the latest `Norda-Main-v2.8.0.zip`, including the professional README supplied by the user. Runtime: Node.js 24.19.0/npm 11.9.0; isolated native MongoDB 7.0.45.
 
 | Check | Result |
 |---|---|
-| Baseline before changes | 248 regression passes, zero failures, five opt-in native skips |
-| Dependency install | Clean `npm ci` passed; no dependency package added/removed/upgraded |
-| JavaScript syntax | All 159 JavaScript files passed |
-| Final default regression suite | 298 reported: 292 passed, zero failed, six native entry points skipped without an explicit test URI |
-| Native MongoDB standalone | 87 reported, 87 passed, zero failed/skipped; compensation path |
-| Native MongoDB replica set | 87 reported, 87 passed, zero failed/skipped; transaction path |
-| Variant catalog | Unique/case-normalized SKU, duplicate/invalid options, safe price/stock totals, identity retention, inactive public stock, expected-stock edit conflicts and legacy conversion guards |
-| Database SKU constraint | Two concurrent native product inserts with the same SKU: one succeeds, one receives unique-index error 11000 |
-| Selected inventory | Distinct cart lines, live selected prices/stock/photos, immutable invoice labels, final-unit SKU race, partial rollback, inactive historical restock, expiry/retry and received returns |
-| Courier tracking | Owner/admin permissions, metadata/dispatch/progress/attempt/delivery, COD invoice synchronization, replay/conflicts, unsafe/backwards/closed guards and public paginated history |
-| Email outbox | Held-until-commit, rollback, state coalescing, queued activation, atomic claims, bounded backoff, stable Message-ID, stale claim recovery and admin retry/privacy |
-| Actual SMTP protocol | Existing account message and order message accepted by an isolated SMTP listener; explicit Message-ID retained; production TLS checks retained |
-| Actual API lifecycle | Separate real MongoDB: server/index initialization, variant checkout, automatic worker delivery to a private file preview with invoice reference, graceful worker/server shutdown |
-| Frontend behavior | Exact-option card/picker, guest continuity, selected-stock controls, escaped invoice/notes, owner account-change guard, shipment timeout/replay guard, email status truth and partial photo upload retry |
-| Previous full flow | Account reset/verification/SMTP/addresses; cart/catalog/admin/checkout; COD/online simulation/gateway state fixtures; invoices/reviews/reports/uploads; reservation expiry/retry; payment review/cancellation/returns/refunds |
-| Dependency audit | Current `npm audit --json`: zero vulnerabilities; dependency lock entries retained except project version |
-| Configuration preservation | Input `server/.env` byte-for-byte preserved; database/JWT/admin/SMTP/gateway credentials unchanged; no owner database or seed changed |
-| Source/assets preservation | No baseline files deleted; catalog/seed/AI images, branding/base CSS, auth/account-recovery/address-book source and unrelated configuration retained |
-| Browser/mobile visual acceptance | Frontend VM/static/resource checks pass; actual target browser/mobile/keyboard/print inspection remains manual |
-| External inbox/Spam | Not contacted; use the owner's working SMTP settings and check actual inbox/Spam and login links |
-| Carrier automation | Store-entered tracking/history implemented; carrier API booking, polling, labels and webhooks not included |
-| Public SSLCOMMERZ/refund settlement | Controlled provider fixtures in tests; merchant/public callback/refund acceptance remains target-environment work |
+| Baseline before changes | 292 passes, zero failures, six opt-in native skips |
+| Dependency installation | Clean `npm ci` passed; dependency versions retained |
+| JavaScript syntax | All 180 JavaScript files passed |
+| Final default suite | 338 reported: 331 passed, zero failed, seven native entry points skipped without an explicit test URI |
+| Native MongoDB standalone | 112 passed, zero failed/skipped; compensation path |
+| Native MongoDB replica set | 112 passed, zero failed/skipped; transaction path |
+| Coupon pricing | Current selected-SKU/effective prices, integer-paisa rounding, percentage/fixed caps, minimums, dates, amount limits and discounted delivery threshold |
+| Coupon integrity | Concurrent global last use, per-account limits, one redemption on replay, snapshot edits, expiry/retry, all payment initiation amounts and discounted return/refund totals |
+| Coupon rollback | Injected invoice/cart/redemption write failures retain stock/cart and roll back order/invoice/use counters |
+| Wishlist privacy | Missing credentials, account isolation, idempotent saves, current prices, archived/missing-item removal and exact-SKU cart continuation |
+| Stock tools | BOM/quoted/formula-safe CSV export, strict parser, preview without writes, exact identifiers, simple/SKU stock and thresholds, parent totals, stale hashes/revisions and duplicate/fractional rejection |
+| Import recovery | Durable replay, different-file key conflicts, interrupted history write recovery, unknown writes requiring review and mixed success/concurrent-conflict results without repeated stock writes |
+| Low-stock alerts | Per-option thresholds, zero stock, legacy default threshold and retired/archived exclusion |
+| Published settings | Default reads do not seed; revision conflicts, validated contact/prices/safe links, public-only projection and old invoice totals preserved after price/settings changes |
+| Native unique indexes | Concurrent duplicate coupon code and wishlist inserts: one succeeds and one receives error 11000; existing SKU index race also passes |
+| Frontend/resource checks | All 33 pages/local references, coupon apply/remove/keys/double-submit/account guards, wishlist response isolation, escaped help/policy/invoice/order content, banner controls and import retry/results |
+| Previous full flow | Account recovery/verification/SMTP/addresses; catalog/cart/COD/gateway fixtures/simulator; invoice/reviews/reports/uploads; expiry/retry; review/cancellation/returns/refunds; tracking/outbox/variants |
+| Dependency audit | `npm audit --json`: zero vulnerabilities |
+| Environment preservation | Input `server/.env` byte-for-byte retained; database/JWT/admin/gateway/SMTP values unchanged; no owner database or seed used |
+| Original assets/source | No baseline file removed; catalog photos, logo, seed data and unrelated account/payment/operations source retained |
+| Browser visual acceptance | Live browser check could not complete because browser tooling timed out/unavailable; target desktop/mobile/keyboard/print acceptance remains manual |
+| External acceptance | Owner Atlas/SMTP inbox, public SSLCOMMERZ callbacks/refund settlement and courier services were not contacted |
 
-Default tests exercise actual Express routes with an isolated fault-injectable model adapter, services, frontend handlers and local SMTP protocol. Six native entry points exercise real Mongoose/MongoDB persistence and HTTP on standalone and replica-set paths. Each creates and drops only a new random `norda_test_*` database on an isolated test server. The runtime smoke check also uses a new isolated test database and file-mode mail. The owner's configured NORDA database is never used.
+Default HTTP journeys run actual Express routes with an isolated fault-injectable model adapter. Seven native entry points run real Mongoose/MongoDB persistence and HTTP on separate standalone and single-member replica-set servers. Each entry point creates and drops only a new random `norda_test_*` database. No real money is moved. Fault-injection diagnostics can appear in passing test output.
 
-`npm run verify` intentionally skips six native entry points without `NORDA_TEST_MONGO_URI`; all were explicitly run in both modes. Expected fault-injection/rollback diagnostics can appear in passing tests. SMTP acceptance and local previews do not establish actual external inbox placement. Provider fixtures do not establish merchant permissions, public callback reachability or bank settlement. No real money was transferred and no actual courier was contacted.
+The default command intentionally skips native entries unless `NORDA_TEST_MONGO_URI` is explicit. All native entries were separately run on both topologies. SMTP protocol tests use an isolated local listener; that does not establish actual inbox placement. Controlled gateway fixtures do not establish merchant permissions or settlement. Frontend VM/static checks do not establish a live browser/device visual result.
 
-The update keeps existing products as they are; variant records are created through the admin editor when the owner chooses. Startup initializes additive indexes and background workers. Existing overdue unpaid reservations and queued refunds continue their established recovery behavior. Order email is queued only for new changes, not mass-generated for all historical orders.
+CSV files are processed per product, with durable results and explicit conflict/review outcomes. They are not all-or-nothing multi-product transactions. Coupon use is retained after successful order creation, including later cancellation/expiry/refund. Those policies are visible in the feature guide/UI. Standalone coordinated commerce writes keep their prior handled-error compensation boundary; replica sets provide the transaction path.
 
-Retain the working local `.env` and uploads during update, especially SMTP changes made later only on the laptop. No setup, reseed or manual migration is required. For usage and acceptance see [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md), [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md) and [ACCEPTANCE_CHECKLIST.md](ACCEPTANCE_CHECKLIST.md).
+Keep your currently working `.env`, local/Atlas URI, later laptop-only SMTP changes and uploaded files when applying the update. No setup, reseed or manual migration is required. See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for usage, API and acceptance.

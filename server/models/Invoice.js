@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const couponSnapshotSchema = new mongoose.Schema({ _id: mongoose.Schema.Types.ObjectId, code: String, title: String, type: String, value: Number, minSubtotal: Number, maxDiscount: Number }, { _id: false });
 
 const invoiceItemSchema = new mongoose.Schema(
   {
@@ -30,6 +31,8 @@ const invoiceSchema = new mongoose.Schema(
     },
     subtotal: { type: Number, required: true, min: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
+    discountAmount: { type: Number, min: 0, default: 0 },
+    coupon: { type: couponSnapshotSchema, default: undefined },
     totalAmount: { type: Number, required: true, min: 0 },
     currency: { type: String, default: "BDT", uppercase: true },
     paymentStatus: {

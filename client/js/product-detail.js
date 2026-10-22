@@ -87,6 +87,7 @@ function renderProduct(product) {
             ${product.stock === 0 ? "Unavailable" : "Add to cart"}
           </button>
         </div>
+        <button type="button" class="btn btn-outline btn-sm" data-wishlist="${escapeHtml(product._id)}" aria-pressed="false">Save to wishlist</button>
         <div id="pd-alert" aria-live="polite"></div>
         <div class="purchase-notes">
           <p><strong>Secure checkout</strong><span>Pay through SSLCOMMERZ or choose cash on delivery.</span></p>
@@ -148,6 +149,7 @@ function renderProduct(product) {
 
   bindProductInteractions(product);
   bindVariantSelection(product);
+  if (typeof refreshWishlistButtons === "function") refreshWishlistButtons();
 }
 
 function bindProductInteractions(product) {

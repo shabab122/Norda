@@ -34,7 +34,7 @@ const initiateSslcommerz = async (req, res, next) => {
     const result = await withOperationLock("payment-init:" + req.user._id, async () => {
       ({ order, invoice } = await createOrderFromCart({
         user: req.user, shippingAddress: req.body.shippingAddress,
-        paymentMethod: "sslcommerz", checkoutKey: req.body.checkoutKey,
+        paymentMethod: "sslcommerz", checkoutKey: req.body.checkoutKey, couponCode: req.body.couponCode, expectedTotals: req.body.expectedTotals,
       }));
       return withOperationLock("order:" + order._id, async () => {
         order = await withDatabaseUnit(async (unit) => expireInUnit(await querySession(Order.findById(order._id), unit.session), unit));

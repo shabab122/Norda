@@ -155,6 +155,7 @@ async function loadProducts() {
       ? data.products.map(productCardHtml).join("")
       : `<div class="empty-state"><h2>No matches found</h2><p>Try removing a filter or widening the price range.</p></div>`;
     renderActiveFilters();
+    if (typeof refreshWishlistButtons === "function") refreshWishlistButtons();
     renderPagination(data.page, data.pages);
   } catch (error) {
     if (request !== catalogRequest) return;

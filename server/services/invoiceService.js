@@ -21,6 +21,8 @@ const createInvoiceForOrder = async (order, session = null, unit = null) => {
   })),
   shippingAddress: order.shippingAddress,
   subtotal: order.subtotal,
+  discountAmount: order.discountAmount || 0,
+  ...(order.coupon?.code ? { coupon: order.coupon.toObject ? order.coupon.toObject() : order.coupon } : {}),
   shippingFee: order.shippingFee,
   totalAmount: order.totalAmount,
   currency: order.currency,

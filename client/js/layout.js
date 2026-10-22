@@ -10,7 +10,7 @@ function renderHeader(activePage = "") {
     <div class="announcement-bar">
       <div class="container announcement-inner">
         <span id="announcement-delivery">Delivery across Bangladesh</span>
-        <span>Secure checkout · Honest pricing</span>
+        <span id="store-announcement">Secure checkout · Honest pricing</span>
       </div>
     </div>
     <div class="site-header">
@@ -23,6 +23,8 @@ function renderHeader(activePage = "") {
           <nav class="main-nav" aria-label="Primary navigation">
             <a href="index.html" class="${activePage === "home" ? "active" : ""}">Home</a>
             <a href="products.html" class="${activePage === "products" ? "active" : ""}">Shop</a>
+            <a href="coupons.html" class="${activePage === "coupons" ? "active" : ""}">Offers</a>
+            <a href="wishlist.html" class="${activePage === "wishlist" ? "active" : ""}">Wishlist</a>
             ${user ? `<a href="orders.html" class="${activePage === "orders" ? "active" : ""}">Orders</a>` : ""}
             ${user && user.role !== "admin" ? `<a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">My account</a>` : ""}
             ${!user ? `<a href="register.html">Create account</a>` : ""}
@@ -104,9 +106,12 @@ function renderFooter() {
         <div>
           <h4>Store</h4>
           <ul>
-            <li>Dhaka, Bangladesh</li>
-            <li>Secure online payment</li>
-            <li>Cash on delivery available</li>
+            <li id="store-contact-address">Dhaka, Bangladesh</li>
+            <li id="store-contact-email" hidden></li>
+            <li id="store-contact-phone" hidden></li>
+            <li><a href="help.html">Contact & help</a></li>
+            <li><a href="help.html#delivery">Delivery & returns</a></li>
+            <li><a href="help.html#privacy">Privacy & terms</a></li>
           </ul>
         </div>
       </div>
@@ -116,6 +121,7 @@ function renderFooter() {
       </div>
     </div>
   `;
+  loadStoreFooter();
 }
 
 function accountHome(user = Api.getUser()) {
@@ -255,6 +261,12 @@ async function loadAnnouncement() {
     const store = await getStoreConfig();
     const element = document.getElementById("announcement-delivery");
     if (element) element.textContent = "Free delivery from " + money(store.freeShippingThreshold);
+    const banner = document.getElementById("store-announcement");
+    if (banner && store.announcement?.visible) {
+      banner.textContent = store.announcement.text;
+      const url = safeStoreLink(store.announcement.url);
+      if (url) { const link = document.createElement("a"); link.href = url; link.textContent = store.announcement.text; banner.replaceChildren(link); }
+    }
   } catch { /* Delivery remains described without an incorrect price promise. */ }
 }
 function toast(message, type = "success") {
@@ -340,3 +352,66 @@ function paymentNote(value) {
 }
 
 function variantLabel(item) { return [item.size, item.color, item.sku ? "SKU: " + item.sku : ""].filter(Boolean).join(" · "); }
+
+function safeStoreLink(value) {
+  if (typeof value !== "string" || /[\\\s<>"']/.test(value)) return "";
+  if (value.startsWith("/") && !value.startsWith("//") && !/%(?:2f|5c)/i.test(value)) return value;
+  try { const url = new URL(value); return url.protocol === "https:" && !url.username && !url.password ? url.href : ""; } catch { return ""; }
+}
+async function loadStoreFooter() {
+  try {
+    const store = await getStoreConfig();
+    const address = document.getElementById("store-contact-address"); if (address) address.textContent = store.address || "Dhaka, Bangladesh";
+    for (const [id, value] of [["store-contact-email", store.supportEmail], ["store-contact-phone", store.supportPhone]]) {
+      const row = document.getElementById(id); if (!row) continue; row.hidden = !value; row.textContent = value || "";
+    }
+  } catch { /* The existing footer remains usable while content is unavailable. */ }
+}
+function applyStoreHero(hero) {
+  const section = document.getElementById("home-hero"); if (!section || !hero) return;
+  section.hidden = hero.visible === false;
+  for (const [id, key] of [["home-hero-eyebrow", "eyebrow"], ["hero-title", "title"], ["home-hero-description", "description"]]) {
+    const element = document.getElementById(id); if (element && typeof hero[key] === "string") element.textContent = hero[key];
+  }
+  const button = document.getElementById("home-hero-button"), link = safeStoreLink(hero.buttonUrl);
+  if (button && link) { button.href = link; button.textContent = hero.buttonLabel; }
+  const image = document.getElementById("home-hero-image"); if (image && hero.imageUrl) image.src = resolveImage(hero.imageUrl);
+}
+
+let savedWishlistIds = new Set(), savedWishlistOwner, wishlistIdsPromise, wishlistRequestedOwner, wishlistReadVersion = 0;
+function syncWishlistButtons() {
+  document.querySelectorAll("[data-wishlist]").forEach((button) => {
+    const saved = savedWishlistOwner === Api.getUser()?._id && savedWishlistIds.has(button.dataset.wishlist);
+    button.setAttribute("aria-pressed", String(Boolean(saved)));
+    button.setAttribute("aria-label", saved ? "Remove product from wishlist" : "Save product to wishlist");
+    if (!button.classList.contains("wishlist-toggle")) button.textContent = saved ? "Saved to wishlist" : "Save to wishlist";
+  });
+}
+async function refreshWishlistButtons(force = false) {
+  const owner = Api.getUser()?._id;
+  if (!owner) { savedWishlistIds.clear(); savedWishlistOwner = undefined; syncWishlistButtons(); return; }
+  if (force || (savedWishlistOwner !== owner && wishlistRequestedOwner !== owner)) {
+    const version = ++wishlistReadVersion; wishlistRequestedOwner = owner;
+    const work = Api.get("/wishlist/ids").then((ids) => { if (Api.getUser()?._id !== owner || version !== wishlistReadVersion) return; savedWishlistIds = new Set(ids); savedWishlistOwner = owner; }).catch((error) => { if (version === wishlistReadVersion) wishlistRequestedOwner = undefined; throw error; });
+    wishlistIdsPromise = work;
+  }
+  try { await wishlistIdsPromise; if (Api.getUser()?._id === owner) syncWishlistButtons(); } catch { /* A deliberate save still reports its own request result. */ }
+}
+document.addEventListener("DOMContentLoaded", async () => { await Api.ready; refreshWishlistButtons(); });
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest("[data-wishlist]"); if (!button || button.disabled) return;
+  const id = button.dataset.wishlist; if (!/^[a-f\d]{24}$/i.test(id)) return;
+  if (!Api.isLoggedIn()) { location.href = "login.html?next=" + encodeURIComponent("wishlist.html?add=" + id); return; }
+  const owner = Api.getUser()._id; button.disabled = true;
+  try {
+    await refreshWishlistButtons(); if (Api.getUser()?._id !== owner) return;
+    const saved = savedWishlistIds.has(id);
+    await (saved ? Api.del("/wishlist/" + id) : Api.put("/wishlist/" + id, {}));
+    if (Api.getUser()?._id !== owner) return;
+    wishlistReadVersion++;
+    if (saved) savedWishlistIds.delete(id); else savedWishlistIds.add(id);
+    savedWishlistOwner = owner; syncWishlistButtons(); toast(saved ? "Removed from your wishlist" : "Saved to your wishlist");
+    window.dispatchEvent(new CustomEvent("norda:wishlist-changed"));
+  } catch (error) { toast(error.message, "error"); }
+  finally { button.disabled = false; }
+});

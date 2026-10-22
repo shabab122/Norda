@@ -4,6 +4,7 @@ const variantSchema = new mongoose.Schema({
   sku: { type: String, required: true, uppercase: true, trim: true, maxlength: 64 },
   size: { type: String, default: "", maxlength: 40 }, color: { type: String, default: "", maxlength: 40 },
   price: { type: Number, required: true, min: 0.01 }, discountPrice: { type: Number, default: 0, min: 0 },
+  lowStockThreshold: { type: Number, min: 0, default: 5 },
   stock: { type: Number, required: true, min: 0 }, images: [String], isActive: { type: Boolean, default: true },
 });
 const productSchema = new mongoose.Schema(
@@ -17,6 +18,8 @@ const productSchema = new mongoose.Schema(
     images: [{ type: String }],
     variants: { type: [variantSchema], default: [] },
     inventoryVersion: { type: Number, default: 0 },
+    lowStockThreshold: { type: Number, min: 0, default: 5 },
+    lastInventoryImport: { type: mongoose.Schema.Types.ObjectId, ref: "InventoryImport" },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "Category", required: true },
     // Keep a readable brand snapshot while linking new records to managed brands.
     brand: { type: String, default: "Generic", trim: true },
