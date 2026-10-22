@@ -21,6 +21,10 @@ const createRequest = async ({ orderId, user, body }) => {
     if (["pending", "unknown", "partially_refunded", "refunded"].includes(order.refundStatus)) throw httpError(409, "A refund is already active or recorded for this order");
     if (body.type === "cancellation" && !["pending", "processing"].includes(order.status)) throw httpError(409, "Cancellation requests are available only before shipment");
     if (body.type === "return" && (order.status !== "delivered" || !order.isPaid)) throw httpError(409, "A return can be requested after a paid order is delivered");
+    if (body.type === "return") {
+      await require("./itemReturnPolicy").requireEligible(order, "return", unit.session);
+      if (await querySession(require("../models/ItemReturnCase").findOne({ order: order._id, status: { $ne: "rejected" } }), unit.session)) throw httpError(409, "Item-level returns or exchanges already exist for this order");
+    }
     const history = await querySession(OrderRequest.find({ order: orderId, type: body.type }), unit.session);
     if (history.some((item) => item.status !== "rejected")) throw httpError(409, "This order already has an active or completed request of this type");
     if (history.length >= 3) throw httpError(409, "Please contact the store after three requests of this type");
@@ -28,6 +32,7 @@ const createRequest = async ({ orderId, user, body }) => {
     unit.compensate(() => OrderRequest.deleteOne({ _id: request._id }));
     await patchOrder(order, { [stateField(body.type)]: "requested" }, unit);
     await audit(orderId, user, body.type + "_requested", reason, unit, { request: request._id });
+    await require("./notificationService").queueOperationMessage(order, request, "request", unit);
     return request;
   }));
 };
@@ -58,6 +63,7 @@ const decideRequest = async ({ requestId, user, body }) => {
       order = await patchOrder(order, { [stateField(request.type)]: status }, unit);
       await audit(order._id, user, request.type + "_" + body.decision, note, unit, { request: request._id });
       if (source && remaining > 0) await queueRefundInUnit({ order, source, amount: remaining, key: "cancel-" + request._id, reason: note, actor: user }, unit);
+      await require("./notificationService").queueOperationMessage(order, updated, "request", unit);
       return updated;
     });
   });
@@ -89,6 +95,7 @@ const receiveReturn = async ({ requestId, user, body }) => {
       order = await patchOrder(order, { returnStatus: "received", returnStockRestored: body.restock }, unit);
       await audit(order._id, user, "return_received", note, unit, { request: request._id });
       if (remaining > 0) await queueRefundInUnit({ order, source, amount: remaining, key: "return-" + request._id, reason: note, actor: user }, unit);
+      await require("./notificationService").queueOperationMessage(order, updated, "request", unit);
       return updated;
     });
   });

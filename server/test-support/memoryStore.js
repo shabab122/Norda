@@ -48,7 +48,7 @@ const apply = (row, update, inserted = false, filter = {}) => {
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -115,7 +115,11 @@ const installMemoryStore = () => {
       const uniqueConflict = (name === "Coupon" && [...records[name].values()].some((v) => v.code === row.code)) ||
         (name === "CouponRedemption" && [...records[name].values()].some((v) => equal(v.order, row.order))) ||
         (name === "WishlistItem" && [...records[name].values()].some((v) => equal(v.user, row.user) && equal(v.product, row.product))) ||
-        (name === "InventoryImport" && [...records[name].values()].some((v) => v.requestKey === row.requestKey));
+        (name === "InventoryImport" && [...records[name].values()].some((v) => v.requestKey === row.requestKey)) ||
+        (name === "AuthSession" && row.legacyTokenHash && [...records[name].values()].some((v) => v.legacyTokenHash === row.legacyTokenHash)) ||
+        (name === "ItemReturnCase" && [...records[name].values()].some((v) => equal(v.order, row.order) && v.requestKey === row.requestKey)) ||
+        (name === "CreditNote" && [...records[name].values()].some((v) => equal(v.itemCase, row.itemCase))) ||
+        (name === "NotificationDeliveryEvent" && [...records[name].values()].some((v) => v.eventId === row.eventId && v.provider === row.provider));
       if (duplicate || uniqueConflict) { const error = new Error("Duplicate record"); error.code = 11000; throw error; }
       records[name].set(String(row._id), row); return document(name, row);
     });
@@ -130,6 +134,7 @@ const installMemoryStore = () => {
       checkFailure(name, "updateOne"); const row = [...records[name].values()].find((item) => matches(item, filter));
       if (!row) return { matchedCount: 0 }; apply(row, update, false, filter); return { matchedCount: 1, modifiedCount: 1 };
     });
+    patch(name, "updateMany", async (filter, update) => { let modifiedCount = 0; for (const row of records[name].values()) if (matches(row, filter)) { apply(row, update, false, filter); modifiedCount++; } return { modifiedCount }; });
     patch(name, "deleteOne", async (filter) => { checkFailure(name, "deleteOne"); const row = [...records[name].values()].find((item) => matches(item, filter)); if (row) records[name].delete(String(row._id)); return { deletedCount: row ? 1 : 0 }; });
   }
   patch("Product", "populate", async (rows, specs) => { for (const row of rows) populate(row, specs); return rows; });

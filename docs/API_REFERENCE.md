@@ -1,12 +1,12 @@
-# Norda 2.8 — API Reference
+# Norda 2.10 — API Reference
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
 
 Base path: `/api`. JSON is used unless the endpoint is marked multipart or CSV.
 
-Authentication accepts the `norda_token` HTTP-only cookie. Optional development clients can send `Authorization: Bearer <token>` only when `AUTH_RETURN_TOKEN=true`. `Customer` means any authenticated user; `Admin` means an authenticated user with `role: "admin"`.
+Authentication accepts the `norda_token` HTTP-only cookie. Optional development clients can send `Authorization: Bearer <token>` only when `AUTH_RETURN_TOKEN=true`. `Customer` means any authenticated user; `Admin` means full administrator; operational endpoints also accept a staff account with the explicitly assigned scope. Staff-management endpoints remain full-admin only. Sessions are persisted and individually revocable. New routes/bodies and the signed delivery-event contract are in [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md#api-additions).
 
 ## Common behavior
 

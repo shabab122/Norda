@@ -1,8 +1,10 @@
-# NORDA 2.9.0 acceptance checklist
+# NORDA 2.10.0 acceptance checklist
+
+> Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. The five management/session/notification/item-return areas are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
 
 ## Recorded status
 
@@ -19,6 +21,9 @@ See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limit
 | Courier history/customer tracking | Guarded HTTP and real MongoDB checks pass; repeated/backwards/unsafe updates checked | Inspect visible courier pages and supplied carrier link |
 | Transactional order email | Commit activation, bounded retry/claims, isolated SMTP delivery and actual automatic worker/file preview pass | Test the owner's actual SMTP inbox/Spam and links |
 | SKU options and independent stock | Cart/checkout/snapshot/race/rollback/expiry/return checks pass on both MongoDB topologies; frontend guards pass | Create real options/photos and inspect browser/mobile/invoice printing |
+| Reports, staff and customers | Native HTTP monetary cohorts, private customer history, scope enforcement and audit rollback pass | Check assigned tools with a team member account |
+| Devices and notification outcomes | Native/VM session isolation/rotation, preferences and signed delivery replay pass | Check two devices, real provider outcomes and optional adapter |
+| Selected-item returns and exchanges | Exact coupon/quantity/stock, held-refund/credit-note synchronization, provider failure/unknown safeguards pass on both topologies | Check visible receipt workflow, replacement tracking and credit-note print |
 | Configuration and credentials | Read-only preflight; no credential/seed changes; additive demo fields need no migration | Retain your working `.env` and uploads |
 
 ## Before starting

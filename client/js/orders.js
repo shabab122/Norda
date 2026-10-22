@@ -83,6 +83,7 @@ function renderOrder(order) {
           ${order.refundStatus && order.refundStatus !== "none" ? `<p class="payment-context"><strong>Refund: ${escapeHtml(order.refundStatus.replace(/_/g, " "))}</strong> · ${money(order.refundedAmount || 0)} completed</p>` : ""}
           <a class="btn btn-outline btn-sm btn-block" href="order-tracking.html?orderId=${encodeURIComponent(order._id)}">Track delivery</a>
           <a class="btn btn-outline btn-sm btn-block" href="order-support.html?orderId=${encodeURIComponent(order._id)}">Cancellation, returns & refunds</a>
+          ${order.status === "delivered" ? `<a class="btn btn-outline btn-sm btn-block" href="item-returns.html?orderId=${encodeURIComponent(order._id)}">Return items or exchange size/color</a>` : ""}
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>

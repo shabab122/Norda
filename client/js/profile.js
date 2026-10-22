@@ -24,6 +24,7 @@ function renderProfile(profile) {
         <span class="account-status ${profile.emailVerified ? "is-verified" : ""}">${profile.emailVerified ? "Email verified" : "Email not verified"}</span>
         <a href="${accountHome(profile)}" class="text-link">Back to my dashboard →</a>
         <a href="orders.html" class="text-link">View orders & invoices →</a>
+        <a href="security.html" class="text-link">Devices & email preferences →</a>
       </aside>
       <div class="profile-content">
         <form id="profile-form" class="checkout-card">

@@ -35,7 +35,7 @@ function shipmentDetailHtml(data) {
 }
 async function saveShipment(event) {
   event.preventDefault(); const form = event.currentTarget;
-  if (shipmentWrite || !form.reportValidity() || !Api.isAdmin()) return;
+  if (shipmentWrite || !form.reportValidity() || !(Api.isAdmin() || Api.can?.("orders"))) return;
   const account = Api.getUser()?._id, storageKey = "norda-shipment:" + account + ":" + shipmentOrderId, alert = document.getElementById("shipment-alert");
   const body = Object.fromEntries(["courierName", "trackingNumber", "trackingUrl", "event", "location", "note"].map((key) => [key, form.elements[key].value.trim()]));
   const signature = JSON.stringify(body), button = form.querySelector('[type="submit"]');

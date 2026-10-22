@@ -9,14 +9,14 @@ const {
   updateProduct,
   deleteProduct,
 } = require("../controllers/productController");
-const { protect, adminOnly } = require("../middleware/auth");
+const { protect, authorize } = require("../middleware/auth");
 
 router.get("/", getProducts);
-router.get("/manage", protect, adminOnly, getManagedProducts);
-router.get("/manage/:id", protect, adminOnly, getManagedProduct);
+router.get("/manage", protect, authorize("catalog"), getManagedProducts);
+router.get("/manage/:id", protect, authorize("catalog"), getManagedProduct);
 router.get("/:id", getProduct);
-router.post("/", protect, adminOnly, createProduct);
-router.put("/:id", protect, adminOnly, updateProduct);
-router.delete("/:id", protect, adminOnly, deleteProduct);
+router.post("/", protect, authorize("catalog"), createProduct);
+router.put("/:id", protect, authorize("catalog"), updateProduct);
+router.delete("/:id", protect, authorize("catalog"), deleteProduct);
 
 module.exports = router;

@@ -1,8 +1,8 @@
-# NORDA 2.8 testing and acceptance
+# NORDA 2.10 testing and acceptance
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
 
 Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Courier/email acceptance is in [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), and SKU inventory acceptance is in [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md). Existing accounts and credentials need no migration.
 
@@ -16,7 +16,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The six real database test entry points are intentionally skipped without an explicit test URI:
+The eight real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
@@ -181,3 +181,9 @@ For public merchant acceptance, allowlist the refund API source IP as required b
 - Names and addresses containing quotes render intact in input values.
 - Verify modal focus/escape, roving product tabs, empty/error states and A4 invoice printing.
 
+
+## 2.10 management and item-return acceptance
+
+Run the new `managementUnit`, `managementFrontend` and `managementHttp` tests with the default suite. `mongoManagement.test.js` runs the shared HTTP/fault journeys against native Mongoose/MongoDB in `npm run test:integration`; the CI matrix includes it on both topologies. Coverage includes scoped staff access/audit rollback, device rotation/revocation and unseen legacy tokens, preference suppression and signed outcome replay, paid-cohort report arithmetic, return windows/quantity/coupon-paisa conservation, held refunds, credit-note receipt rollback, equal-price SKU replacement, zero credit and confirmed-failure/unknown gateway refund handling.
+
+Use the laptop acceptance matrix in [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md#acceptance-on-your-laptop). Test actual browser/mobile/keyboard/credit-note printing and provider mail/gateway behavior separately from VM/native automated evidence.

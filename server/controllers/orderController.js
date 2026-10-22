@@ -44,10 +44,10 @@ const getOrder = async (req, res, next) => {
     if (!order) return res.status(404).json({ message: "Order not found" });
     const ownerId = order.user?._id || order.user;
     const isOwner = ownerId && ownerId.toString() === req.user._id.toString();
-    if (!isOwner && req.user.role !== "admin") {
+    if (!isOwner && !require("../utils/permissions").hasPermission(req.user, "orders")) {
       return res.status(403).json({ message: "Not authorized to view this order" });
     }
-    res.json(orderView(order, { includeInternal: req.user.role === "admin" }));
+    res.json(orderView(order, { includeInternal: require("../utils/permissions").hasPermission(req.user, "payments") }));
   } catch (error) {
     next(error);
   }

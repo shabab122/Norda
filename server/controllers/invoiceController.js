@@ -2,7 +2,7 @@ const { pagination } = require("../utils/validation");
 const Invoice = require("../models/Invoice");
 
 const canView = (invoice, user) => {
-  if (user.role === "admin") return true;
+  if (require("../utils/permissions").hasPermission(user, "orders")) return true;
   const ownerId = invoice.user?._id || invoice.user;
   return Boolean(ownerId && ownerId.toString() === user._id.toString());
 };

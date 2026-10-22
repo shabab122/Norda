@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.9.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.10.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,13 +32,13 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.9.0** |
+| Application version | **2.10.0** |
 | Market and currency | Bangladesh · BDT / ৳ |
-| Experiences | Public storefront, personal customer dashboard and administrator workspace |
+| Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Core commerce, recovery, order operations, SKU variants, coupons, wishlist, inventory tools and editable store content implemented; public-release acceptance remains |
+| Development status | Core commerce, management/reporting, device sessions and item returns/exchanges implemented; public-release acceptance remains |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
@@ -62,6 +62,22 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - A personal dashboard with the signed-in identity, cart quantity, order counts, recent orders, invoice links and delivery details.
 - Separate visitor, customer and administrator navigation, with account-change and cached-page refresh guards.
 - Owner-scoped access to carts, orders and invoices; customers cannot access another customer's records.
+
+### Reporting, Team Access and Devices
+
+- Daily/monthly Dhaka sales reports: paid-order cohorts, product/SKU rankings, coupon savings, confirmed refunds/net revenue and CSV export.
+- Customer search and purchase history; administrator-managed existing staff accounts with nine explicit operational permissions and access-change audit.
+- Staff workspace/navigation that exposes assigned tools; current database permissions enforced on every API request.
+- Active device sessions, individual sign-out and sign-out-other-devices with cookie rotation and invalidation of unseen old JWTs.
+- Profile email preferences for order/return/refund messages; security emails remain enabled. Separate provider delivery/bounce/complaint history and an optional signed delivery webhook.
+
+### Item Returns and Exchanges
+
+- Selected purchased lines/quantities with stable coupon-paisa allocation, owner guards and prevention of overlapping whole-order returns.
+- Configurable return windows snapshot on new orders; approved refund holds release only after physical receipt and per-SKU restock decisions.
+- Owner-protected printable credit notes; confirmed refund success synchronizes the case, original invoice refund summary and credit note without rewriting original totals.
+- Equal-price same-product size/color exchanges reserve replacement stock on approval, release it on withdrawal and track replacement shipment/delivery after receipt.
+- Pending/unknown refund results block duplicate payment submission; confirmed failures can retry on the same received case and credit note.
 
 ### Cart, Checkout and Orders
 
@@ -211,7 +227,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.9.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.10.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -252,6 +268,7 @@ The complete template is [`server/.env.example`](server/.env.example). Configure
 | `SSLCOMMERZ_STORE_PASSWORD` | Private merchant password; optional until using the actual provider |
 | `SSLCOMMERZ_IS_LIVE` | Provider environment; `false` for sandbox |
 | `MAIL_TRANSPORT` | `auto`, `smtp` or private development `file` delivery |
+| `MAIL_WEBHOOK_SECRET` | Optional 32+ character secret for a trusted provider delivery-event adapter; normal SMTP does not require it |
 | `MAIL_FROM` | Verified sender address/name for SMTP |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE` | Existing mail server and TLS configuration |
 | `SMTP_USER`, `SMTP_PASS` | Private SMTP authentication; retain working values |
@@ -358,6 +375,7 @@ API base path: **`/api`**. JSON is used for normal requests; uploads use multipa
 | Wishlist | Protected `GET /wishlist`, `GET /wishlist/ids`, `PUT/DELETE /wishlist/:productId` |
 | Inventory tools | Admin list/export, preview/import and recorded import-result endpoints |
 | Published settings | Public `GET /store/config`, admin `GET/PUT /admin/store-settings` |
+| Management and recovery | Sales reports, customers/staff, device sessions, email preferences/outcomes, item returns/exchanges and credit notes; see [feature guide](docs/MANAGEMENT_RETURNS.md) |
 | Operations and delivery | Customer requests/tracking; admin review, returns/refunds, shipment and email queue routes |
 | Administration reports | `GET /admin/dashboard-summary`, `GET /admin/reports/orders.csv` |
 
@@ -400,16 +418,16 @@ Recorded release evidence, as of **22 October 2026**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.9.0 | **180 files passed** |
-| Default suite, v2.9.0 | **331 passed, 0 failed, 7 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.9.0 | **112 passed**, compensation path |
-| Native single-member replica set, v2.9.0 | **112 passed**, transaction path |
+| JavaScript syntax, v2.10.0 | **210 files passed** |
+| Default suite, v2.10.0 | **373 passed, 0 failed, 8 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.10.0 | **142 passed**, compensation path |
+| Native single-member replica set, v2.10.0 | **142 passed**, transaction path |
 | Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
-| Frontend | VM behavior, safe rendering, state guards and all 33 pages/local resources checked |
+| Frontend | VM behavior, safe rendering, state guards and all 41 pages/local resources checked |
 | Browser/mobile/keyboard/print | Target-device visual acceptance remains manual; browser tooling could not complete the live check |
 | Public SSLCOMMERZ/SMTP/carrier | Actual merchant callbacks/refund settlement, inbox placement and courier-provider acceptance remain environment-specific |
 
-Tests cover current and previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
+Tests cover reports, scoped staff/customer access, devices, signed email outcomes/preferences, item/exchange/refund/credit-note rollback, and current/previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
 
 ### Native MongoDB Verification
 
@@ -449,27 +467,32 @@ These items are planned work, separate from the implemented features above. Deve
 - [x] Coupons/promo codes and account wishlists.
 - [x] Product/SKU stock CSV tools and per-option low-stock alerts.
 - [x] Editable storefront banner, contact, FAQs, policies and delivery pricing.
+- [x] Advanced day/month sales reports with product/SKU rankings, coupons and confirmed refund/net revenue analysis.
+- [x] Customer/staff management, audited scoped permissions and device session controls.
+- [x] Return/refund email preferences and verified delivery/bounce/complaint history.
+- [x] Selected-item returns/equal-price exchanges, configurable windows and credit notes.
 
 ### Next Product and Operations Work
 
-- [ ] Advanced sales/product/SKU reporting beyond the existing summary and CSV.
+- [ ] Bank settlement/cash-flow reconciliation and external accounting integration.
 - [ ] Carrier API booking, rates, labels and authenticated tracking automation.
-- [ ] Item-level returns/exchanges, configurable return windows and credit notes.
-- [ ] Refund-specific email, SMS, bounce monitoring and notification preferences.
-- [ ] Customer/staff management and stronger device/session controls.
+- [ ] Price-difference exchanges, partial-parcel receipt and external accounting credit-note integration.
+- [ ] Optional SMS, provider-specific delivery adapters and complaint-remediation tooling.
+- [ ] Optional staff MFA/passkeys and invitation lifecycle.
 - [ ] Optional full guest cart/checkout, comparison and recently viewed products.
 - [ ] SEO metadata, sitemap and product structured data.
 - [ ] Deployment/HTTPS, durable media storage and unused-image cleanup.
 - [ ] Database/media backups, restore drills, monitoring and operational alerts.
 - [ ] Release automation, rollback planning and ongoing dependency auditing.
 
-Carrier events are currently store-entered. Return requests currently cover whole orders; partial monetary refunds are supported. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
+Carrier events are currently store-entered. Whole-order returns and selected-item returns are supported, with equal-price size/color exchanges and separate credit notes. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
-| [Coupons, wishlist, inventory and store settings](docs/COMMERCE_TOOLS.md) | Setup, policies, API and acceptance for v2.9.0 |
+| [Management, devices and item returns](docs/MANAGEMENT_RETURNS.md) | Usage, policies, webhook contract and v2.10 API additions |
+| [Coupons, wishlist, inventory and store settings](docs/COMMERCE_TOOLS.md) | Setup, policies, API and acceptance for the v2.9 commerce tools |
 | [Account recovery and addresses](docs/ACCOUNT_RECOVERY.md) | Email, reset/verification and address book |
 | [Checkout recovery](docs/CHECKOUT_RECOVERY.md) | Reservation expiry and same-order retry |
 | [Order operations](docs/ORDER_OPERATIONS.md) | Payment review, cancellations, returns and refunds |
@@ -488,7 +511,7 @@ Carrier events are currently store-entered. Return requests currently cover whol
 | [Future development](docs/FUTURE_DEVELOPMENT.md) | Development phases and planned capabilities |
 | [Changelog](CHANGELOG.md) | Version history |
 
-Historical sections remain labeled by release. This README, the v2.9.0 feature guide and the current verification report describe the latest application status.
+Historical sections remain labeled by release. This README, the v2.10 management/return guide and the current verification report describe the latest application status.
 
 ## Contributing
 

@@ -47,7 +47,7 @@ app.use(helmet({
   contentSecurityPolicy: { directives: { "img-src": ["'self'", "https:", "data:", "blob:", ...(process.env.NODE_ENV === "production" ? [] : ["http:"])] } },
 }));
 app.use(cookieParser());
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "1mb", verify(req, res, buffer) { if (req.originalUrl.split("?")[0] === "/api/mail/delivery-events") req.rawMailBody = Buffer.from(buffer); } }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 app.use(mongoSanitize());
 app.use(hpp());
@@ -73,6 +73,7 @@ app.use("/api", apiLimiter);
 app.use("/api", (req, res, next) => { res.setHeader("Cache-Control", "no-store"); next(); });
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { fallthrough: false }));
+app.post("/api/mail/delivery-events", async (req, res, next) => { try { const s = require("./services/notificationDeliveryService"); s.verifyWebhook(req); res.json(await s.recordDelivery(req.body)); } catch (e) { next(e); } });
 app.use("/api/auth", authRoutes);
 app.use("/api/brands", brandRoutes);
 app.use("/api/categories", categoryRoutes);
@@ -84,8 +85,10 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/store", storeRoutes);
 app.use("/api", require("./routes/commerceToolsRoutes"));
+app.use("/api", require("./routes/itemReturnRoutes"));
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/admin", require("./routes/managementRoutes"));
 app.use("/api/admin/operations", require("./routes/orderOperationsRoutes"));
 app.use("/api/admin/notifications", require("./routes/notificationRoutes"));
 

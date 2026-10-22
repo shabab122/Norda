@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema(
       country: { type: String, default: "Bangladesh" },
       phone: String,
     },
+    returnPolicy: { type: new mongoose.Schema({ returnWindowDays: Number, exchangeEnabled: Boolean }, { _id: false }), default: undefined },
     shipment: {
       courierName: { type: String, default: "", maxlength: 80 }, trackingNumber: { type: String, default: "", maxlength: 100 },
       trackingUrl: { type: String, default: "", maxlength: 500 }, state: { type: String, default: "", enum: ["", "shipped", "in_transit", "out_for_delivery", "delivery_attempted", "delivered"] },

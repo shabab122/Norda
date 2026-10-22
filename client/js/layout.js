@@ -36,7 +36,7 @@ function renderHeader(activePage = "") {
           </form>
         </div>
         <div class="header-actions ${user ? "has-account" : ""}">
-          ${user ? `<a href="${accountHome(user)}" class="account-link ${user.role === "admin" ? "account-link-admin" : ""}" title="${escapeHtml(user.name + " · " + user.email)}" aria-label="${escapeHtml((user.role === "admin" ? "Administrator" : "Customer") + " account: " + user.name + ", " + user.email)}"><span class="account-avatar" aria-hidden="true">${escapeHtml(accountInitials(user.name))}</span><span class="account-link-copy"><strong>${escapeHtml(user.name)}</strong><small>${user.role === "admin" ? "Admin workspace" : "Customer account"}</small></span></a>` : ""}
+          ${user ? `<a href="${accountHome(user)}" class="account-link ${user.role === "admin" ? "account-link-admin" : ""}" title="${escapeHtml(user.name + " · " + user.email)}" aria-label="${escapeHtml((user.role === "admin" ? "Administrator" : "Customer") + " account: " + user.name + ", " + user.email)}"><span class="account-avatar" aria-hidden="true">${escapeHtml(accountInitials(user.name))}</span><span class="account-link-copy"><strong>${escapeHtml(user.name)}</strong><small>${user.role === "admin" ? "Admin workspace" : user.role === "staff" ? "Staff workspace" : "Customer account"}</small></span></a>` : ""}
           <a href="cart.html" class="icon-link cart-link">
             ${icon("bag")}<span>Cart</span><span id="cart-count" class="badge hidden">0</span>
           </a>
@@ -125,7 +125,7 @@ function renderFooter() {
 }
 
 function accountHome(user = Api.getUser()) {
-  return user?.role === "admin" ? "admin/dashboard.html" : "dashboard.html";
+  return user?.role === "admin" ? "admin/dashboard.html" : user?.role === "staff" ? "admin/workspace.html" : "dashboard.html";
 }
 function accountInitials(name) {
   return String(name || "Customer").trim().split(/\s+/).filter(Boolean).slice(0, 2).map((part) => Array.from(part)[0]).join("").toUpperCase();
@@ -170,6 +170,12 @@ function requireLogin(redirectTo = "login.html") {
 function requireAdmin() {
   document.body.dataset.protected = "admin";
   if (Api.isAdmin()) return true;
+  if (Api.getUser()?.role === "staff") {
+    const page = window.location.pathname.split("/").pop();
+    const scopes = { "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
+    if (page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
+    window.location.href = "workspace.html"; return false;
+  }
   window.location.href = "../login.html";
   return false;
 }

@@ -1,5 +1,14 @@
 # Future NORDA development
 
+## Completed in 2.10.0
+
+- Daily/monthly sales reports, top products/SKUs, coupon savings and confirmed refund/net revenue cohorts.
+- Customer search/history and audited, explicit staff permissions with a staff workspace.
+- Return/refund email, account preferences and verified delivery/bounce/complaint history; optional signed provider adapter endpoint.
+- Active device sessions, individual revocation and sign-out-others with legacy JWT invalidation.
+- Selected-item/quantity returns, order-snapshot return windows, held refunds, credit notes and equal-price size/color exchanges with replacement stock/tracking.
+- See [the feature and acceptance guide](MANAGEMENT_RETURNS.md).
+
 ## Completed in 2.9.0
 
 - Coupon center and guarded fixed/percentage checkout discounts with limits and immutable invoice/payment/refund snapshots.
@@ -69,20 +78,20 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 ## Phase 1 — account and checkout recovery
 
 - Optional recipient names and additional address formats
-- Stronger session/device management and ongoing dependency auditing
+- Optional MFA/passkeys and ongoing dependency auditing
 
 ## Phase 2 — order operations
 
 - Carrier-specific booking, labels, rates, authenticated webhooks/polling and delivery-exception/return-to-sender workflows
-- Refund-specific email, SMS, email bounce/webhook handling, delivery monitoring and notification preferences
-- Item-level returns, exchanges, configurable return window, refund deductions and formal credit-note/accounting integration
-- Customer management, operational search and optional finer-grained staff permissions
+- Optional SMS provider, provider-specific mail adapters and delivery/complaint remediation tooling
+- Price-difference exchanges, partial-parcel receipt, discretionary refund deductions and external credit-note/accounting integration
+- Optional staff MFA, invitation lifecycle and organization-specific permission expansion
 
 ## Phase 3 — catalog and experience
 
 - Optional bulk creation of new catalog/SKU records, warehouse inventory and low-stock email subscriptions
 - Optional full guest cart/checkout
-- Sales reports, optional comparison/recently viewed products
+- Bank settlement/cash-flow reconciliation reports, optional comparison/recently viewed products
 - SEO metadata, sitemap and product structured data
 
 ## Phase 4 — public operations

@@ -1,8 +1,11 @@
+const deliveryEvents = require("../services/notificationDeliveryService");
 const express = require("express");
-const { protect, adminOnly } = require("../middleware/auth");
+const { protect, authorize } = require("../middleware/auth");
 const { listNotifications, retryEmail } = require("../controllers/deliveryController");
 const router = express.Router();
-router.use(protect, adminOnly);
+router.use(protect, authorize("notifications"));
 router.get("/", listNotifications);
 router.post("/:id/retry", retryEmail);
+router.post("/:id/delivery", async (req, res, next) => { try { res.json(await deliveryEvents.recordDelivery({ ...req.body, notificationId: req.params.id }, req.user)); } catch (e) { next(e); } });
+router.get("/:id/events", async (req, res, next) => { try { require("../services/orderOperationStore").objectId(req.params.id); const { page, limit } = require("../utils/validation").pagination(req.query); const Event = require("../models/NotificationDeliveryEvent"); const filter = { notification: req.params.id }; const [items, total] = await Promise.all([Event.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Event.countDocuments(filter)]); res.json({ items, total, page, pages: Math.ceil(total / limit) || 1 }); } catch (e) { next(e); } });
 module.exports = router;

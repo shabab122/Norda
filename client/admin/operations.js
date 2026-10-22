@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 function configureOperationFilters() {
   document.querySelectorAll("[data-operations-mode]").forEach((button) => button.classList.toggle("is-active", button.dataset.operationsMode === operationsMode));
   const filter = document.getElementById("operations-status");
-  const states = operationsMode === "requests" ? ["requested", "approved", "received", "completed", "rejected"] : operationsMode === "refunds" ? ["queued", "submitting", "pending", "unknown", "succeeded", "failed"] : [];
+  const states = operationsMode === "requests" ? ["requested", "approved", "received", "completed", "rejected"] : operationsMode === "refunds" ? ["awaiting_return", "queued", "submitting", "pending", "unknown", "succeeded", "failed"] : [];
   filter.innerHTML = '<option value="">All states</option>' + states.map((state) => `<option value="${state}">${escapeHtml(operationWords(state))}</option>`).join(""); filter.disabled = operationsMode === "reviews";
 }
 async function loadOperationsQueue() {
@@ -55,7 +55,7 @@ function operationPaymentOptions(payments, order = {}) {
 function operationDetailHtml(data) {
   const { order, payments, requests, refunds, events } = data, options = operationPaymentOptions(payments, order);
   return `<div class="operations-card"><span class="eyebrow">Order #${escapeHtml(order._id.slice(-8).toUpperCase())}</span><h2>Order operations</h2><p>${escapeHtml(order.status)} · ${escapeHtml(paymentLabel(order.paymentStatus))} · ${money(order.totalAmount)}${order.paymentMethod === "demo" ? " · Simulated payment, no real money" : ""}</p>
-    <dl><div><dt>Order refund completed</dt><dd>${money(order.refundedAmount || 0)}</dd></div><div><dt>Order refund pending</dt><dd>${money(order.refundPendingAmount || 0)}</dd></div><div><dt>Additional payments refunded</dt><dd>${money(order.extraRefundedAmount || 0)}</dd></div></dl><div class="operations-actions"><a class="btn btn-outline btn-sm" href="../invoice.html?orderId=${encodeURIComponent(order._id)}">View invoice</a><button class="btn btn-outline btn-sm" type="button" data-detail-refresh>Refresh order</button></div></div>
+    <dl><div><dt>Order refund completed</dt><dd>${money(order.refundedAmount || 0)}</dd></div><div><dt>Order refund pending</dt><dd>${money(order.refundPendingAmount || 0)}</dd></div><div><dt>Additional payments refunded</dt><dd>${money(order.extraRefundedAmount || 0)}</dd></div></dl><div class="operations-actions"><a class="btn btn-outline btn-sm" href="../invoice.html?orderId=${encodeURIComponent(order._id)}">View invoice</a><a class="btn btn-outline btn-sm" href="item-returns.html?orderId=${encodeURIComponent(order._id)}">Item returns & exchanges</a><button class="btn btn-outline btn-sm" type="button" data-detail-refresh>Refresh order</button></div></div>
     <div class="operations-finance"><section class="operations-card"><h2>Payment review & notes</h2>${order.paymentReviewReason ? `<div class="operations-banner">${escapeHtml(order.paymentReviewReason)}</div>` : ""}<form id="operation-review-form">
       <label for="review-payment">Payment / validated charge</label><select id="review-payment">${options}</select>
       <label for="review-note">Internal audit note</label><textarea id="review-note" minlength="5" maxlength="1000" required></textarea><label class="operations-check"><input id="review-risk" type="checkbox" />I have investigated and accept the gateway's risk flag, if present.</label>

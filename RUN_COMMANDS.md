@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.8.0 to 2.9.0
+## Update from 2.2–2.9.0 to 2.10.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -23,6 +23,16 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Management, devices and item returns — 2.10
+
+- Admin: **Sales reports**, **Customers**, **Staff & permissions**, **Item returns & exchanges**.
+- Staff: sign in with an existing registered account; the admin assigns explicit permissions, then **My workspace** lists their tools.
+- Customer: **Profile → Devices & email preferences**, and a delivered order's **Return items or exchange size/color** action.
+- Return/refund mail uses the existing SMTP configuration. Provider bounce/delivery events need either a verified manual outcome or the optional signed webhook; no new credential is required for normal use.
+- Policy defaults to 30 days with equal-price size/color exchanges enabled. New orders retain a policy snapshot; existing data is not reseeded.
+
+See [docs/MANAGEMENT_RETURNS.md](docs/MANAGEMENT_RETURNS.md) for procedures, permission scopes, return/refund accounting and the optional email delivery adapter.
 
 ## Coupons, wishlist, inventory and store settings
 

@@ -7,15 +7,15 @@ const {
   getBrands,
   updateBrand,
 } = require("../controllers/brandController");
-const { adminOnly, protect } = require("../middleware/auth");
+const { authorize, protect } = require("../middleware/auth");
 
 const router = express.Router();
 
 router.get("/", getBrands);
-router.get("/manage", protect, adminOnly, getAllBrands);
+router.get("/manage", protect, authorize("catalog"), getAllBrands);
 router.get("/:id", getBrand);
-router.post("/", protect, adminOnly, createBrand);
-router.put("/:id", protect, adminOnly, updateBrand);
-router.delete("/:id", protect, adminOnly, deleteBrand);
+router.post("/", protect, authorize("catalog"), createBrand);
+router.put("/:id", protect, authorize("catalog"), updateBrand);
+router.delete("/:id", protect, authorize("catalog"), deleteBrand);
 
 module.exports = router;

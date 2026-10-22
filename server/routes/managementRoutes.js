@@ -1,0 +1,12 @@
+const router = require("express").Router();
+const { protect, authorize, adminOnly } = require("../middleware/auth");
+const c = require("../controllers/managementController");
+router.use(protect);
+router.get("/customers", authorize("customers"), c.listCustomers);
+router.get("/customers/:id/orders", authorize("customers"), c.customerHistory);
+router.get("/staff", adminOnly, c.listStaff);
+router.put("/staff", adminOnly, c.saveStaff);
+router.get("/staff/audit", adminOnly, c.staffHistory);
+router.get("/reports/sales", authorize("reports"), async (req, res, next) => { try { res.json(await require("../services/salesReportService").salesReport(req.query)); } catch (e) { next(e); } });
+router.get("/reports/sales.csv", authorize("reports"), async (req, res, next) => { try { const s = require("../services/salesReportService"); const report = await s.salesReport(req.query); res.type("text/csv").attachment("norda-sales-" + report.from + "-" + report.to + ".csv").send(s.reportCsv(report)); } catch (e) { next(e); } });
+module.exports = router;

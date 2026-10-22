@@ -15,8 +15,10 @@ const cookieOptions = () => ({
   path: "/",
 });
 
-const sendSession = (res, user, statusCode = 200, extra = {}) => {
-  const token = generateToken(user._id, user.tokenVersion || 0);
+const sendSession = async (req, res, user, statusCode = 200, extra = {}, reuse = false) => {
+  const sessionId = reuse && req.sessionId ? req.sessionId : (await require("../services/sessionService").createSession(user, req))._id;
+  const token = generateToken(user._id, user.tokenVersion || 0, sessionId);
+  if (reuse) { const decoded = jwt.decode(token); await require("../models/AuthSession").updateOne({ _id: sessionId, user: user._id, revokedAt: { $exists: false } }, { $set: { expiresAt: new Date(decoded.exp * 1000) } }); }
   res.cookie("norda_token", token, cookieOptions());
   const payload = { ...profilePayload(user), ...extra };
   if (process.env.AUTH_RETURN_TOKEN === "true") payload.token = token;
@@ -67,7 +69,7 @@ const register = async (req, res, next) => {
     catch (error) { safeMailError(error); verificationEmail = { delivery: "unavailable" }; }
     // Email delivery trouble must not leave a successfully created account
     // looking like a failed registration or discard a guest's cart selection.
-    sendSession(res, user, 201, { verificationEmail });
+    await sendSession(req, res, user, 201, { verificationEmail });
   } catch (error) {
     next(error);
   }
@@ -93,7 +95,7 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    sendSession(res, user);
+    await sendSession(req, res, user);
   } catch (error) {
     next(error);
   }
@@ -139,7 +141,7 @@ const updateProfile = async (req, res, next) => {
       const version = req.user.tokenVersion || 0;
       const updated = await User.findOneAndUpdate({ _id: req.user._id, $or: [{ tokenVersion: version }, ...(version ? [] : [{ tokenVersion: { $exists: false } }])] }, update, { new: true, runValidators: true });
       if (!updated) return res.status(409).json({ message: "Your account changed. Refresh and sign in again before saving." });
-      sendSession(res, updated);
+      await sendSession(req, res, updated, 200, {}, req.body.password === undefined);
     });
   } catch (error) {
     next(error);
@@ -152,7 +154,7 @@ const logout = async (req, res, next) => {
     let decoded;
     try { if (token) decoded = jwt.verify(token, process.env.JWT_SECRET); } catch { /* Already expired. */ }
     if (decoded?.id) {
-      await User.updateOne({ _id: decoded.id, $or: [{ tokenVersion: decoded.version || 0 }, ...(decoded.version ? [] : [{ tokenVersion: { $exists: false } }])] }, { $inc: { tokenVersion: 1 } });
+      await require("../services/sessionService").logoutToken(token, decoded);
     }
     const { maxAge, ...clearOptions } = cookieOptions();
     res.clearCookie("norda_token", clearOptions);

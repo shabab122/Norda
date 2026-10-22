@@ -1,8 +1,8 @@
 const express = require("express");
-const { protect, adminOnly } = require("../middleware/auth");
+const { protect, authorize } = require("../middleware/auth");
 const controller = require("../controllers/orderOperationsController");
 const router = express.Router();
-router.use(protect, adminOnly);
+router.use(protect, authorize("payments"));
 router.get("/", controller.listAdminOperations);
 router.get("/orders/:id", controller.getAdminOrderOperations);
 router.post("/orders/:id/review", controller.reviewOrder);
