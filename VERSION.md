@@ -1,3 +1,5 @@
-# Norda 2.9.0
+# Norda 2.10.0
 
-Built from the latest Norda-Main-v2.8.0.zip with the user-selected professional README. Adds coupons/promo codes, account wishlists, stock CSV/low-stock tools and editable store content. Existing environment credentials and catalog/order data are preserved; no reseed or manual migration is required.
+Built directly from `Norda-Main-v2.9.0.zip`. Adds advanced sales reports, customer/staff permissions, return/refund email preferences and delivery outcomes, active device sessions, and item-level returns/equal-price exchanges with credit notes.
+
+Existing database/JWT/admin/SMTP/gateway credentials and catalog assets are retained. Preserve your working laptop `.env` and uploads when copying source. No reseed or manual migration is required; additive collections/indexes initialize at startup. See [the feature guide](docs/MANAGEMENT_RETURNS.md) and [verification results](docs/VERIFICATION_RESULTS.md).

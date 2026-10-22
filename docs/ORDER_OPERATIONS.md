@@ -1,5 +1,7 @@
 # Payment review, cancellation requests, returns and refunds
 
+> Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
+
 Available in NORDA **2.7.0**, based on 2.6.0. This update adds three connected workflows without changing customer credentials, saved addresses, catalog records or historical order/invoice totals.
 
 ## Apply the update

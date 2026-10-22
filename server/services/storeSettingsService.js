@@ -25,6 +25,7 @@ const safeLink = (value, image = false) => {
   return url.href;
 };
 const defaults = () => ({
+  returnWindowDays: 30, exchangeEnabled: true,
   revision: 0, currency: store.currency, freeShippingThreshold: store.freeShippingThreshold, flatShippingFee: store.flatShippingFee,
   supportEmail: "", supportPhone: "", address: "Dhaka, Bangladesh", supportHours: "",
   announcement: { visible: false, text: "", url: "" },
@@ -36,7 +37,7 @@ const getSettings = async (session = null) => {
   const base = defaults();
   if (!saved) return base;
   return { ...base, revision: saved.revision || 0,
-    ...Object.fromEntries(["supportEmail", "supportPhone", "address", "supportHours", "freeShippingThreshold", "flatShippingFee"].filter((key) => saved[key] !== undefined).map((key) => [key, saved[key]])),
+    ...Object.fromEntries(["supportEmail", "supportPhone", "address", "supportHours", "freeShippingThreshold", "flatShippingFee", "returnWindowDays", "exchangeEnabled"].filter((key) => saved[key] !== undefined).map((key) => [key, saved[key]])),
     announcement: { ...base.announcement, ...saved.announcement }, hero: { ...base.hero, ...saved.hero },
     faq: saved.faq || [], policies: { ...base.policies, ...saved.policies },
   };
@@ -45,6 +46,8 @@ const normalize = (body, current) => {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw httpError(400, "Invalid store settings");
   if (!Number.isSafeInteger(body.revision) || body.revision !== current.revision) throw httpError(409, "Store settings changed. Reload before saving.");
   const out = {};
+  if (body.returnWindowDays !== undefined) { if (!Number.isSafeInteger(body.returnWindowDays) || body.returnWindowDays < 0 || body.returnWindowDays > 365) throw httpError(400, "Return window must be 0 to 365 whole days"); out.returnWindowDays = body.returnWindowDays; }
+  if (body.exchangeEnabled !== undefined) { if (typeof body.exchangeEnabled !== "boolean") throw httpError(400, "Exchange setting must be true or false"); out.exchangeEnabled = body.exchangeEnabled; }
   for (const [key, max] of [["supportEmail", 254], ["supportPhone", 40], ["address", 500], ["supportHours", 160]]) if (body[key] !== undefined) out[key] = text(body[key], max, key);
   if (out.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(out.supportEmail)) throw httpError(400, "Use a valid support email");
   for (const key of ["freeShippingThreshold", "flatShippingFee"]) if (body[key] !== undefined) out[key] = amount(body[key], key);

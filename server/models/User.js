@@ -37,9 +37,11 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin"],
+      enum: ["user", "admin", "staff"],
       default: "user",
     },
+    permissions: { type: [String], enum: require("../utils/permissions").SCOPES, default: [] },
+    notificationPreferences: { orderUpdates: { type: Boolean, default: true }, returnUpdates: { type: Boolean, default: true }, refundUpdates: { type: Boolean, default: true } },
     address: addressSchema,
     // The original address remains available to older clients. Address-book
     // defaults are resolved separately, so checkout cannot overwrite the book.

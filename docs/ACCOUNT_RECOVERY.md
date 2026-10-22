@@ -1,5 +1,7 @@
 # Account recovery, email verification and delivery addresses
 
+> Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
+
 Introduced in **NORDA 2.5.0**. This update extends the existing Express/Mongoose authentication and checkout flows. No account, password, role, JWT secret, MongoDB URI or payment credential is replaced. Existing accounts and order history require no migration or reseed.
 
 ## Update an existing installation

@@ -16,7 +16,11 @@ const customerUrl = (order, tracking = false) => {
     return new URL((tracking ? "order-tracking.html" : "order-support.html") + "?orderId=" + encodeURIComponent(order._id), url.href.replace(/\/?$/, "/")).href;
   } catch { return ""; }
 };
+const preferenceKey = (topic) => topic === "return" ? "returnUpdates" : topic === "refund" ? "refundUpdates" : "orderUpdates";
+const allowsEmail = (owner, topic) => owner?.notificationPreferences?.[preferenceKey(topic)] !== false;
 const messages = {
+  return: ["Return or exchange update", "There is an update to your return or exchange request. Sign in for the full details."],
+  refund: ["Refund update", "Your refund status is shown below. A pending or review status does not confirm money has been returned."],
   confirmation: ["Order confirmed", "We have received your order. Keep this reference to follow your purchase."],
   payment: ["Payment update", "Your payment status has changed. The current status is shown below."],
   shipping: ["Your order has shipped", "Your order has been handed over for delivery."],
@@ -24,10 +28,10 @@ const messages = {
   cancellation: ["Order cancelled", "Your order has been cancelled. If money was captured, follow its separate refund status in your account."],
   tracking: ["Delivery update", "There is a new shipment update for your order."],
 };
-const queueMessage = async (order, topic, suffix, unit, extra = "") => {
+const queueMessage = async (order, topic, suffix, unit, extra = "", reference = null) => {
   const key = String(order._id) + ":" + topic + ":" + suffix;
   unit.emailTopics ||= new Map();
-  const topicKey = String(order._id) + ":" + topic;
+  const topicKey = String(order._id) + ":" + topic + (reference ? ":" + reference.id : "");
   const staged = unit.emailTopics.get(topicKey);
   if (staged && staged.key !== key) await OrderNotification.deleteOne({ _id: staged._id }, unit.session ? { session: unit.session } : {});
   if (await querySession(OrderNotification.findOne({ key }), unit.session)) return;
@@ -38,8 +42,8 @@ const queueMessage = async (order, topic, suffix, unit, extra = "") => {
   const shipment = order.shipment || {};
   const text = ["NORDA", "Hello " + owner.name + ",", intro, "Order: " + order._id, order.invoiceNumber ? "Invoice: " + order.invoiceNumber : "", "Total: BDT " + Number(order.totalAmount).toFixed(2), order.discountAmount > 0 ? "Coupon: " + order.coupon?.code + " — saving BDT " + Number(order.discountAmount).toFixed(2) : "", "Payment: " + order.paymentStatus, "Order status: " + order.status, order.paymentMethod === "demo" ? "Test payment: no real money was transferred." : "", lines,
     shipment.courierName ? "Courier: " + shipment.courierName : "", shipment.trackingNumber ? "Tracking number: " + shipment.trackingNumber : "", extra, actionUrl ? "View your order securely: " + actionUrl : "Sign in to your Norda account to view the order.", "Norda customer care"].filter(Boolean).join("\n\n");
-  const sourceState = topic === "confirmation" ? { exists: true } : topic === "payment" ? { paymentStatus: order.paymentStatus } : topic === "tracking" ? { shipmentState: shipment.state } : { status: order.status };
-  const record = await insertDocument(OrderNotification, { order: order._id, user: owner._id, key, topic, to: owner.email, subject: "Norda — " + title + " #" + String(order._id).slice(-8).toUpperCase(), text, actionUrl, sourceState, status: "held", attempts: 0, nextAttemptAt: new Date() }, unit.session);
+  const sourceState = reference ? { reference } : topic === "confirmation" ? { exists: true } : topic === "payment" ? { paymentStatus: order.paymentStatus } : topic === "tracking" ? { shipmentState: shipment.state } : { status: order.status };
+  const record = await insertDocument(OrderNotification, { order: order._id, user: owner._id, key, topic, to: owner.email, subject: "Norda — " + title + " #" + String(order._id).slice(-8).toUpperCase(), text, actionUrl, sourceState, status: allowsEmail(owner, topic) ? "held" : "suppressed", lastError: allowsEmail(owner, topic) ? "" : "Customer email preference is disabled.", attempts: 0, nextAttemptAt: new Date() }, unit.session);
   unit.emailTopics.set(topicKey, record);
   unit.compensate(() => OrderNotification.deleteOne({ _id: record._id }));
   // Queue activation is outside the transaction; no SMTP call runs on checkout.
@@ -58,7 +62,9 @@ const queueOrderChanges = async (order, previous, unit, confirmation = false) =>
 };
 const activateHeld = async (row) => {
   const order = await Order.findById(row.order), source = row.sourceState || {};
-  const valid = order && (!source.status || source.status === order.status) && (!source.paymentStatus || source.paymentStatus === order.paymentStatus) && (!source.shipmentState || source.shipmentState === order.shipment?.state);
+  let referenceValid = true;
+  if (source.reference) { const Model = { refund: require("../models/Refund"), item: require("../models/ItemReturnCase"), request: require("../models/OrderRequest") }[source.reference.model]; const record = Model && await Model.findById(source.reference.id); referenceValid = Boolean(record && record.status === source.reference.status); }
+  const valid = referenceValid && order && (!source.status || source.status === order.status) && (!source.paymentStatus || source.paymentStatus === order.paymentStatus) && (!source.shipmentState || source.shipmentState === order.shipment?.state);
   await OrderNotification.updateOne({ _id: row._id, status: "held" }, { $set: { status: valid ? "queued" : "suppressed", ...(valid ? {} : { lastError: "Uncommitted or superseded state; message was not sent." }) } });
 };
 const sendNotification = async (id) => {
@@ -66,11 +72,16 @@ const sendNotification = async (id) => {
   const row = await OrderNotification.findOneAndUpdate({ _id: id, status: "queued", nextAttemptAt: { $lte: now }, attempts: { $lt: 5 } }, { $set: { status: "sending", claimedAt: now, claimToken: token }, $inc: { attempts: 1 } }, { new: true });
   if (!row) return;
   try {
+    const owner = await User.findById(row.user);
+    const complaint = await OrderNotification.exists({ to: row.to, deliveryStatus: "complained" });
+    if (!owner || !allowsEmail(owner, row.topic) || complaint || row.deliveryStatus === "bounced") { await OrderNotification.updateOne({ _id: id, claimToken: token }, { $set: { status: "suppressed", lastError: complaint ? "Recipient complaint: further store email suppressed." : row.deliveryStatus === "bounced" ? "Provider bounce: this email will not be retried." : "Customer email preference is disabled." }, $unset: { claimToken: 1 } }); return; }
     const config = mail.mailConfiguration();
     const domain = (config.from.match(/@([^<>\s]+)>?$/)?.[1] || "norda.local").toLowerCase();
     const messageId = "<norda-" + crypto.createHash("sha256").update(row.key).digest("hex").slice(0, 40) + "@" + domain + ">";
+    await OrderNotification.updateOne({ _id: id, claimToken: token }, { $set: { messageId } });
     const receipt = await mail.sendAccountMail({ to: row.to, subject: row.subject, text: row.text, kind: "order_" + row.topic, actionUrl: row.actionUrl, messageId });
     await OrderNotification.updateOne({ _id: id, status: "sending", claimToken: token }, { $set: { status: "sent", sentAt: new Date(), transport: receipt?.transport || config.transport, messageId, lastError: "" }, $unset: { claimToken: 1 } });
+    await OrderNotification.updateOne({ _id: id, deliveryStatus: { $in: ["unknown", null] } }, { $set: { deliveryStatus: (receipt?.transport || config.transport) === "file" ? "preview" : "accepted" } });
   } catch {
     const failed = row.attempts >= 5;
     await OrderNotification.updateOne({ _id: id, status: "sending", claimToken: token }, { $set: { status: failed ? "failed" : "queued", nextAttemptAt: new Date(Date.now() + Math.min(7200000, 60000 * 4 ** (row.attempts - 1))), lastError: "Email delivery failed. Check the existing SMTP settings or retry later." }, $unset: { claimToken: 1 } });
@@ -96,4 +107,9 @@ const startNotificationWorker = () => {
   const timer = setInterval(tick, 15000); timer.unref(); tick();
   return async () => { stopped = true; clearInterval(timer); if (running) await running; };
 };
-module.exports = { customerUrl, queueMessage, queueOrderChanges, activateHeld, sendNotification, sweepNotifications, retryNotification, startNotificationWorker };
+const queueOperationMessage = async (order, record, model, unit) => {
+  const topic = model === "refund" ? "refund" : "return";
+  const extra = topic === "refund" ? "Refund reference: " + record._id + "\nRefund status: " + record.status + "\nAmount: BDT " + Number(record.amount).toFixed(2) + (record.gateway === "demo" ? "\nSimulation: no real money is moved." : "") : "Request: " + record._id + "\nType: " + record.type + "\nStatus: " + record.status + (record.decisionMessage ? "\nStore response: " + record.decisionMessage : "");
+  return queueMessage(order, topic, record._id + ":" + record.status, unit, extra, { model, id: String(record._id), status: record.status });
+};
+module.exports = { queueOperationMessage, preferenceKey, allowsEmail, customerUrl, queueMessage, queueOrderChanges, activateHeld, sendNotification, sweepNotifications, retryNotification, startNotificationWorker };

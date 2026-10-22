@@ -1,8 +1,8 @@
-> Current version: 2.9.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+> Current version: 2.10.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
 
 # Norda — Project Requirements
 
@@ -11,7 +11,7 @@ See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limit
 | Field | Value |
 |---|---|
 | Product | Norda e-commerce website |
-| Version | 2.8.0 |
+| Version | 2.10.0 |
 | Delivery branch | `feature/v2-complete-commerce-flow` |
 | Baseline commit | `8d913fa` — Basic foundation of Frontend & Backend |
 | Intended market | Bangladesh |
@@ -30,7 +30,8 @@ Norda shall provide a clear end-to-end shopping experience and a small operation
 |---|---|
 | Visitor | Browse, search and filter the public catalog; view products and reviews; register or sign in |
 | Customer | Visitor capabilities plus profile, cart, checkout, own orders, own invoices and delivered-purchase reviews |
-| Administrator | Catalog/media management, all-order processing, invoices, dashboard and CSV reporting |
+| Administrator | All operational tools and audited staff grants; administrator credentials/access protected from the staff editor |
+| Staff | Only assigned reports/catalog/inventory/orders/payments/customers/notifications/marketing/settings scopes; cannot grant permissions |
 | SSLCOMMERZ | Hosted payment selection and result notifications; the server validates successful transactions |
 
 An administrator is stored as a user with `role: "admin"`, rather than in a separate credentials collection. This keeps one authentication path and prevents customer/admin account logic from diverging.
@@ -39,7 +40,7 @@ An administrator is stored as a user with `role: "admin"`, rather than in a sepa
 
 ### 4.1 Authentication and customer profile
 
-- **AUTH-01** A visitor shall register with full name, valid email and a password between 8 and 128 characters.
+- **AUTH-01** A visitor shall register with full name, valid email and a password at least 8 characters and at most 72 UTF-8 bytes.
 - **AUTH-02** Email addresses shall be unique and normalized to lowercase.
 - **AUTH-03** A customer or administrator shall sign in through the same endpoint.
 - **AUTH-04** The server shall issue a signed session token in an HTTP-only cookie. Bearer-token return shall be disabled by default and available only as an explicit development option.
@@ -245,3 +246,15 @@ The release candidate is acceptable when:
 10. Responsive, keyboard and print checks in `TESTING_GUIDE.md` pass.
 
 Detailed execution steps are in [TESTING_GUIDE.md](TESTING_GUIDE.md).
+
+## 2.10 additional acceptance requirements
+
+- **REPORT-01** Day/month Dhaka paid-order cohorts shall reconcile captured totals, coupons and confirmed refunds; simulations/review and extra-charge refunds are excluded as documented.
+- **STAFF-01** Only full admins shall grant registered accounts explicit staff scopes, with an atomic audit; no credential replacement or self-escalation.
+- **SESSION-01** Owners shall list/revoke devices; sign-out-others shall keep the requesting browser signed in with a rotated cookie and invalidate unseen legacy JWTs.
+- **NOTIFY-01** Owners shall set order/return/refund preferences; security mail remains enabled. Provider acceptance and delivery outcomes shall be distinct, verified and replay guarded.
+- **RETURN-ITEM-01** Selected quantities shall not exceed purchased units or overlap whole-order returns. Coupon-paisa allocation shall remain conserved through rejections.
+- **RETURN-ITEM-02** Approved monetary holds shall not pay before receipt. Selected restocking, credit note issuance, confirmed settlement and invoice refund metadata shall remain synchronized.
+- **EXCHANGE-01** Equal-price same-product replacement SKUs shall reserve on approval, release on withdrawal and ship only after original receipt; original invoice totals remain intact.
+
+Policies, APIs and acceptance examples: [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md).

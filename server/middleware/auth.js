@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const sessions = require("../services/sessionService");
 
 // Verifies the JWT and attaches the logged-in user to req.user
 const protect = async (req, res, next) => {
@@ -22,6 +23,9 @@ const protect = async (req, res, next) => {
   try {
     const user = await User.findById(decoded.id);
     if (!user || (decoded.version || 0) !== (user.tokenVersion || 0)) return res.status(401).json({ message: "Your session has expired. Please sign in again." });
+    const session = await sessions.authenticateSession(decoded, token, user, req);
+    if (!session) return res.status(401).json({ message: "This device session has expired or was signed out. Please sign in again." });
+    req.sessionId = session._id;
     req.user = user;
     req.auth = { id: user._id.toString(), email: user.email, role: user.role };
     next();
@@ -37,4 +41,5 @@ const adminOnly = (req, res, next) => {
   return res.status(403).json({ message: "Access denied. Admins only." });
 };
 
-module.exports = { protect, adminOnly };
+const authorize = (scope) => (req, res, next) => require("../utils/permissions").hasPermission(req.user, scope) ? next() : res.status(403).json({ message: "You do not have permission for " + scope });
+module.exports = { protect, adminOnly, authorize };

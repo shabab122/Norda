@@ -1,8 +1,8 @@
-# Norda 2.8 — Architecture and Data Model
+# Norda 2.10 — Architecture and Data Model
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas are implemented; advanced sales reports, carrier APIs, item-level exchanges, cloud media and production operations remain future work. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
 
 ## System view
 
@@ -36,7 +36,7 @@ sequenceDiagram
     C-->>B: JSON response
 ```
 
-Public catalog routes bypass authentication. Protected routes call `protect`; administrator routes call `protect` and then `adminOnly`.
+Public catalog routes bypass authentication. Protected routes call `protect`; operational routes call `protect` and `authorize(scope)`. Full-admin staff grants retain `adminOnly`. JWTs include a persisted device-session ID; authentication also checks revocation, expiry, token version and the current database permissions.
 
 ## Checkout and order lifecycle
 
@@ -138,3 +138,9 @@ Products embed retained size/color options. A partial unique multikey SKU index 
 `shipmentService` validates courier details, HTTPS links, replay keys and forward progress. Shipment events, order/COD state, invoice synchronization and staged emails share the existing order lock/database unit. The customer tracking endpoint returns public projections with paginated history; administrator actor/request metadata stays private.
 
 `notificationService` stages durable held records inside the database unit. New `afterCommit` hooks activate them after the transaction/compensated operation succeeds; failed activation can be recovered by the worker. Provider calls run outside commerce transactions. Atomic sending claims, bounded exponential retry and stable Message-ID provide at-least-once SMTP delivery. Existing account SMTP/file transport is reused with optional message IDs, and local account/order previews are filtered separately. The API starts/stops all three workers with its existing lifecycle. See [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md) and [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md).
+
+## 2.10 management collections and coordination
+
+`AuthSession` stores session IDs, expiry/version, revocation and masked device metadata; legacy tokens are adopted by hash. `StaffAudit` records full-admin grants. `ItemReturnCase` records immutable selected lines/unit ordinals, decisions, receipt and replacement shipment. `CreditNote` records invoice adjustments without replacing original totals. Refund `awaiting_return` holds reserve the source balance until physical receipt. `NotificationDeliveryEvent` is an append-only provider/manual outcome history, separate from SMTP acceptance; preferences are checked before staging/sending.
+
+Item cases/refunds/exchanges share the existing `order:<id>` lock and database unit. Access grants plus audit and sign-out-other-session rotations also use transaction/compensation units. No external SMTP/gateway call runs inside a database transaction. See [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md) for report definitions and policy boundaries.

@@ -21,6 +21,8 @@ function profilePayload(user) {
   const preferred = book.addresses.find((entry) => entry.isDefault);
   return {
     _id: user._id, name: user.name, email: user.email, role: user.role,
+    permissions: user.role === "staff" ? [...(user.permissions || [])] : [],
+    notificationPreferences: { orderUpdates: true, returnUpdates: true, refundUpdates: true, ...(user.notificationPreferences?.toObject?.() || user.notificationPreferences || {}) },
     address: preferred ? plainAddress(preferred) : user.address || null,
     ...book, emailVerified: Boolean(user.emailVerifiedAt), emailVerifiedAt: user.emailVerifiedAt || null,
   };

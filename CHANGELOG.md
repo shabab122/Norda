@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.10.0 — 2026-10-22
+
+- Add Dhaka daily/monthly paid-order cohort reports, product/SKU rankings, coupon savings, confirmed refunds/net revenue and CSV export.
+- Add customer search/purchase history and administrator-managed, audited staff permissions. Existing accounts/passwords are retained.
+- Add store email preferences, return/refund updates and verified delivery/bounce/complaint history with optional signed webhook integration.
+- Add active device sessions, individual revocation and sign-out-other-devices with current-session rotation and legacy JWT invalidation.
+- Add selected-item/quantity returns, coupon-paisa allocation, held refunds released after receipt, configurable order-snapshot return windows and printable credit notes.
+- Add same-product equal-price size/color exchanges with replacement-SKU reservation, receipt/restock decisions and replacement tracking.
+- Extend HTTP, fault-injection, frontend and native MongoDB tests; preserve existing credentials, dependencies, catalog and previous journeys.
+
+
 All notable project changes are recorded here.
 
 ## 2.9.0 — Coupons, wishlist, inventory tools and published store settings

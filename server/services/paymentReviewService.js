@@ -11,7 +11,7 @@ const reviewOrder = async ({ orderId, user, body }) => {
   objectId(orderId); const note = noteText(body.note);
   if (!["verify", "retain", "approve", "close_refunded", "note"].includes(body.action)) throw httpError(400, "Choose a valid payment review action");
   return withOperationLock("order:" + orderId, async () => {
-    let order = await ownedOrder(orderId, user);
+    let order = await ownedOrder(orderId, user, null, "payments");
     if (body.action === "note") return withDatabaseUnit(async (unit) => { await audit(orderId, user, "admin_note", note, unit); return order; });
     if (body.action === "approve" && order.paymentStatus === "paid" && order.paymentReviewStatus === "approved") return order;
     if (body.action === "close_refunded" && order.paymentReviewStatus === "refunded") return order;

@@ -31,14 +31,14 @@ const patchOrder = async (order, fields, unit) => {
   return updated;
 };
 const audit = async (orderId, actor, action, note, unit, refs = {}) => {
-  const event = await insertDocument(OrderEvent, { order: orderId, actor: actor?._id, actorRole: actor?.role === "admin" ? "admin" : actor ? "user" : "system", action, note, ...refs }, unit.session);
+  const event = await insertDocument(OrderEvent, { order: orderId, actor: actor?._id, actorRole: ["admin", "staff"].includes(actor?.role) ? actor.role : actor ? "user" : "system", action, note, ...refs }, unit.session);
   unit.compensate(() => OrderEvent.deleteOne({ _id: event._id }));
   return event;
 };
-const ownedOrder = async (id, user, session) => {
+const ownedOrder = async (id, user, session, scope) => {
   objectId(id); const order = await querySession(Order.findById(id), session);
   if (!order) throw httpError(404, "Order not found");
-  if (user.role !== "admin" && String(order.user) !== String(user._id)) throw httpError(403, "Not authorized to access this order");
+  if (user.role !== "admin" && !(scope && require("../utils/permissions").hasPermission(user, scope)) && String(order.user) !== String(user._id)) throw httpError(403, "Not authorized to access this order");
   return order;
 };
 const restoreStock = async (order, unit) => {

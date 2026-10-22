@@ -8,7 +8,7 @@ const { withOperationLock } = require("./operationLock");
 const { insertDocument, querySession, withDatabaseUnit } = require("./databaseUnit");
 const { objectId, noteText, requestKey, cents, moneyCents, patch, patchOrder, audit, ownedOrder, cancelForOperations } = require("./orderOperationStore");
 const { refundSource } = require("./verifiedPayments");
-const ACTIVE = ["queued", "submitting", "pending", "unknown"];
+const ACTIVE = ["awaiting_return", "queued", "submitting", "pending", "unknown"];
 const refundId = () => "NRF" + Date.now().toString(36).toUpperCase() + crypto.randomBytes(8).toString("hex").toUpperCase();
 const sumRefunds = (rows) => rows.reduce((sum, row) => sum + moneyCents(row.amount), 0);
 const sourceRefunds = (orderId, source, session) => querySession(Refund.find({ order: orderId, bankTransactionId: source.bankTransactionId, gateway: source.gateway }), session);
@@ -29,7 +29,7 @@ const syncRefundSummary = async (order, unit) => {
   }
   return patchOrder(order, fields, unit);
 };
-const queueRefundInUnit = async ({ order, source, amount, key, reason, actor }, unit) => {
+const queueRefundInUnit = async ({ order, source, amount, key, reason, actor, itemCase = null, holdForReturn = false }, unit) => {
   const existing = await querySession(Refund.findOne({ order: order._id, requestKey: key }), unit.session);
   if (existing) {
     if (moneyCents(existing.amount) !== amount || existing.bankTransactionId !== source.bankTransactionId) throw httpError(409, "This refund request key belongs to a different refund");
@@ -38,23 +38,28 @@ const queueRefundInUnit = async ({ order, source, amount, key, reason, actor }, 
   const previous = await sourceRefunds(order._id, source, unit.session);
   const reserved = sumRefunds(previous.filter((row) => row.status !== "failed"));
   if (amount <= 0 || amount + reserved > moneyCents(source.amount)) throw httpError(409, "This refund exceeds the unrefunded amount or another refund is still unresolved");
-  if (source.scope === "order" && order.status !== "cancelled" && !["received", "completed"].includes(order.returnStatus)) throw httpError(409, "Approve cancellation or receive the returned items before refunding this order");
+  if (itemCase) {
+    const record = await querySession(require("../models/ItemReturnCase").findById(itemCase), unit.session);
+    if (!record || record.type !== "return" || String(record.order) !== String(order._id) || moneyCents(record.creditAmount) !== amount || record.status !== (holdForReturn ? "approved" : "received") || source.scope !== "order") throw httpError(409, "Invalid item refund reservation");
+  } else if (holdForReturn) throw httpError(409, "A return hold requires an approved item request");
+  if (!itemCase && source.scope === "order" && order.status !== "cancelled" && !["received", "completed"].includes(order.returnStatus)) throw httpError(409, "Approve cancellation or receive the returned items before refunding this order");
   const refund = await insertDocument(Refund, {
     order: order._id, user: order.user, payment: source.payment?._id, gateway: source.gateway, scope: source.scope,
     requestKey: key, transactionId: refundId(), originalTransactionId: source.payment?.transactionId || "",
     validationId: source.validationId, bankTransactionId: source.bankTransactionId,
-    amount: amount / 100, currency: order.currency, status: source.gateway === "manual" ? "pending" : "queued",
+    amount: amount / 100, currency: order.currency, ...(itemCase ? { itemCase } : {}), status: holdForReturn ? "awaiting_return" : source.gateway === "manual" ? "pending" : "queued",
     reason, requestedBy: actor._id,
   }, unit.session);
   unit.compensate(() => Refund.deleteOne({ _id: refund._id }));
   await audit(order._id, actor, "refund_requested", reason, unit, { refund: refund._id, payment: source.payment?._id });
   await syncRefundSummary(order, unit);
+  await require("./notificationService").queueOperationMessage(order, refund, "refund", unit);
   return refund;
 };
 const requestRefund = async ({ orderId, user, body }) => {
   objectId(orderId); const key = requestKey(body.requestKey), reason = noteText(body.note);
   const result = await withOperationLock("order:" + orderId, async () => {
-    let order = await ownedOrder(orderId, user);
+    let order = await ownedOrder(orderId, user, null, "payments");
     const replay = await Refund.findOne({ order: orderId, requestKey: key });
     if (replay) {
       if ((body.amount !== undefined && cents(body.amount) !== moneyCents(replay.amount)) || (body.paymentId && String(body.paymentId) !== String(replay.payment)) || (body.validationId !== undefined && body.validationId !== replay.validationId) || reason !== replay.reason) throw httpError(409, "This request key belongs to another refund");
@@ -79,6 +84,10 @@ const refundState = async (refund, fields, note, unit, actor = null) => {
   if (!order) throw httpError(409, "Refund order is missing");
   await syncRefundSummary(order, unit);
   if (fields.status && fields.status !== refund.status) await audit(order._id, actor, "refund_" + fields.status, note, unit, { refund: refund._id, payment: refund.payment });
+  if (fields.status && fields.status !== refund.status) {
+    await require("./itemReturnStore").syncCaseRefund(updated, unit);
+    await require("./notificationService").queueOperationMessage(order, updated, "refund", unit);
+  }
   return updated;
 };
 const responseMatches = (data, refund, requireReference = true) => data && data.APIConnect === "DONE" && data.bank_tran_id === refund.bankTransactionId &&
@@ -164,4 +173,4 @@ const startRefundWorker = () => {
   const timer = setInterval(tick, 30000); timer.unref(); tick();
   return async () => { stopped = true; clearInterval(timer); if (running) await running; };
 };
-module.exports = { ACTIVE, sumRefunds, sourceRefunds, syncRefundSummary, queueRefundInUnit, requestRefund, processRefund, confirmManualRefund, reconcileRefund, sweepRefunds, startRefundWorker };
+module.exports = { refundState, ACTIVE, sumRefunds, sourceRefunds, syncRefundSummary, queueRefundInUnit, requestRefund, processRefund, confirmManualRefund, reconcileRefund, sweepRefunds, startRefundWorker };

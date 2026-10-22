@@ -28,7 +28,7 @@ const listAdminOperations = handle(async (req) => {
   if (mode === "reviews") { Model = Order; filter.paymentStatus = "review"; }
   if (mode === "refunds") Model = Refund;
   if (req.query.status && mode !== "reviews") {
-    const allowed = mode === "requests" ? ["requested", "approved", "rejected", "received", "completed"] : ["queued", "submitting", "pending", "unknown", "succeeded", "failed"];
+    const allowed = mode === "requests" ? ["requested", "approved", "rejected", "received", "completed"] : ["awaiting_return", "queued", "submitting", "pending", "unknown", "succeeded", "failed"];
     if (!allowed.includes(req.query.status)) throw httpError(400, "Invalid operation status");
     filter.status = req.query.status;
   }
@@ -42,7 +42,7 @@ const listAdminOperations = handle(async (req) => {
   return { mode, items, total, page, pages: Math.ceil(total / limit) || 1 };
 });
 const getAdminOrderOperations = handle(async (req) => {
-  const order = await ownedOrder(req.params.id, req.user);
+  const order = await ownedOrder(req.params.id, req.user, null, "payments");
   const [payments, cases, records, events] = await Promise.all([
     Payment.find({ order: order._id }).sort({ createdAt: 1 }), OrderRequest.find({ order: order._id }).sort({ createdAt: -1 }),
     Refund.find({ order: order._id }).sort({ createdAt: -1 }), OrderEvent.find({ order: order._id }).populate("actor", "name email").sort({ createdAt: -1 }).limit(200),

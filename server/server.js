@@ -25,7 +25,7 @@ const validateEnvironment = () => {
 const startServer = async () => {
   validateEnvironment();
   await connectDB();
-  await Promise.all([require("./models/Product").init(), require("./models/ShipmentEvent").init(), require("./models/OrderNotification").init(), ...["Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport"].map((name) => require("./models/" + name).init())]);
+  await Promise.all([require("./models/Product").init(), require("./models/ShipmentEvent").init(), require("./models/OrderNotification").init(), ...["Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent"].map((name) => require("./models/" + name).init())]);
   const port = Number(process.env.PORT) || 5000;
   if ([3000, 3002].includes(port)) throw new Error("Ports 3000 and 3002 are reserved for GitStack/Gitea. Use PORT=5000 for Norda.");
   const server = app.listen(port, () => {

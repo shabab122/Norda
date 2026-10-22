@@ -96,7 +96,7 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     for (const item of items) await reserveItem(item, unit);
     const order = await insertDocument(Order, {
       user: user._id, items, shippingAddress: address, ...totals, ...(quote.coupon ? { coupon: quote.coupon } : {}), currency: store.currency,
-      paymentMethod, paymentChannel, paymentStatus: "pending",
+      paymentMethod, paymentChannel, paymentStatus: "pending", returnPolicy: { returnWindowDays: config.returnWindowDays, exchangeEnabled: config.exchangeEnabled },
       ...(paymentMethod !== "cod" ? { reservationExpiresAt: nextReservationDeadline() } : {}), ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
