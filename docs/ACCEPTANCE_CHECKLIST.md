@@ -109,3 +109,16 @@ Official integration reference: https://developer.sslcommerz.com/doc/v4/ . This 
 ## Branding and invoice presentation
 
 Check the full Norda name and AI symbol in the storefront header/footer, invoice, payment page and admin sidebar. Inspect the updated tab icon, long invoice numbers and long email addresses at small widths. Confirm the repeated Demo badges/large yellow invoice banner are gone while the compact simulation/no-charge information remains readable, including in a printed invoice.
+
+## Production tools — 2.11 deployment acceptance
+
+Automated HTTP/native/protocol/VM checks passed; owner-account/browser acceptance remains separate. Keep old credentials and follow [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md).
+
+1. In eCourier sandbox, load assigned package charges, book one eligible processing order, print its label, reconcile the original reference and verify real pickup/tracking. Check COD/prepaid collection semantics with the merchant; acknowledge exceptions without automatic stock/payment changes. Confirm carrier cancellation before order restocking.
+2. Inspect new courier/media/system screens with full admin, scoped staff and a customer. Check desktop/mobile/keyboard behavior and visible customer tracking; retain existing invoice/credit-note printing acceptance.
+3. On the final HTTPS domain, inspect initial product metadata/JSON-LD, canonical URL, sitemap and robots rules; validate with Rich Results/Search Console.
+4. With the owner's Cloudinary account, upload a real image, migrate one old upload, confirm the legacy URL, and delete a truly unreferenced aged test asset through preview/confirm. Verify a referenced image is blocked.
+5. Create/verify an encrypted backup, copy it off-host and restore to a new test database/media directory. Check indexes, representative orders/invoices and images. Keep the key separate; do not promote the drill automatically.
+6. Verify readiness during maintenance and receive a controlled operational alert through actual SMTP/HTTPS. Use an external monitor for a stopped host/process.
+
+These checks do not replace the retained public SSLCOMMERZ sandbox success/failure/cancel/IPN/refund acceptance matrix.

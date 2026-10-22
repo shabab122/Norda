@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.10.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.11.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,13 +32,13 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.10.0** |
+| Application version | **2.11.0** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Core commerce, management/reporting, device sessions and item returns/exchanges implemented; public-release acceptance remains |
+| Development status | Core commerce, management, courier API, SEO, cloud media and backup/monitoring implemented; provider/deployment acceptance remains |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
@@ -105,6 +105,17 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - MongoDB transactions when available; compensating writes for handled failures on standalone development databases.
 - Compact simulated-payment/no-charge information on relevant customer and invoice views; local simulator payments are excluded from administrator revenue.
 
+### Courier API, SEO, Cloud Media and Operations
+
+- Optional eCourier API booking, assigned package charges, trusted PDF labels and automatic tracking with delivery-exception review.
+- Durable one-booking intents and same-reference timeout recovery; carrier pickup/delivery reuses existing order, COD, invoice and notification logic.
+- Automatic booking is opt-in with an activation cutoff and merchant package/address/payment requirements. Existing manual tracking remains available for orders without an API parcel.
+- Product-specific metadata, canonical URLs, Open Graph, safe Product/variant JSON-LD, robots directives and paginated public sitemaps in initial server responses.
+- Optional server-authenticated Cloudinary uploads, legacy-URL-preserving migration and explicit reference-checked unused-media cleanup.
+- AES-256-GCM encrypted BSON/index/local/cloud-media backups, authenticated verification and restore into a new isolated database/media directory.
+- Shared maintenance leases, optional scheduled backups, request IDs/redacted error events, readiness checks, system status and optional SMTP/HTTPS operational alerts.
+- Three scoped tools: **Courier API**, **Media library** and **System health**. See [setup, provider limits and recovery procedures](docs/PRODUCTION_TOOLS.md).
+
 ### Administration
 
 - Product, category and brand management, including search/pagination in management lists.
@@ -143,9 +154,9 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 | Persistence | MongoDB and Mongoose |
 | Authentication | Bcrypt password hashing, JWT and HTTP-only cookies |
 | Request protection | Helmet, CORS allowlist, rate limiting, request sanitization, role/ownership checks and escaped output |
-| Product media | Multer, validated local uploads, AI-generated WebP catalog images and PNG/WebP brand assets |
+| Product media | Multer, validated local/optional Cloudinary uploads, AI-generated catalog and brand assets |
 | Tests | Node's built-in test runner, HTTP regression journeys, frontend VM checks and opt-in native MongoDB tests |
-| Automation | GitHub Actions verification, dependency audit and MongoDB topology test matrix |
+| Automation | GitHub Actions verification, dependency audit, MongoDB topology tests and optional courier/backup/alert workers |
 
 ## Requirements
 
@@ -159,6 +170,9 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 | Git | Needed for repository-based contribution; optional when running an extracted ZIP |
 | SMTP service | Required for actual account/order inbox delivery; private file previews are available in development |
 | External payment account | Required only for actual SSLCOMMERZ hosted checkout; unnecessary for COD or the local simulator |
+| Optional courier/cloud accounts | eCourier merchant sandbox/live credentials and Cloudinary credentials only when activating those integrations |
+| Backup storage/key | Private disk space and a separate 32-byte base64 key; secure off-host copies and retention are an operator policy |
+| Public SEO/alerts | Final HTTPS origin for indexing; existing SMTP or an HTTPS alert receiver for external notifications |
 
 Norda defaults to port **5000**. Startup rejects ports **3000** and **3002**, which are reserved for the existing GitStack/Gitea services. Docker is optional; this application does not require those services or their PostgreSQL databases.
 
@@ -221,13 +235,15 @@ Open **[http://localhost:5000](http://localhost:5000)**. Express serves the webs
 | Help and policies | `/help.html` | Public |
 | Admin workspace | `/admin/dashboard.html` | Administrator |
 | Coupon, inventory and settings tools | `/admin/coupons.html`, `/admin/inventory.html`, `/admin/store-settings.html` | Administrator |
-| API health | `/api/health` | Public |
+| Courier API and media library | `/admin/courier.html`, `/admin/media.html` | Administrator or assigned orders/catalog staff |
+| System health | `/admin/system.html` | Full administrator |
+| API health/readiness | `/api/health`, `/api/health/ready` | Public, minimal status |
 
 Register normally to create a customer. For administrator access, use the private `ADMIN_EMAIL` and `ADMIN_PASSWORD` from your environment after seeding. No shared administrator password is bundled. A normal customer sign-in opens the personal dashboard; a pending shopping destination takes priority.
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.10.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.11.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -236,6 +252,8 @@ npm run acceptance:preflight
 npm run verify
 npm run dev
 ```
+
+New integrations are optional. Keep your existing `.env`; if required, copy `server/.env.integrations.example` to a private `.env.integrations` and configure only the provider/backup/alert settings you want to activate. Existing environment values have priority. See [production tools](docs/PRODUCTION_TOOLS.md) before enabling automatic booking, cloud deletion or backups.
 
 To import missing catalog samples separately:
 
@@ -418,16 +436,18 @@ Recorded release evidence, as of **22 October 2026**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.10.0 | **210 files passed** |
-| Default suite, v2.10.0 | **373 passed, 0 failed, 8 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.10.0 | **142 passed**, compensation path |
-| Native single-member replica set, v2.10.0 | **142 passed**, transaction path |
+| JavaScript syntax, v2.11.0 | **235 files passed** |
+| Default suite, v2.11.0 | **409 passed, 0 failed, 10 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.11.0 | **173 passed**, compensation path |
+| Native single-member replica set, v2.11.0 | **173 passed**, transaction path |
 | Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
-| Frontend | VM behavior, safe rendering, state guards and all 41 pages/local resources checked |
+| Frontend | VM behavior, safe rendering, state guards and all 44 pages/local resources checked |
 | Browser/mobile/keyboard/print | Target-device visual acceptance remains manual; browser tooling could not complete the live check |
-| Public SSLCOMMERZ/SMTP/carrier | Actual merchant callbacks/refund settlement, inbox placement and courier-provider acceptance remain environment-specific |
+| Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
+| Actual server/worker startup | Optional configuration, readiness and graceful shutdown passed on both topologies |
+| Public providers/deployment | SSLCOMMERZ acceptance, real courier/Cloudinary account access, inbox/alert receipt, off-host recovery and final-domain SEO remain environment-specific |
 
-Tests cover reports, scoped staff/customer access, devices, signed email outcomes/preferences, item/exchange/refund/credit-note rollback, and current/previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
+Tests also cover courier replay/reconciliation/tracking/exceptions, actual provider request protocols, SEO/JSON-LD/sitemaps, cloud migration/reference locks/cleanup, maintenance leases, redacted alerts and encrypted backup recovery. Earlier tests cover reports, scoped staff/customer access, devices, signed email outcomes/preferences, item/exchange/refund/credit-note rollback, and current/previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
 
 ### Native MongoDB Verification
 
@@ -472,25 +492,29 @@ These items are planned work, separate from the implemented features above. Deve
 - [x] Return/refund email preferences and verified delivery/bounce/complaint history.
 - [x] Selected-item returns/equal-price exchanges, configurable windows and credit notes.
 
+- [x] eCourier booking, package charges, labels, authenticated tracking polling and exception review.
+- [x] Product SEO metadata, canonical URLs, sitemap and structured data.
+- [x] Optional Cloudinary media hosting, legacy URL migration and guarded unused-image cleanup.
+- [x] Encrypted BSON/media backups, isolated restore drills, monitoring and optional alerts.
+
 ### Next Product and Operations Work
 
 - [ ] Bank settlement/cash-flow reconciliation and external accounting integration.
-- [ ] Carrier API booking, rates, labels and authenticated tracking automation.
 - [ ] Price-difference exchanges, partial-parcel receipt and external accounting credit-note integration.
 - [ ] Optional SMS, provider-specific delivery adapters and complaint-remediation tooling.
 - [ ] Optional staff MFA/passkeys and invitation lifecycle.
 - [ ] Optional full guest cart/checkout, comparison and recently viewed products.
-- [ ] SEO metadata, sitemap and product structured data.
-- [ ] Deployment/HTTPS, durable media storage and unused-image cleanup.
-- [ ] Database/media backups, restore drills, monitoring and operational alerts.
+- [ ] Public HTTPS deployment, provider account acceptance, off-host backup replication/retention and external uptime checks.
+- [ ] Additional carriers, reverse pickup and broader carrier address/collection contracts.
 - [ ] Release automation, rollback planning and ongoing dependency auditing.
 
-Carrier events are currently store-entered. Whole-order returns and selected-item returns are supported, with equal-price size/color exchanges and separate credit notes. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
+Manual carrier tracking remains supported; the optional eCourier adapter books and polls authenticated carrier events. Automatic booking and cloud/backup/alert services require the owner's configuration. Whole-order returns and selected-item returns are supported, with equal-price size/color exchanges and separate credit notes. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
+| [Production tools](docs/PRODUCTION_TOOLS.md) | Courier API, SEO, cloud media, encrypted backup/restore, monitoring and optional setup |
 | [Management, devices and item returns](docs/MANAGEMENT_RETURNS.md) | Usage, policies, webhook contract and v2.10 API additions |
 | [Coupons, wishlist, inventory and store settings](docs/COMMERCE_TOOLS.md) | Setup, policies, API and acceptance for the v2.9 commerce tools |
 | [Account recovery and addresses](docs/ACCOUNT_RECOVERY.md) | Email, reset/verification and address book |
@@ -511,7 +535,7 @@ Carrier events are currently store-entered. Whole-order returns and selected-ite
 | [Future development](docs/FUTURE_DEVELOPMENT.md) | Development phases and planned capabilities |
 | [Changelog](CHANGELOG.md) | Version history |
 
-Historical sections remain labeled by release. This README, the v2.10 management/return guide and the current verification report describe the latest application status.
+Historical sections remain labeled by release. This README, the v2.11 production guide, the retained management/return guide and the current verification report describe the latest application status.
 
 ## Contributing
 

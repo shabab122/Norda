@@ -26,6 +26,7 @@ const normalizeShippingAddress = (value = {}) => {
     city: cleanText(value.city, 60), district: cleanText(value.district, 60),
     postCode: cleanText(value.postCode, 20), country: cleanText(value.country, 60) || "Bangladesh",
     phone: cleanText(value.phone, 20),
+    ...(value.thana ? { thana: cleanText(value.thana, 40) } : {}), ...(value.area ? { area: cleanText(value.area, 40) } : {}),
   };
   const missing = REQUIRED_ADDRESS_FIELDS.filter((field) => !address[field]);
   if (missing.length) throw httpError(400, "Shipping address is incomplete: " + missing.join(", "));
@@ -125,6 +126,7 @@ const cancelInUnit = async (order, reason, unit, options = {}) => {
     await syncInvoicePayment(order, session);
     return order;
   }
+  await require("./courierService").assertNoActiveBooking(order._id, unit.session);
   if (order.isPaid || order.paymentStatus === "review") throw httpError(409, "This payment needs to be resolved before cancellation");
   if (!["pending", "processing"].includes(order.status)) throw httpError(409, "Only pending or processing unpaid orders can be cancelled");
   for (const item of order.items) await restoreItem(item, unit, Boolean(item.variantId));
@@ -153,13 +155,14 @@ const cancelOrderAndRestoreStock = (order, reason = "") => withOperationLock("or
   return cancelInUnit(fresh, reason, unit);
 }));
 
-const updateOrderWorkflow = (id, body, actor = null) => withOperationLock("order:" + id, () => withDatabaseUnit(async (unit) => {
+const updateOrderInUnit = async (id, body, actor = null, unit) => {
   const { session, compensate } = unit;
   const order = await querySession(Order.findById(id), session);
   if (!order) throw httpError(404, "Order not found");
   const input = body.shipment ? normalizeShipment(body.shipment) : undefined;
   const eventStatus = input && { shipped: "shipped", in_transit: "shipped", out_for_delivery: "shipped", delivery_attempted: "shipped", delivered: "delivered" }[input.event];
   const requestedStatus = eventStatus || body.status || order.status;
+  if (actor && (input || requestedStatus !== order.status || body.isPaid !== undefined)) { const carrier = await querySession(require("../models/CourierBooking").findOne({ order: id, status: { $nin: ["cancelled", "rejected"] } }), session); if (carrier && requestedStatus !== "cancelled") throw httpError(409, "Use carrier synchronization or cancel/reconcile the active parcel before manual fulfillment or payment changes"); }
   if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before changing fulfillment or cash payment");
   if (!canTransitionOrder(order.status, requestedStatus)) throw httpError(409, "Order cannot move from " + order.status + " to " + requestedStatus);
   if (body.isPaid !== undefined && typeof body.isPaid !== "boolean") throw httpError(400, "Payment confirmation must be true or false");
@@ -188,6 +191,7 @@ const updateOrderWorkflow = (id, body, actor = null) => withOperationLock("order
   await syncInvoicePayment(updated, session, unit, previous);
   if (shipping.record && !["shipped", "delivered"].includes(shipping.record.event) && updated.status === "shipped") await require("./notificationService").queueMessage(updated, "tracking", String(shipping.record._id), unit, [shipping.record.location, shipping.record.note].filter(Boolean).join(" — "));
   return updated;
-}));
+};
+const updateOrderWorkflow = (id, body, actor = null) => withOperationLock("order:" + id, () => withDatabaseUnit((unit) => updateOrderInUnit(id, body, actor, unit)));
 
-module.exports = { cancelInUnit, calculateTotals, canTransitionOrder, cancelOrderAndRestoreStock, createOrderFromCart, normalizeCheckoutKey, normalizeShippingAddress, updateOrderWorkflow };
+module.exports = { updateOrderInUnit, cancelInUnit, calculateTotals, canTransitionOrder, cancelOrderAndRestoreStock, createOrderFromCart, normalizeCheckoutKey, normalizeShippingAddress, updateOrderWorkflow };

@@ -30,7 +30,7 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
       if (operator === "$elemMatch") return Array.isArray(value) && value.some((v) => matches(v, argument));
       if (operator === "$type") return typeof value === argument;
       if (operator === "$exists") return (value !== undefined) === argument;
-      if (operator === "$regex") return new RegExp(argument, expected.$options || "").test(value || "");
+      if (operator === "$regex") return (Array.isArray(value) ? value.flat(Infinity) : [value]).some((v) => new RegExp(argument, expected.$options || "").test(v || ""));
       if (operator === "$options") return true;
       throw new Error("Unsupported test query operator: " + operator);
     });
@@ -39,7 +39,12 @@ const matches = (row, filter = {}) => Object.entries(filter).every(([key, expect
 });
 const apply = (row, update, inserted = false, filter = {}) => {
   if (inserted && update.$setOnInsert) Object.assign(row, clone(update.$setOnInsert));
-  if (update.$set) Object.assign(row, clone(update.$set));
+  if (update.$set) for (const [key, value] of Object.entries(update.$set)) {
+    if (key === "writers.$.expiresAt") { const writer = row.writers.find((w) => w.token === filter["writers.token"]); if (writer) writer.expiresAt = clone(value); }
+    else row[key] = clone(value);
+  }
+  for (const [key, value] of Object.entries(update.$push || {})) { row[key] ||= []; row[key].push(clone(value)); }
+  for (const [key, value] of Object.entries(update.$pull || {})) row[key] = (row[key] || []).filter((v) => !matches(v, value));
   for (const [key, value] of Object.entries(update.$inc || {})) {
     if (key === "variants.$.stock") { const variant = row.variants.find((v) => matches(v, filter.variants.$elemMatch)); variant.stock += value; }
     else row[key] = (row[key] || 0) + value;
@@ -48,7 +53,7 @@ const apply = (row, update, inserted = false, filter = {}) => {
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent", "MaintenanceGate", "CourierBooking", "CourierEvent", "BackupRun", "OperationalEvent"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -119,7 +124,10 @@ const installMemoryStore = () => {
         (name === "AuthSession" && row.legacyTokenHash && [...records[name].values()].some((v) => v.legacyTokenHash === row.legacyTokenHash)) ||
         (name === "ItemReturnCase" && [...records[name].values()].some((v) => equal(v.order, row.order) && v.requestKey === row.requestKey)) ||
         (name === "CreditNote" && [...records[name].values()].some((v) => equal(v.itemCase, row.itemCase))) ||
-        (name === "NotificationDeliveryEvent" && [...records[name].values()].some((v) => v.eventId === row.eventId && v.provider === row.provider));
+        (name === "NotificationDeliveryEvent" && [...records[name].values()].some((v) => v.eventId === row.eventId && v.provider === row.provider)) ||
+        (name === "CourierBooking" && [...records[name].values()].some((v) => equal(v.order, row.order) || v.reference === row.reference)) ||
+        (name === "CourierEvent" && [...records[name].values()].some((v) => equal(v.booking, row.booking) && v.key === row.key)) ||
+        (name === "OperationalEvent" && [...records[name].values()].some((v) => v.key === row.key));
       if (duplicate || uniqueConflict) { const error = new Error("Duplicate record"); error.code = 11000; throw error; }
       records[name].set(String(row._id), row); return document(name, row);
     });

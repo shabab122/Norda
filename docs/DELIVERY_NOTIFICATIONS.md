@@ -1,5 +1,8 @@
 # Courier tracking and order email — NORDA 2.8
 
+> Current extension: v2.11 adds optional eCourier booking/tracking, Cloudinary media and backup/monitoring. See [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md). Existing workflows below remain supported.
+
+
 > Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
 
 This release adds courier/tracking details, append-only shipment history, an owner-protected customer tracking view and queued transactional email. It uses the existing MongoDB and SMTP configuration. No new merchant/courier credential or required environment setting is introduced.

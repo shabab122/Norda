@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.9.0 to 2.10.0
+## Update from 2.2–2.10.0 to 2.11.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -168,3 +168,17 @@ NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm
 Use `NORDA_EXPECT_TRANSACTIONS=1` and your replica-set URI to test transactions. Both modes were verified for this release with native MongoDB 7.0.45. GitHub Actions runs both modes on MongoDB 7.
 
 The tests use new random `norda_test_*` databases, then remove only those test databases. Use an isolated MongoDB server with permission to create test databases. The tests exercise real HTTP authentication, all catalog categories/images, cart operations, checkout/invoices, cancellation, simultaneous stock purchases, payment review, return receipt, refund persistence, SKU inventory/receipt, courier history, email queue and rollback. They do not use your store's database name or import demo records into it.
+
+## Optional production integrations — 2.11
+
+Keep the working `.env` and any existing `.env.integrations`. For new integrations only, copy `server/.env.integrations.example` to a private `server/.env.integrations`, fill the relevant provider/backup settings, then restart. Existing `.env`/process values have priority. The default update does not enable courier booking, cloud storage, alerts or scheduled backups. Full setup, provider restrictions and acceptance: [PRODUCTION_TOOLS.md](docs/PRODUCTION_TOOLS.md).
+
+Backup commands, from `server/`, after setting a separate backup encryption key:
+
+```bash
+npm run backup:create
+npm run backup:verify -- --file /absolute/private/path/actual-backup.ndb
+npm run backup:restore -- --file /absolute/private/path/actual-backup.ndb --database norda_restore_release_check --output /absolute/private/new-restore-folder
+```
+
+Use the actual generated archive path and a fresh target/folder. Restore refuses the original or an existing database and leaves the working `MONGO_URI` unchanged. Schedule/off-host retention and recovery promotion are described in the guide.

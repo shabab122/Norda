@@ -1,37 +1,41 @@
-# Verification results — NORDA 2.10.0
+# Verification results — NORDA 2.11.0
 
-Prepared 2026-10-22 (Asia/Dhaka), built directly from `Norda-Main-v2.9.0.zip`. Runtime: Node.js 24.19.0/npm 11.9.0 and isolated native MongoDB 7.0.45.
+Release checks recorded on 22 October 2026 using Node.js 24.19.0, npm 11.9.0 and native MongoDB 7.0.45. Source was extracted directly from `Norda-Main-v2.10.0.zip` and extended for the four selected production areas.
 
-| Check | Result |
+| Check | Recorded result |
 |---|---|
-| Input baseline | 338 reported: 331 passed, zero failed, seven opt-in native skips |
-| Dependency installation | Clean npm ci passed; dependency versions retained |
-| JavaScript syntax | All 210 JavaScript files passed |
-| Default release suite | 381 reported: 373 passed, zero failed, eight native entry points skipped without an explicit test URI |
-| Native standalone | 142 passed, zero failed/skipped; handled-error compensation path |
-| Native single-member replica set | 142 passed, zero failed/skipped; transaction path |
-| Reporting | Dhaka boundary, impossible dates/range, cohort captured totals, cancelled paid orders, simulations excluded, exact coupons, confirmed refunds/net revenue, product/SKU rankings and CSV |
-| Staff/customer access | Guest/customer rejection, registration escalation rejection, live scoped permissions, protected admin/self grants, safe search/history, password preservation and grant/audit rollback |
-| Device sessions | Distinct sign-ins, owner revocation, current markers and safe projections, individual logout preserving another login, sign-out-others rotating the current session and invalidating unseen legacy JWTs, rollback on replacement-session failure |
-| Notification improvements | Preference validation/suppression before delivery, security opt-out rejection, return/refund events, verified outcome history, replay/mismatch protection, bounce monotonicity, HMAC tampering/stale/unsigned rejection and complaint suppression |
-| Item return policy/quantity | Owner isolation, snapshot policy after settings changes, expired windows, original quantity bounds, overlapping requests, whole-order/item overlap rejection and approval blocked during payment review |
-| Return accounting | Integer-paisa allocation conservation including rejection gaps, held refunds cannot pay early, receipt/restock replay, one credit note, original invoice total unchanged and confirmed refund metadata/credit/case synchronization |
-| Return fault recovery | Injected credit-note failure rolls back stock/case/hold; invoice failure rolls back approval/refund; retry remains usable |
-| Exchanges | Equal-price/different-option validation, exact replacement reservation, approval replay, one-time withdrawal release, sold-out rejection, original receipt/stock choice, courier URL safety, shipment/delivery ordering and original invoice preservation |
-| Gateway refund edges | Controlled confirmed rejection can retry on the same credit note; completed replay is safe; timeout stays unknown and blocks another submission; no real merchant/money used |
-| Zero credit | Fully discounted merchandise creates a settled zero credit note without a refund transaction |
-| Frontend/resources | All 41 pages and local assets served; shared branding, static IDs/references, escaped case/device text, safe tracking links, case-state form gating, staff navigation, account/stale-response guards and stable per-account intent keys |
-| Prior regression journeys | Catalog/cart/COD/gateway/simulator, recovery/verification/addresses, invoices/reviews/uploads, expiry/retry, review/cancellation/whole-order refund, courier/outbox/SKU, coupons/wishlist/inventory imports/settings retained |
-| Dependency audit | npm audit --json: zero vulnerabilities |
-| Credentials/data | Input server/.env retained byte-for-byte; database/JWT/admin/gateway/SMTP values unchanged; no owner database read, seed or reset |
-| Original files/assets | No baseline file removed; catalog images, logo, seed data and unrelated configuration retained |
-| Browser/device/print | Live target-browser visual/mobile/keyboard and printed invoice/credit-note acceptance remains manual; automated checks are VM/static/HTTP |
-| External services | Owner Atlas, actual SMTP inbox/bounce adapter, public SSLCOMMERZ callbacks/refund settlement and carrier services were not contacted |
+| JavaScript syntax | 235 files passed |
+| `npm run verify` | 419 reported: **409 passed**, 0 failed, 10 native entry points skipped without an explicit test URI |
+| Native standalone | **173 passed**, 0 failed/skipped; handled-error compensation path |
+| Native single-member replica set | **173 passed**, 0 failed/skipped; transaction path |
+| Actual server startup/shutdown | 1 additional smoke test passed on each topology, including all workers, optional configuration, readiness and graceful shutdown |
+| Dependency audit | **0 vulnerabilities**, dependency versions unchanged; JSON included |
+| Existing files | All 342 input files retained; input `.env`, config/seed data, catalog/brand assets and dependency selections preserved |
+| Frontend resources | All 44 HTML pages/local resources checked through existing HTTP/static tests; new admin VM checks passed |
 
-Default HTTP tests run the actual Express routes with an isolated, fault-injectable model adapter. Eight native entries use real Mongoose/MongoDB and HTTP on separate standalone and single-member replica-set servers. Each creates/drops only a random `norda_test_*` database; none uses the owner's database. Fault-injection diagnostics in passing output are intentional.
+## New feature evidence
 
-The eight native entries intentionally skip in a default run without NORDA_TEST_MONGO_URI. All eight were separately executed on both topologies. Existing SMTP protocol tests use a local listener; that does not prove inbox placement. Controlled gateway fixtures do not prove merchant permissions/settlement. Email delivery outcomes require provider verification or the optional trusted signed adapter, separately from SMTP acceptance.
+| Area | Exercised behavior |
+|---|---|
+| eCourier HTTP/native | Scope/privacy, one-intent replay, package quote checks, acceptance without pickup, dropped-response reconciliation, local invoice failure after remote acceptance, COD delivery/invoice replay, partial-delivery exceptions, identity/amount mismatch, cancellation before stock release, fractional/prepaid guards, activation cutoff, zero-collection mapping and manual-dispatch protection |
+| Provider protocols | Actual eCourier/Cloudinary adapters with intercepted fetch: fixed official hosts, server headers/authentication, package/label validation, uncertain duplicate errors, multipart public identity, no overwrite and owned-asset deletion |
+| SEO | Initial HTML product-specific metadata/JSON-LD/canonicals, actual offers/ratings, script-terminator escaping, private noindex, robots/sitemap, archived-product behavior and variant offer range |
+| Cloud media | Validated uploads, uncertain upload recovery, migration preserving legacy URLs, reference checks including variants/history/transformed URLs, preview-to-delete reference race, explicit/idempotent cleanup and deleted-image reuse rejection |
+| Maintenance | Temporary mutation rejection with Retry-After, successful release, and a drain timeout retaining a still-active writer lease |
+| Monitoring | Administrator/scoped privacy, hourly deduplication, safe error capture, file-versus-inbox delivery distinction and bounded/replayed webhook alerts |
+| Backup/restore | Real encrypted raw BSON/collection/index/local/cloud-byte capture, authenticated verification, wrong key/tamper refusal, exact BSON type/index/image recovery, source/existing-target protection and missing-image failure without false success |
+| Frontend | New courier state/action rendering, escaping, media/system account-change guards and orders/catalog versus full-admin navigation |
 
-Reports are paid-order cohorts and not bank-settlement/accounting exports. Item returns do not credit original delivery fees. Exchanges support equal-price same-product size/color alternatives. SMS, carrier API booking, price-difference exchanges, partial-parcel receipt and external accounting remain separate optional scope. See [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md) for the implemented policies, API and laptop acceptance.
+The prior account, cart, checkout, SSLCOMMERZ state handling, review/cancellation/refund, delivery/email, SKU, coupon/wishlist/inventory/settings, reports/staff/devices and selected-item return/exchange tests remain in the full suite.
 
-Preserve your working `.env`, current Atlas/local URI, later laptop-only SMTP values, uploads and Git history on update. No setup/reseed or manual migration is required. New collections/indexes are additive; standalone multi-document writes retain the handled-error compensation boundary and replica sets provide the transaction path.
+## Execution boundary
+
+The ten native entries were executed serially on newly started isolated standalone and single-member replica-set servers. Each creates and drops only its new random test databases; restore uses a fresh `norda_restore_*` target and private temporary media directory. Provider responses are controlled; no owner database, real courier parcel, live Cloudinary account, public alert receiver or real payment is used. Passing fault-injection output deliberately includes redacted error diagnostics.
+
+Actual server smoke tests also start the real `server.js`, initialize the additive models and all workers, load a temporary optional integration file, fetch readiness/robots/new admin HTML and shut down cleanly on both topologies. Their test configuration is not shipped.
+
+Browser automation was not available for a reliable live visual pass in this environment. Static/HTTP/VM checks do not establish desktop/mobile/keyboard/print acceptance. The owner's real eCourier package/collection contract, booking/labels/tracking, Cloudinary upload/delete permissions, actual SMTP/alert receipt, off-host backup recovery and final public-domain SEO must be checked during deployment. Public SSLCOMMERZ success/failure/cancellation/IPN/refund acceptance remains separate.
+
+The archive format is NORDA `.ndb`, not `mongodump`. Backups coordinate upgraded NORDA writers; old app versions and outside database writers require a maintenance window. Off-host replication/retention and recovery promotion are operator procedures. Standalone multi-document commerce writes retain handled-error compensation limits; replica sets provide transaction semantics.
+
+Preserve the working laptop `.env`, current Atlas/local URI, SMTP values, private optional integration settings, uploads and Git history. No setup/reseed or manual migration is required. See [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for setup, contract limits and acceptance.

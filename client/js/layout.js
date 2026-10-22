@@ -172,7 +172,7 @@ function requireAdmin() {
   if (Api.isAdmin()) return true;
   if (Api.getUser()?.role === "staff") {
     const page = window.location.pathname.split("/").pop();
-    const scopes = { "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
+    const scopes = { "courier.html": "orders", "media.html": "catalog", "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
     if (page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
     window.location.href = "workspace.html"; return false;
   }

@@ -1,8 +1,8 @@
-# NORDA 2.10 testing and acceptance
+# NORDA 2.11 testing and acceptance
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. Sales reports, staff/customer management, device sessions, notification outcomes and selected-item returns/exchanges are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). The optional eCourier API, SEO, Cloudinary media and backup/monitoring tools are now implemented in 2.11; see [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) for configuration and live-account acceptance. Existing credentials/data are preserved.
 
 Current results are recorded in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md). Account recovery, verification and address-book acceptance are described in [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Checkout recovery acceptance and reservation behavior are described in [CHECKOUT_RECOVERY.md](CHECKOUT_RECOVERY.md). Payment review, cancellation and refund acceptance are described in [ORDER_OPERATIONS.md](ORDER_OPERATIONS.md). Courier/email acceptance is in [DELIVERY_NOTIFICATIONS.md](DELIVERY_NOTIFICATIONS.md), and SKU inventory acceptance is in [PRODUCT_VARIANTS.md](PRODUCT_VARIANTS.md). Existing accounts and credentials need no migration.
 
@@ -16,13 +16,13 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The eight real database test entry points are intentionally skipped without an explicit test URI:
+The ten real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
 ```
 
-Each entry point creates a new random `norda_test_*` database and removes only that new database. Set `NORDA_EXPECT_TRANSACTIONS=1` when testing a replica set. Both topologies run in CI. Native HTTP checks cover the 24-product seed, asset serving, cookie login, multi-category cart, real totals, one invoice, cancellation, final-unit races, same-cart replay, injected invoice failure and upload validation. Native operations checks also cover cancellation decisions, return receipt, cash/gateway/simulated refund persistence, private audit projections, risky review, extra charges and net revenue. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
+Each entry point creates a new random `norda_test_*` database and removes only that new database; backup tests also create and remove a new isolated `norda_restore_*` target and temporary media folder. Native files run serially to avoid shared upload-fixture races. Set `NORDA_EXPECT_TRANSACTIONS=1` when testing a replica set. Both topologies run in CI. Native HTTP checks cover the 24-product seed, asset serving, cookie login, multi-category cart, real totals, one invoice, cancellation, final-unit races, same-cart replay, injected invoice failure and upload validation. Native operations checks also cover cancellation decisions, return receipt, cash/gateway/simulated refund persistence, private audit projections, risky review, extra charges and net revenue. Gateway calls in regression tests are fixtures and do not test live SSLCOMMERZ.
 
 ## Current verification limits
 
@@ -187,3 +187,9 @@ For public merchant acceptance, allowlist the refund API source IP as required b
 Run the new `managementUnit`, `managementFrontend` and `managementHttp` tests with the default suite. `mongoManagement.test.js` runs the shared HTTP/fault journeys against native Mongoose/MongoDB in `npm run test:integration`; the CI matrix includes it on both topologies. Coverage includes scoped staff access/audit rollback, device rotation/revocation and unseen legacy tokens, preference suppression and signed outcome replay, paid-cohort report arithmetic, return windows/quantity/coupon-paisa conservation, held refunds, credit-note receipt rollback, equal-price SKU replacement, zero credit and confirmed-failure/unknown gateway refund handling.
 
 Use the laptop acceptance matrix in [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md#acceptance-on-your-laptop). Test actual browser/mobile/keyboard/credit-note printing and provider mail/gateway behavior separately from VM/native automated evidence.
+
+## Production tools regression coverage — 2.11
+
+`productionToolsHttp.test.js` and `mongoProductionTools.test.js` share 24 HTTP journeys: scope/privacy, initial SEO, booking replay/uncertainty, tracking/invoice/COD guards, exceptions/cancellation, automatic/prepaid/manual-dispatch rules, cloud upload/migration/reference-safe cleanup, maintenance/writer drainage and redacted alert transport. `providerProtocols.test.js` exercises the actual eCourier/Cloudinary REST adapters with intercepted network responses. Unit and frontend VM suites check authenticated archive framing, logical text-index restoration, safe structured data, scoped pages and account-response races.
+
+`mongoBackup.test.js` exercises encrypted BSON/index/local/cloud-byte backup, wrong-key/tamper rejection, isolated restore, source/existing-target refusal and missing-media failure on real MongoDB. All provider calls remain controlled fixtures. Follow [the production guide](PRODUCTION_TOOLS.md) for actual provider/off-host/SEO acceptance.

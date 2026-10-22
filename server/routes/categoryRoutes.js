@@ -1,3 +1,4 @@
+const { guard: mediaGuard } = require("../services/mediaService");
 const express = require("express");
 const router = express.Router();
 const {
@@ -11,8 +12,8 @@ const { protect, authorize } = require("../middleware/auth");
 
 router.get("/", getCategories);
 router.get("/:id", getCategory);
-router.post("/", protect, authorize("catalog"), createCategory);
-router.put("/:id", protect, authorize("catalog"), updateCategory);
-router.delete("/:id", protect, authorize("catalog"), deleteCategory);
+router.post("/", protect, authorize("catalog"), mediaGuard(createCategory));
+router.put("/:id", protect, authorize("catalog"), mediaGuard(updateCategory));
+router.delete("/:id", protect, authorize("catalog"), mediaGuard(deleteCategory));
 
 module.exports = router;

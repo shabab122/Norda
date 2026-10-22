@@ -169,7 +169,7 @@ const sweepRefunds = async () => {
 };
 const startRefundWorker = () => {
   let running, stopped = false;
-  const tick = () => { if (stopped || running) return; running = sweepRefunds().catch(() => console.error("Refund reconciliation sweep failed")).finally(() => { running = null; }); };
+  const tick = () => { if (stopped || running) return; running = require("./maintenanceService").withWriteLease(sweepRefunds).catch(() => console.error("Refund reconciliation sweep failed")).finally(() => { running = null; }); };
   const timer = setInterval(tick, 30000); timer.unref(); tick();
   return async () => { stopped = true; clearInterval(timer); if (running) await running; };
 };

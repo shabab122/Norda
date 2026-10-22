@@ -24,7 +24,7 @@ const errorHandler = (err, req, res, next) => {
     message = err.code === "LIMIT_FILE_SIZE" ? "Image must be 5 MB or smaller" : err.message;
   }
 
-  if (statusCode >= 500) console.error(err);
+  if (statusCode >= 500) require("../services/operationsService").captureError(err, req);
   res.status(statusCode).json({
     message: statusCode >= 500 && process.env.NODE_ENV === "production" ? "Server Error" : message,
   });

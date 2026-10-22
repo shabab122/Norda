@@ -1,0 +1,4 @@
+const mongoose = require("mongoose");
+const schema = new mongoose.Schema({ key: { type: String, required: true, unique: true }, kind: String, severity: { type: String, enum: ["warning", "error"], default: "error" }, summary: String, requestId: String, method: String, route: String, frames: [String], count: { type: Number, default: 1 }, status: { type: String, enum: ["open", "resolved"], default: "open" }, alertStatus: { type: String, enum: ["queued", "sending", "sent", "failed", "disabled"], default: "disabled" }, alertTransport: String, attempts: { type: Number, default: 0 }, claimedAt: Date, nextAttemptAt: Date, notifiedAt: Date, lastSeenAt: Date }, { timestamps: true });
+schema.index({ createdAt: 1 }, { expireAfterSeconds: 90 * 86400 });
+module.exports = mongoose.model("OperationalEvent", schema);
