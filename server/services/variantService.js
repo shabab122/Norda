@@ -10,6 +10,7 @@ const parseVariants = async (input, current) => {
   const old = current?.variants || [];
   if (old.length && !input.length) throw httpError(409, "Keep existing variants for order history; deactivate options instead");
   if (!old.length && input.length && current && await Order.exists({ "items.product": current._id })) throw httpError(409, "This product already has order history. Create a new variant product to preserve its original inventory.");
+  if (!old.length && input.length && current && await require("../models/WarehouseStock").exists({ product: current._id, variantKey: "base", quantity: { $gt: 0 } })) throw httpError(409, "Transfer or reconcile base warehouse stock before creating variant inventory");
   const ids = new Set(), skus = new Set(), combinations = new Set();
   const variants = input.map((row) => {
     if (!row || typeof row !== "object" || Array.isArray(row)) throw httpError(400, "Invalid variant");

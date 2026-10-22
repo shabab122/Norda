@@ -210,4 +210,4 @@ const deleteProduct = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { createProduct, deleteProduct, getProduct, getManagedProduct, getManagedProducts, getProducts, updateProduct };
+module.exports = { parseProductPayload, createProduct, deleteProduct, getProduct, getManagedProduct, getManagedProducts, getProducts, updateProduct };

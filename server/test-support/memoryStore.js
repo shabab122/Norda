@@ -53,7 +53,7 @@ const apply = (row, update, inserted = false, filter = {}) => {
   if (!Object.keys(update).some((key) => key.startsWith("$"))) Object.assign(row, clone(update));
 };
 const installMemoryStore = () => {
-  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent", "MaintenanceGate", "CourierBooking", "CourierEvent", "BackupRun", "OperationalEvent"];
+  const names = ["User", "Cart", "Product", "Order", "Invoice", "Payment", "OperationLock", "Category", "Brand", "Review", "Upload", "OrderRequest", "Refund", "OrderEvent", "ShipmentEvent", "OrderNotification", "Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent", "MaintenanceGate", "CourierBooking", "CourierEvent", "BackupRun", "OperationalEvent", "MfaChallenge", "StaffInvitation", "Warehouse", "WarehouseStock", "InventoryMovement", "CatalogImport", "StockSubscription", "StockNotice", "OffsiteBackup", "RestoreDrill"];
   const models = Object.fromEntries(names.map((name) => [name, require("../models/" + name)]));
   const records = Object.fromEntries(names.map((name) => [name, new Map()]));
   const originals = []; const failures = new Map(); let sequence = 100;
@@ -127,7 +127,14 @@ const installMemoryStore = () => {
         (name === "NotificationDeliveryEvent" && [...records[name].values()].some((v) => v.eventId === row.eventId && v.provider === row.provider)) ||
         (name === "CourierBooking" && [...records[name].values()].some((v) => equal(v.order, row.order) || v.reference === row.reference)) ||
         (name === "CourierEvent" && [...records[name].values()].some((v) => equal(v.booking, row.booking) && v.key === row.key)) ||
-        (name === "OperationalEvent" && [...records[name].values()].some((v) => v.key === row.key));
+        (name === "OperationalEvent" && [...records[name].values()].some((v) => v.key === row.key)) ||
+        (["CatalogImport", "InventoryMovement", "StaffInvitation"].includes(name) && [...records[name].values()].some(v => v.requestKey === row.requestKey)) ||
+        (name === "Warehouse" && [...records[name].values()].some(v => v.code === row.code)) ||
+        (name === "WarehouseStock" && [...records[name].values()].some(v => equal(v.warehouse,row.warehouse) && equal(v.product,row.product) && v.variantKey === row.variantKey)) ||
+        (name === "MfaChallenge" && [...records[name].values()].some(v => v.hash === row.hash)) ||
+        (name === "StockSubscription" && [...records[name].values()].some(v => equal(v.user,row.user))) ||
+        (name === "StockNotice" && [...records[name].values()].some(v => equal(v.user,row.user) && v.stockKey === row.stockKey)) ||
+        (name === "OffsiteBackup" && [...records[name].values()].some(v => equal(v.run,row.run)));
       if (duplicate || uniqueConflict) { const error = new Error("Duplicate record"); error.code = 11000; throw error; }
       records[name].set(String(row._id), row); return document(name, row);
     });

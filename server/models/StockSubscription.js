@@ -1,0 +1,1 @@
+const m = require("mongoose"); module.exports = m.model("StockSubscription", new m.Schema({ user: { type: m.Schema.Types.ObjectId, ref: "User", unique: true, required: true }, enabled: { type: Boolean, default: true }, includeWarehouses: { type: Boolean, default: false } }, { timestamps: true }));

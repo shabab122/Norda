@@ -8,14 +8,16 @@ const hashToken = (token) => crypto.createHash("sha256").update(token).digest("h
 const ipHint = (ip = "") => String(ip).replace(/^::ffff:/, "").includes(".") ? String(ip).replace(/^::ffff:/, "").split(".").slice(0, 3).join(".") + ".*" : String(ip).split(":").slice(0, 3).join(":") + ":*";
 const device = (req) => String(req?.headers?.["user-agent"] || "Unknown device").replace(/[\u0000-\u001f\u007f]/g, "").slice(0, 240);
 async function createSession(user, req) {
+  if (user.mfaEnabled && req?.mfaVerifiedRevision !== (user.mfaRevision || 0)) throw httpError(401, "Complete authenticator sign-in before a device session can be created");
   return withOperationLock("sessions:" + user._id, async () => {
     const payload = { id: String(user._id), version: user.tokenVersion || 0 };
     const lifetime = jwt.decode(jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || "7d" })).exp;
-    const session = await AuthSession.create({ user: user._id, tokenVersion: user.tokenVersion || 0, expiresAt: new Date(lifetime * 1000), lastSeenAt: new Date(), device: device(req), ipHint: ipHint(req?.ip) });
+    const session = await AuthSession.create({ user: user._id, mfaVerifiedRevision: user.mfaEnabled ? user.mfaRevision || 0 : null, tokenVersion: user.tokenVersion || 0, expiresAt: new Date(lifetime * 1000), lastSeenAt: new Date(), device: device(req), ipHint: ipHint(req?.ip) });
     return session;
   });
 }
 async function authenticateSession(decoded, token, user, req) {
+  if (user.mfaEnabled && !decoded.sid) return null;
   let session;
   if (decoded.sid) {
     if (!/^[a-f0-9]{24}$/i.test(decoded.sid)) return null;
@@ -28,6 +30,7 @@ async function authenticateSession(decoded, token, user, req) {
       catch (error) { if (error.code !== 11000) throw error; session = await AuthSession.findOne({ legacyTokenHash }); }
     }
   }
+  if (user.mfaEnabled && session?.mfaVerifiedRevision !== (user.mfaRevision || 0)) return null;
   if (!session || String(session.user) !== String(user._id) || session.revokedAt || new Date(session.expiresAt).getTime() <= Date.now() || session.tokenVersion !== (user.tokenVersion || 0)) return null;
   if (Date.now() - new Date(session.lastSeenAt).getTime() > 60000) await AuthSession.updateOne({ _id: session._id, revokedAt: { $exists: false } }, { $set: { lastSeenAt: new Date() } });
   return session;
@@ -51,7 +54,7 @@ async function revokeSessions(user, current, id, others = false) {
       if (!currentSession || currentSession.revokedAt || +new Date(currentSession.expiresAt) <= Date.now()) throw httpError(401, "The current session expired. Sign in again.");
       const updated = await patch(User, account, { tokenVersion: (account.tokenVersion || 0) + 1 }, unit);
       for (const s of sessions) await patch(AuthSession, s, { revokedAt: new Date() }, unit);
-      const fresh = await insertDocument(AuthSession, { user: user._id, tokenVersion: updated.tokenVersion, expiresAt: currentSession.expiresAt, lastSeenAt: new Date(), device: currentSession.device, ipHint: currentSession.ipHint }, unit.session);
+      const fresh = await insertDocument(AuthSession, { user: user._id, mfaVerifiedRevision: currentSession.mfaVerifiedRevision, tokenVersion: updated.tokenVersion, expiresAt: currentSession.expiresAt, lastSeenAt: new Date(), device: currentSession.device, ipHint: currentSession.ipHint }, unit.session);
       unit.compensate(() => AuthSession.deleteOne({ _id: fresh._id }));
       return { revoked: sessions.filter((s) => String(s._id) !== String(current) && s.tokenVersion === (user.tokenVersion || 0) && +new Date(s.expiresAt) > Date.now()).length, currentRevoked: false, sessionId: fresh._id, account: updated };
     });

@@ -32,7 +32,7 @@ exports.saveStaff = handle(async (req) => {
     if (!user) throw httpError(404, "This person must register a normal account before you grant staff access");
     if (user.role === "admin" || String(user._id) === String(req.user._id)) throw httpError(403, "Administrator access cannot be edited here");
     const permissions = req.body.role === "staff" ? [...req.body.permissions].sort() : [];
-    const updated = await patch(User, user, { role: req.body.role, permissions }, unit);
+    const updated = await patch(User, user, { role: req.body.role, permissions, ...(req.body.role === "user" ? { staffMfaRequired: false } : {}) }, unit);
     const event = await insertDocument(StaffAudit, { actor: req.user._id, target: user._id, previousRole: user.role, role: updated.role, previousPermissions: [...(user.permissions || [])], permissions, note }, unit.session);
     unit.compensate(() => StaffAudit.deleteOne({ _id: event._id }));
     return safeUser(updated);

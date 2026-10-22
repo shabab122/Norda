@@ -14,11 +14,11 @@ const cents = (value) => {
   return result;
 };
 const moneyCents = (value) => Math.round(Number(value || 0) * 100);
-const patch = async (Model, document, fields, unit) => {
+const patch = async (Model, document, fields, unit, condition = {}) => {
   const original = document.toObject ? document.toObject() : document;
   const previous = {}, absent = {};
   for (const field of Object.keys(fields)) { if (original[field] === undefined) absent[field] = 1; else previous[field] = original[field]; }
-  const updated = await Model.findOneAndUpdate({ _id: document._id }, { $set: fields }, writeOptions(unit.session, { new: true }));
+  const updated = await Model.findOneAndUpdate({ _id: document._id, ...condition }, { $set: fields }, writeOptions(unit.session, { new: true }));
   if (!updated) throw httpError(409, "The record changed. Please refresh and try again.");
   unit.compensate(() => Model.updateOne({ _id: document._id }, { ...(Object.keys(previous).length ? { $set: previous } : {}), ...(Object.keys(absent).length ? { $unset: absent } : {}) }));
   return updated;

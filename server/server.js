@@ -26,7 +26,7 @@ const validateEnvironment = () => {
 const startServer = async () => {
   validateEnvironment();
   await connectDB();
-  await Promise.all([require("./models/Product").init(), require("./models/ShipmentEvent").init(), require("./models/OrderNotification").init(), ...["Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent", "MaintenanceGate", "CourierBooking", "CourierEvent", "BackupRun", "OperationalEvent"].map((name) => require("./models/" + name).init())]);
+  await Promise.all([require("./models/Product").init(), require("./models/ShipmentEvent").init(), require("./models/OrderNotification").init(), ...["Coupon", "CouponRedemption", "WishlistItem", "StoreSettings", "InventoryImport", "AuthSession", "StaffAudit", "ItemReturnCase", "CreditNote", "NotificationDeliveryEvent", "MaintenanceGate", "CourierBooking", "CourierEvent", "BackupRun", "OperationalEvent", "MfaChallenge", "StaffInvitation", "Warehouse", "WarehouseStock", "InventoryMovement", "CatalogImport", "StockSubscription", "StockNotice", "OffsiteBackup", "RestoreDrill"].map((name) => require("./models/" + name).init())]);
   const port = Number(process.env.PORT) || 5000;
   if ([3000, 3002].includes(port)) throw new Error("Ports 3000 and 3002 are reserved for GitStack/Gitea. Use PORT=5000 for Norda.");
   const server = app.listen(port, () => {
@@ -37,6 +37,8 @@ const startServer = async () => {
   const stopRefunds = startRefundWorker();
   const stopNotifications = startNotificationWorker();
   const stopCourier = require("./services/courierService").startCourierWorker();
+  const stopStockMail = require("./services/stockNotificationService").startWorker();
+  const stopOffsite = require("./services/offsiteBackupService").startWorker();
   const stopOperations = require("./services/operationsService").startOperationsWorker();
   let shuttingDown = false;
   const shutdown = (signal) => {
@@ -44,7 +46,7 @@ const startServer = async () => {
     shuttingDown = true;
     console.log(signal + " received. Closing server...");
     server.close(async () => {
-      await Promise.all([stopReservations(), stopRefunds(), stopNotifications(), stopCourier(), stopOperations()]);
+      await Promise.all([stopReservations(), stopRefunds(), stopNotifications(), stopCourier(), stopOperations(), stopStockMail(), stopOffsite()]);
       await mongoose.connection.close();
       process.exit(0);
     });

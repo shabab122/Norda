@@ -1,0 +1,2 @@
+const m = require("mongoose");
+module.exports = m.model("CatalogImport", new m.Schema({ requestKey: { type: String, required: true, unique: true }, sourceHash: String, user: { type: m.Schema.Types.ObjectId, ref: "User" }, status: { type: String, enum: ["completed"], default: "completed" }, products: [{ product: { type: m.Schema.Types.ObjectId, ref: "Product" }, slug: String, name: String }] }, { timestamps: true }));

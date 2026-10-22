@@ -95,6 +95,7 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (user.mfaEnabled) return res.json(await require("../services/mfaService").challenge(user));
     await sendSession(req, res, user);
   } catch (error) {
     next(error);
@@ -162,4 +163,4 @@ const logout = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { register, login, logout, getProfile, updateProfile };
+module.exports = { register, login, logout, getProfile, updateProfile, sendSession };

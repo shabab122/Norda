@@ -1,0 +1,2 @@
+const m = require("mongoose");
+module.exports = m.model("InventoryMovement", new m.Schema({ requestKey: { type: String, required: true, unique: true }, intentHash: String, kind: String, product: { type: m.Schema.Types.ObjectId, ref: "Product" }, variantKey: String, from: String, to: String, quantity: Number, before: Number, after: Number, note: String, actor: { type: m.Schema.Types.ObjectId, ref: "User" }, status: { type: String, enum: ["completed"], default: "completed" } }, { timestamps: true }));

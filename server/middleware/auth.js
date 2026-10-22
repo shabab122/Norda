@@ -26,6 +26,7 @@ const protect = async (req, res, next) => {
     const session = await sessions.authenticateSession(decoded, token, user, req);
     if (!session) return res.status(401).json({ message: "This device session has expired or was signed out. Please sign in again." });
     req.sessionId = session._id;
+    req.mfaVerifiedRevision = user.mfaEnabled ? session.mfaVerifiedRevision : undefined;
     req.user = user;
     req.auth = { id: user._id.toString(), email: user.email, role: user.role };
     next();
