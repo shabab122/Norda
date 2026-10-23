@@ -24,7 +24,7 @@ function describeConfig(env) {
   };
 }
 async function main() {
-  require("dotenv").config();
+  require("../config/cliEnvironment").loadCliEnvironment();
   const config = describeConfig(process.env);
   console.log("NORDA acceptance preflight — read only; no accounts, credentials or inventory are changed.");
   console.log("MongoDB target:", config.databaseAddress);

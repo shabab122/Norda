@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("../config/cliEnvironment").loadCliEnvironment();
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { checkMailConfiguration, localMailDirectory } = require("../services/mailService");

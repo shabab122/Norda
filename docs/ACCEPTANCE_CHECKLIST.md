@@ -1,10 +1,12 @@
-# NORDA 2.10.0 acceptance checklist
+# NORDA 2.12.1 acceptance checklist
+
+> Current patch: preflight and mail commands now read optional integration settings without replacing existing values. See [measured acceptance results](VERIFICATION_RESULTS.md) for the current test record and the checks that remain blocked. No owner database or credentials were changed.
 
 > Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
-See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. The five management/session/notification/item-return areas are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). Carrier APIs, cloud media and deployment operations remain separate scope. Existing credentials/data are preserved.
+See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limits, routes and acceptance scenarios. These four areas remain implemented. The five management/session/notification/item-return areas are now implemented in 2.10; see [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.md). eCourier/cloud media and deployment tooling are implemented in later releases; actual provider/host acceptance remains separate. Existing credentials/data are preserved.
 
 ## Recorded status
 

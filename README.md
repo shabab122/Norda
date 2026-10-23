@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.12.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.12.1</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.12.0** |
+| Application version | **2.12.1** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
@@ -259,7 +259,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.12.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.12.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -361,7 +361,7 @@ The seed provides **24 illustrative products, 12 categories and 24 original AI-g
 
 Brands, descriptions, prices and quantities are sample data. Replace them with verified merchant inventory before actual sales. An intentionally sold-out organizer and several low-stock products support availability testing. The administrator can add real products through the UI without editing seed files.
 
-Product and invoice history remain linked when products are archived. Uploads currently live in `server/uploads/`; durable production media storage remains on the roadmap. Brand asset provenance and prompts are recorded in [`docs/BRANDING.md`](docs/BRANDING.md); catalog prompts are in [`AI_ASSETS.json`](client/assets/products/photos/AI_ASSETS.json).
+Product and invoice history remain linked when products are archived. Uploads use `server/uploads/` by default; optional Cloudinary storage, migration and guarded cleanup are implemented. Actual cloud-account acceptance remains necessary. Brand asset provenance and prompts are recorded in [`docs/BRANDING.md`](docs/BRANDING.md); catalog prompts are in [`AI_ASSETS.json`](client/assets/products/photos/AI_ASSETS.json).
 
 ## Architecture and Project Structure
 
@@ -440,6 +440,8 @@ All commands run from `server/`.
 | `npm run mail:orders -- email@example.com` | Read private development order mail |
 | `npm run reservations:expire` | Run a one-shot reservation expiry sweep |
 
+Preflight and mail commands read the optional `server/.env.integrations` just as startup does. Existing process and base `.env` values, including explicit empty values, retain priority. No settings file is rewritten.
+
 ## Testing
 
 ### Default Verification
@@ -450,20 +452,20 @@ npm run verify
 
 Coverage includes business rules, injected write failures, HTTP authentication/catalog/cart/order journeys, payment-state protection, uploads, frontend VM rendering and static asset/reference checks.
 
-Recorded release evidence, as of **22 October 2026**:
+Recorded release evidence, as of **23 October 2026**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.12.0 | **268 files passed** |
-| Default suite, v2.12.0 | **441 passed, 0 failed, 12 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.12.0 | **197 passed**, compensation path |
-| Native single-member replica set, v2.12.0 | **197 passed**, transaction path |
+| JavaScript syntax, v2.12.1 | **273 files passed** |
+| Default suite, v2.12.1 | **454 passed, 0 failed, 13 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.12.1 | **198 passed**, compensation path |
+| Native single-member replica set, v2.12.1 | **198 passed**, transaction path |
 | Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
 | Frontend | VM behavior, safe rendering, state guards and all 48 pages/local resources checked |
-| Browser/mobile/keyboard/print | Target-device visual acceptance remains manual; browser tooling could not complete the live check |
+| Browser/mobile/keyboard/print | Static/VM checks passed; the available browser could not access the isolated local server, so visible acceptance remains pending |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
-| Actual server/worker startup | Optional configuration, all workers and graceful shutdown passed on both topologies; production replica-set preflight accepts replica/rejects standalone |
-| Release/monitor tests | YAML/Bash checks, controlled code rollback, independent outage/recovery, RFC TOTP vectors and new frontend session/race guards passed |
+| Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
+| Release/monitor tests | YAML/Bash checks, controlled code rollback, outage/recovery, RFC TOTP vectors and session/race guards passed; local SMTP account/operations/uptime delivery and rejection/TLS checks passed |
 | Public providers/deployment | SSLCOMMERZ acceptance, real courier/Cloudinary account access, inbox/alert receipt, off-host recovery and final-domain SEO remain environment-specific |
 
 Tests also cover courier replay/reconciliation/tracking/exceptions, actual provider request protocols, SEO/JSON-LD/sitemaps, cloud migration/reference locks/cleanup, maintenance leases, redacted alerts and encrypted backup recovery. Earlier tests cover reports, scoped staff/customer access, devices, signed email outcomes/preferences, item/exchange/refund/credit-note rollback, and current/previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.
