@@ -1,15 +1,16 @@
 const router = require("express").Router();
-const { protect, authorize } = require("../middleware/auth");
+const { authorize } = require("../middleware/auth");
+const { shopper: protect } = require("../services/guestService");
 const s = require("../services/itemReturnService");
 const { pagination } = require("../utils/validation");
 const { objectId } = require("../services/orderOperationStore");
-const handle = (fn, status = 200) => async (req, res, next) => { try { res.status(status).json(await fn(req)); } catch (e) { next(e); } };
+const handle = (fn, status = 200) => async (req, res, next) => { try { const result = await fn(req); res.status(status).json(result); } catch (e) { next(e); } };
 router.use(protect);
 router.get("/orders/:id/item-returns", handle((req) => s.customerCases(req.params.id, req.user)));
 router.post("/orders/:id/item-returns", handle((req) => s.createCase({ orderId: req.params.id, user: req.user, body: req.body }), 201));
 router.get("/admin/item-returns", authorize("payments"), handle(async (req) => {
   const { page, limit } = pagination(req.query); const filter = {};
-  if (req.query.status) { if (!["requested", "approved", "rejected", "received", "ready", "shipped", "completed"].includes(req.query.status)) throw require("../utils/httpError")(400, "Invalid item request status"); filter.status = req.query.status; }
+  if (req.query.status) { if (!["requested", "approved", "receiving", "rejected", "received", "ready", "shipped", "completed"].includes(req.query.status)) throw require("../utils/httpError")(400, "Invalid item request status"); filter.status = req.query.status; }
   if (req.query.orderId) { objectId(req.query.orderId); filter.order = req.query.orderId; }
   const Case = require("../models/ItemReturnCase");
   const [rows, total] = await Promise.all([Case.find(filter).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit), Case.countDocuments(filter)]);

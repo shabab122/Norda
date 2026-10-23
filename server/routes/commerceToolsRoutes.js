@@ -4,7 +4,7 @@ const { protect, authorize } = require("../middleware/auth");
 const c = require("../controllers/commerceToolsController");
 const router = express.Router();
 router.get("/coupons", c.publicCoupons);
-router.post("/coupons/preview", protect, c.previewCoupon);
+router.post("/coupons/preview", require("../services/guestService").shopper, c.previewCoupon);
 router.get("/wishlist", protect, c.wishlist);
 router.get("/wishlist/ids", protect, c.wishlistIds);
 router.put("/wishlist/:id", protect, c.saveWish);

@@ -1,6 +1,8 @@
 # Documentation index
 
-> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+> Current extension: [Commerce operations — 2.13](COMMERCE_EXPANSION.md). Settlement, price-difference exchanges, reverse pickups/partial receipts, guest checkout, warehouse allocation and availability alerts.
+
+- [Release automation, recovery and team inventory](RELEASE_AUTOMATION.md) — retained 2.12 infrastructure/security/inventory tooling.
 
 
 - [Production tools](PRODUCTION_TOOLS.md) — v2.11 eCourier, SEO, Cloudinary media, encrypted backup/restore and monitoring.

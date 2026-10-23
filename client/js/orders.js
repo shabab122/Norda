@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader("orders");
   renderFooter();
-  if (!requireLogin()) return;
+  if (!requireShopper()) return;
 
   const params = new URLSearchParams(window.location.search);
   await loadOrders(params.get("placed"), params.get("invoice"));
@@ -11,9 +11,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function loadOrders(justPlaced, invoiceNumber) {
   const root = document.getElementById("orders-root");
   try {
-    const account = Api.getUser()?._id;
+    const account = shoppingIdentity();
     const orders = await Api.get("/orders/my");
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     const banner = justPlaced
       ? `<div class="order-confirmation"><span aria-hidden="true">✓</span><div><strong>Order placed successfully</strong><p>We reserved your items and created ${invoiceNumber ? `invoice ${escapeHtml(invoiceNumber)}` : "an invoice"}. Payment and delivery updates appear below.</p></div></div>`
       : "";
@@ -81,9 +81,9 @@ function renderOrder(order) {
           ${order.cancellationStatus && order.cancellationStatus !== "none" ? `<p class="payment-context">Cancellation: ${escapeHtml(order.cancellationStatus)}</p>` : ""}
           ${order.returnStatus && order.returnStatus !== "none" ? `<p class="payment-context">Return: ${escapeHtml(order.returnStatus)}</p>` : ""}
           ${order.refundStatus && order.refundStatus !== "none" ? `<p class="payment-context"><strong>Refund: ${escapeHtml(order.refundStatus.replace(/_/g, " "))}</strong> · ${money(order.refundedAmount || 0)} completed</p>` : ""}
-          <a class="btn btn-outline btn-sm btn-block" href="order-tracking.html?orderId=${encodeURIComponent(order._id)}">Track delivery</a>
+          <a class="btn btn-outline btn-sm btn-block" href="order-tracking.html?orderId=${encodeURIComponent(order._id)}">${order.fulfillmentManaged ? "Track warehouse parcels" : "Track delivery"}</a>
           <a class="btn btn-outline btn-sm btn-block" href="order-support.html?orderId=${encodeURIComponent(order._id)}">Cancellation, returns & refunds</a>
-          ${order.status === "delivered" ? `<a class="btn btn-outline btn-sm btn-block" href="item-returns.html?orderId=${encodeURIComponent(order._id)}">Return items or exchange size/color</a>` : ""}
+          ${order.status === "delivered" ? `<a class="btn btn-outline btn-sm btn-block" href="item-returns.html?orderId=${encodeURIComponent(order._id)}">Return items or exchange products</a>` : ""}
           <a class="btn btn-outline btn-sm btn-block" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a>
         </aside>
       </div>
@@ -95,7 +95,7 @@ function renderOrder(order) {
 async function retryOrderPayment(button) {
   if (button.disabled) return;
   const orderId = button.dataset.paymentRetry;
-  const account = Api.getUser()?._id;
+  const account = shoppingIdentity();
   if (!account || !/^[a-f0-9]{24}$/i.test(orderId)) return;
   const storageKey = "norda-payment-retry:" + account + ":" + orderId;
   const alert = document.querySelector('[data-retry-alert="' + orderId + '"]');
@@ -111,7 +111,7 @@ async function retryOrderPayment(button) {
   if (alert) alert.textContent = "Checking the previous payment and available stock…";
   try {
     const result = await Api.post("/payments/sslcommerz/" + orderId + "/retry", { retryKey });
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     if (result.alreadyPaid || result.review) {
       sessionStorage.removeItem(storageKey);
       window.location.assign("payment-result.html?orderId=" + encodeURIComponent(orderId));
@@ -122,7 +122,7 @@ async function retryOrderPayment(button) {
     sessionStorage.removeItem(storageKey);
     window.location.assign(url.toString());
   } catch (error) {
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     if (error.status >= 400 && error.status < 500) sessionStorage.removeItem(storageKey);
     if (alert) alert.textContent = error.message + " Your saved order and invoice are kept. Refresh your orders to see the latest status.";
     button.disabled = false;

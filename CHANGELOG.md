@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.13.0 — 2026-10-24
+
+- Add reviewed gateway/COD/exchange/refund settlement CSV reconciliation, exact fees/net amounts, partial remittances, duplicate guards and audited exceptions. Imports never authenticate payment or alter orders.
+- Add different-product/variant price adjustments with preserved coupon allocation, dedicated validated SSLCOMMERZ or actual manual exchange receipts, lower-price refund/credit notes and financial review/refund dispatch guards.
+- Add reverse pickup requests, confirmed courier appointments/history and durable partial item receipts with physical/restock quantity validation, rollback and replay protection.
+- Add full private guest carts and checkout, frozen billing identity, one-use email access recovery, once-only cart merging and atomic order linking to matching verified accounts.
+- Add opt-in priority warehouse allocation and split parcels, exact discount/shipping allocations, source-specific cancellation/expiry/retry/review and all-parcels-delivered COD confirmation. Keep legacy online fulfillment as the default.
+- Add verified-customer base/SKU availability subscriptions with exact fulfillment availability, durable email batches, unsubscribe, backoff and maintenance participation.
+- Add scoped customer/admin screens and regression/HTTP/fault/race/frontend/native tests. Preserve all source files, credentials, dependency selections and catalog/brand assets. See the feature guide for manual provider steps and shared-server upgrade compatibility.
+
 ## 2.12.1 — 2026-10-23
 
 - Make acceptance preflight and mail commands load optional integration settings with the same precedence as application startup. Existing process/base environment values and private files remain intact.

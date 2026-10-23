@@ -9,7 +9,8 @@ const {
   updateOrderStatus,
 } = require("../controllers/orderController");
 const operations = require("../controllers/orderOperationsController");
-const { protect, authorize } = require("../middleware/auth");
+const { authorize } = require("../middleware/auth");
+const { shopper: protect } = require("../services/guestService");
 
 router.post("/", protect, createOrder);
 router.get("/my", protect, getMyOrders);

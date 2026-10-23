@@ -6,11 +6,11 @@
 
 <p align="center">
   A full-stack e-commerce application for Bangladesh.<br />
-  Product discovery, account-based shopping, checkout, invoices and store administration.
+  Product discovery, guest/account shopping, payments, fulfillment and store administration.
 </p>
 
 <p align="center">
-  <strong>Version 2.12.1</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.13.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -26,19 +26,19 @@
 
 ## Overview
 
-Norda brings the customer shopping journey and day-to-day store operations into one application. Visitors explore the catalog; customers manage their own carts, delivery details, orders and invoices; administrators maintain products, inventory and fulfillment.
+Norda brings the customer shopping journey and day-to-day store operations into one application. Visitors explore the catalog; guests and customers manage their own carts, delivery details, orders and invoices; administrators maintain products, inventory and fulfillment.
 
 The application uses a single Express server to serve the HTML/CSS/JavaScript frontend and the `/api` backend. MongoDB stores the commerce data. No frontend build step or separate frontend development server is required.
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.12.1** |
+| Application version | **2.13.0** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Core commerce, team MFA, warehouse/catalog tools, deployment automation and off-host recovery implemented; real account/deployment acceptance remains |
+| Development status | Commerce operations, guest checkout, multi-warehouse allocation, team MFA and release/recovery tooling implemented; target-environment acceptance remains |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
@@ -76,12 +76,14 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - Selected purchased lines/quantities with stable coupon-paisa allocation, owner guards and prevention of overlapping whole-order returns.
 - Configurable return windows snapshot on new orders; approved refund holds release only after physical receipt and per-SKU restock decisions.
 - Owner-protected printable credit notes; confirmed refund success synchronizes the case, original invoice refund summary and credit note without rewriting original totals.
-- Equal-price same-product size/color exchanges reserve replacement stock on approval, release it on withdrawal and track replacement shipment/delivery after receipt.
+- Same-product or cross-product/variant exchanges reserve replacement stock on approval. Higher-price adjustments use separate verified payments/receipts; lower-price adjustments release held refunds after complete receipt. Equal-price exchanges remain available.
+- Reverse pickup requests, confirmed carrier booking/history and partial physical receipts with independently inspected restock quantities; original invoices remain unchanged.
 - Pending/unknown refund results block duplicate payment submission; confirmed failures can retry on the same received case and credit note.
 
 ### Cart, Checkout and Orders
 
-- Persistent account-based cart: add products, update quantities, remove items and clear the cart.
+- Persistent registered or private guest cart: add products/exact variants, update quantities, remove items and clear the cart.
+- Guest COD/configured online checkout, billing identity snapshots, one-use emailed access recovery, safe cart merging and verified-email account linking.
 - Selected product/quantity continuity through sign-in or registration, with a short-lived selection added once after authentication.
 - Server-side price, quantity, stock and archived-product validation.
 - Shipping-address validation, saved address details and configurable delivery charges.
@@ -124,7 +126,7 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - Full-admin staff invitations with expiring one-use links, existing-account ownership checks, new staff acceptance, revoke/resend and access audit.
 - Optional authenticator TOTP MFA with encrypted secrets, hashed one-use recovery codes, bounded sign-in challenges and server-verified device sessions. New invited staff can be required to enroll; existing credentials remain unchanged.
 - Previewed new-product/SKU CSV creation, per-warehouse ledger balances, audited/replayed transfers and count adjustments, archive guards and opt-in low-stock email queues.
-- Online checkout retains its existing stock location. Satellite balances become saleable only after transfer; orders/returns/exchanges retain their established inventory logic.
+- Online checkout keeps its previous stock source by default. Opt-in fulfillment rules make selected warehouses saleable, allocate exact SKU sources and split parcels with customer tracking. Cancellation, expiry, retry/review and COD delivery preserve warehouse/invoice consistency.
 - See [release, recovery, MFA and inventory setup](docs/RELEASE_AUTOMATION.md). Owner host/provider configuration and live acceptance remain necessary before activation.
 
 ### Administration
@@ -155,6 +157,16 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 - Size/color variants have retained unique SKUs, individual prices/photos and independent stock throughout cart, checkout, cancellation, expiry/retry and return restocking.
 - Admin **Store settings** publishes a homepage banner, announcement, support contact, FAQs and delivery/return/privacy/terms text to the storefront and help page.
 - Editable delivery charges apply to new checkouts after coupon savings. Existing orders/invoices retain recorded totals.
+
+### Settlement, Guest Shopping and Fulfillment — 2.13
+
+- Reviewed gateway/COD/exchange/refund statement CSV import, fees/net totals, partial remittances, exception-resolution audit and duplicate protection.
+- Price-difference exchange adjustments and printable receipts, exact SSLCOMMERZ validation or actual manual receipts, lower-price refund/credit notes and dispatch funding guards.
+- Reverse collections with confirmed carrier references and partial item receipts; only physically inspected quantities are restocked.
+- Full guest cart/checkout, recovery through an expiring private email link, one-time cart merge and order linking to the matching verified account.
+- Priority warehouse allocation, per-SKU splitting, parcel history/tracking and all-parcels-delivered COD confirmation. Expired checkout recovery keeps the original source plan.
+- Verified-customer, exact-option back-in-stock subscriptions with durable SMTP/file queues, retry/backoff and unsubscribe.
+- See [workflows, permissions, upgrade and provider boundaries](docs/COMMERCE_EXPANSION.md). Statement import and reverse booking confirmation are reviewed operations; this release does not automatically transfer money or submit reverse carrier bookings.
 
 ## Technology Stack
 
@@ -242,7 +254,12 @@ Open **[http://localhost:5000](http://localhost:5000)**. Express serves the webs
 | Storefront | `/index.html` | Public |
 | Product catalog | `/products.html` | Public |
 | Customer dashboard | `/dashboard.html` | Signed-in customer |
-| Cart and checkout | `/cart.html`, `/checkout.html` | Signed-in customer |
+| Cart and checkout | `/cart.html`, `/checkout.html` | Private guest or signed-in customer |
+| Guest order access | `/guest-orders.html` | Private browser session / one-use email recovery |
+| Customer availability alerts | `/stock-alerts.html` | Registered account; verified email to subscribe |
+| Exchange payment and return pickup | `/exchange-payment.html?id=…`, `/return-pickups.html?orderId=…` | Purchasing account/guest |
+| Settlement / exchange adjustments | `/admin/settlements.html`, `/admin/exchange-payments.html` | Payment staff/admin |
+| Warehouse fulfillment / return collections | `/admin/fulfillment.html`, `/admin/return-pickups.html` | Scoped inventory/order staff/admin |
 | Orders and invoices | `/orders.html`, `/invoice.html?orderId=…` | Owner; administrators may access permitted records |
 | Wishlist and offers | `/wishlist.html`, `/coupons.html` | Wishlist requires sign-in; offers are public |
 | Help and policies | `/help.html` | Public |
@@ -259,7 +276,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.12.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.13.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -269,7 +286,7 @@ npm run verify
 npm run dev
 ```
 
-For shared Atlas/two-PC use, upgrade all active app servers before MFA enrollment and share the same new MFA key securely. Keep the backup key separately.
+For shared Atlas/two-PC use, upgrade **all active app servers** before using these new guest, warehouse and exchange workflows. Older releases do not understand their records and are not a safe automatic rollback target after activation. Keep the same existing MFA/backup keys. See [upgrade compatibility](docs/COMMERCE_EXPANSION.md#upgrade-an-existing-store).
 
 New integrations are optional. Keep your existing `.env`; if required, copy `server/.env.integrations.example` to a private `.env.integrations` and configure only the provider/backup/alert settings you want to activate. Existing environment values have priority. See [production tools](docs/PRODUCTION_TOOLS.md) before enabling automatic booking, cloud deletion or backups.
 
@@ -452,16 +469,16 @@ npm run verify
 
 Coverage includes business rules, injected write failures, HTTP authentication/catalog/cart/order journeys, payment-state protection, uploads, frontend VM rendering and static asset/reference checks.
 
-Recorded release evidence, as of **23 October 2026**:
+Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.12.1 | **273 files passed** |
-| Default suite, v2.12.1 | **454 passed, 0 failed, 13 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.12.1 | **198 passed**, compensation path |
-| Native single-member replica set, v2.12.1 | **198 passed**, transaction path |
+| JavaScript syntax, v2.13.0 | **307 files passed** |
+| Default suite, v2.13.0 | **500 passed, 0 failed, 14 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.13.0 | **234 passed**, compensation path |
+| Native single-member replica set, v2.13.0 | **234 passed**, transaction path |
 | Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
-| Frontend | VM behavior, safe rendering, state guards and all 48 pages/local resources checked |
+| Frontend | VM behavior, safe rendering, state guards and all 56 pages/local resources checked |
 | Browser/mobile/keyboard/print | Static/VM checks passed; the available browser could not access the isolated local server, so visible acceptance remains pending |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
@@ -511,7 +528,11 @@ These items are planned work, separate from the implemented features above. Deve
 - [x] Advanced day/month sales reports with product/SKU rankings, coupons and confirmed refund/net revenue analysis.
 - [x] Customer/staff management, audited scoped permissions and device session controls.
 - [x] Return/refund email preferences and verified delivery/bounce/complaint history.
-- [x] Selected-item returns/equal-price exchanges, configurable windows and credit notes.
+- [x] Selected-item returns, configurable windows, equal/different-price product exchanges and credit notes.
+- [x] Settlement/cash reconciliation, fees and audited statement exceptions.
+- [x] Reverse pickup confirmation and partial item receipt/restocking.
+- [x] Private guest carts/checkout, email access recovery and verified account linking.
+- [x] Opt-in warehouse routing/split parcels, stock recovery and exact-option availability mail.
 
 - [x] eCourier booking, package charges, labels, authenticated tracking polling and exception review.
 - [x] Product SEO metadata, canonical URLs, sitemap and structured data.
@@ -526,21 +547,22 @@ These items are planned work, separate from the implemented features above. Deve
 
 ### Next Product and Operations Work
 
-- [ ] Bank settlement/cash-flow reconciliation and external accounting integration.
-- [ ] Price-difference exchanges, partial-parcel receipt and external accounting credit-note integration.
+- [ ] Provider-specific automated statement adapters beyond reviewed settlement reconciliation and external accounting integration.
+- [ ] External credit-note/accounting adapters and optional discretionary refund policies.
 - [ ] Optional SMS, provider-specific delivery adapters and complaint-remediation tooling.
 - [ ] Optional passkeys, device trust and further team permission policies.
-- [ ] Optional full guest cart/checkout, comparison and recently viewed products.
+- [ ] Guest-retention tooling, optional comparison and recently viewed products.
 - [ ] Actual host/domain/provider acceptance, operator recovery promotion and ongoing operational response.
-- [ ] Additional carriers, reverse pickup and broader carrier address/collection contracts.
+- [ ] Additional carriers, automatic reverse-booking/per-parcel APIs and broader address/collection contracts.
 - [ ] Ongoing dependency auditing, capacity/load acceptance and future compatible rollback drills.
 
-Manual carrier tracking remains supported; the optional eCourier adapter books and polls authenticated carrier events. Automatic booking and cloud/backup/alert services require the owner's configuration. Whole-order returns and selected-item returns are supported, with equal-price size/color exchanges and separate credit notes. Variant products require an exact option for cart actions. See [the new feature guide](docs/COMMERCE_TOOLS.md) for coupon usage rules, CSV recovery and settings behavior.
+Manual carrier tracking remains supported; the optional eCourier adapter books and polls authenticated carrier events. Automatic booking and cloud/backup/alert services require the owner's configuration. Whole-order returns and selected-item returns are supported, with equal/different-price product/option exchanges, partial item receipts and separate adjustments/credit notes. Variant products require an exact option for cart actions. See [commerce operations](docs/COMMERCE_EXPANSION.md) for the new workflows and [commerce tools](docs/COMMERCE_TOOLS.md) for coupons, wishlist, stock CSV and settings.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
+| [Commerce operations](docs/COMMERCE_EXPANSION.md) | Settlement, priced exchanges, pickups/partial receipts, guest checkout, warehouse parcels and availability alerts |
 | [Release automation and team inventory](docs/RELEASE_AUTOMATION.md) | Deployment, independent monitoring, private off-host recovery, invitations/MFA and advanced inventory |
 | [Production tools](docs/PRODUCTION_TOOLS.md) | Courier API, SEO, cloud media, encrypted backup/restore, monitoring and optional setup |
 | [Management, devices and item returns](docs/MANAGEMENT_RETURNS.md) | Usage, policies, webhook contract and v2.10 API additions |

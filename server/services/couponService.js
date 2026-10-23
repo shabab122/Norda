@@ -44,7 +44,14 @@ const quoteCoupon = async (code, subtotal, userId, session = null) => {
   if (!code) return { coupon: null, discountAmount: 0 };
   const coupon = await querySession(Coupon.findOne({ code }), session);
   const discountAmount = discountFor(coupon, subtotal);
-  if (coupon.perUserLimit && await querySession(Redemption.countDocuments({ coupon: coupon._id, user: userId }), session) >= coupon.perUserLimit) throw httpError(409, "You have reached this coupon's per-account limit");
+  if (coupon.perUserLimit) {
+    const User = require("../models/User"), owner = await querySession(User.findById(userId), session);
+    if (owner?.isGuest && !owner.guestEmail) throw httpError(409, "Enter your guest order name and email before applying this coupon");
+    const email = owner?.isGuest ? owner.guestEmail : owner?.email;
+    const related = email ? await querySession(User.find({ $or: [{ email }, { isGuest: true, guestEmail: email }] }).select("_id"), session) : [];
+    const identities = [...new Set([String(userId), ...related.map(u => String(u._id))])];
+    if (await querySession(Redemption.countDocuments({ coupon: coupon._id, user: { $in: identities } }), session) >= coupon.perUserLimit) throw httpError(409, "You have reached this coupon's per-account or order-email limit");
+  }
   return { coupon: { _id: coupon._id, code: coupon.code, title: coupon.title, type: coupon.type, value: coupon.value, minSubtotal: coupon.minSubtotal, maxDiscount: coupon.maxDiscount }, discountAmount };
 };
 // Each successfully created order consumes one use. Cancellation, expiry,

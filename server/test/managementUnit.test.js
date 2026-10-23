@@ -25,7 +25,9 @@ test("Report dates reject impossible calendar days and CSV preserves useful head
 test("Item requests reject fractional quantities, duplicate lines and unsafe replacement identifiers", () => {
   const base = { requestKey: crypto.randomUUID(), reason: "A careful return request", type: "return", items: [{ lineIndex: 0, quantity: 1 }] };
   for (const items of [[{ lineIndex: 0, quantity: -1 }], [{ lineIndex: 0, quantity: 1.1 }], [{ lineIndex: -1, quantity: 1 }], [{ lineIndex: 0, quantity: 1 }, { lineIndex: 0, quantity: 1 }]]) assert.throws(() => normalizeRequest({ ...base, items }), /quantity|line/);
-  assert.throws(() => normalizeRequest({ ...base, type: "exchange" }), /identifier/);
+  assert.throws(() => normalizeRequest({ ...base, type: "exchange" }), /replacement/);
+  assert.throws(() => normalizeRequest({ ...base, type: "exchange", items: [{ lineIndex: 0, quantity: 1, replacementProductId: "unsafe" }] }), /identifier/);
+  assert.throws(() => normalizeRequest({ ...base, items: [{ lineIndex: 0, quantity: 1, replacementProductId: "000000000000000000000001" }] }), /exchanges/);
   assert.equal(normalizeRequest(base).hash, normalizeRequest({ ...base, reason: "  " + base.reason + "  " }).hash);
 });
 test("Return settings accept disabled windows but reject fractions, out-of-range days and string booleans", () => {

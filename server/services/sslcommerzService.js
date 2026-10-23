@@ -60,25 +60,26 @@ const ensureGatewayUrl = (value) => {
   return url.toString();
 };
 
-const createPaymentSession = async ({ order, invoice, user, transactionId }) => {
+const createPaymentSession = async ({ order, invoice, user, transactionId, callbackKind = "order" }) => {
   if (!isConfigured()) {
     throw httpError(503, "SSLCOMMERZ is not configured on this server");
   }
 
   const serverUrl = trimTrailingSlash(process.env.SERVER_URL);
   const address = order.shippingAddress;
+  const callbackPath = callbackKind === "exchange" ? "/api/exchange-payments/sslcommerz/" : "/api/payments/sslcommerz/";
   const payload = new URLSearchParams({
     store_id: process.env.SSLCOMMERZ_STORE_ID,
     store_passwd: process.env.SSLCOMMERZ_STORE_PASSWORD,
     total_amount: order.totalAmount.toFixed(2),
     currency: order.currency,
     tran_id: transactionId,
-    success_url: serverUrl + "/api/payments/sslcommerz/success",
-    fail_url: serverUrl + "/api/payments/sslcommerz/fail",
-    cancel_url: serverUrl + "/api/payments/sslcommerz/cancel",
-    ipn_url: serverUrl + "/api/payments/sslcommerz/ipn",
-    cus_name: truncate(user.name, 50),
-    cus_email: truncate(user.email, 50),
+    success_url: serverUrl + callbackPath + "success",
+    fail_url: serverUrl + callbackPath + "fail",
+    cancel_url: serverUrl + callbackPath + "cancel",
+    ipn_url: serverUrl + callbackPath + "ipn",
+    cus_name: truncate(order.customerSnapshot?.name || user.name, 50),
+    cus_email: truncate(order.customerSnapshot?.email || user.guestEmail || user.email, 50),
     cus_add1: truncate(address.line1, 50),
     cus_add2: truncate(address.line2, 50),
     cus_city: truncate(address.city, 50),

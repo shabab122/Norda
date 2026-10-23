@@ -17,7 +17,7 @@ const { refundSource } = require("./verifiedPayments");
 const refunds = require("./refundService");
 const notify = (order, item, unit) => require("./notificationService").queueOperationMessage(order, item, "item", unit);
 const fingerprint = (v) => crypto.createHash("sha256").update(JSON.stringify(v)).digest("hex");
-const safeCase = (c) => ({ _id: c._id, order: c.order, type: c.type, status: c.status, reason: c.reason, items: c.items, creditAmount: c.creditAmount, decisionMessage: c.decisionMessage || "", deadline: c.deadline, refund: c.refund, creditNote: c.creditNote, shipment: c.shipment, createdAt: c.createdAt, decidedAt: c.decidedAt, receivedAt: c.receivedAt });
+const safeCase = (c) => ({ _id: c._id, order: c.order, type: c.type, status: c.status, reason: c.reason, items: c.items, creditAmount: c.creditAmount, decisionMessage: c.decisionMessage || "", deadline: c.deadline, refund: c.refund, creditNote: c.creditNote, shipment: c.shipment, exchangeBalance: c.exchangeBalance || 0, exchangePaymentStatus: c.exchangePaymentStatus || "not_required", exchangeInvoiceNumber: c.exchangeInvoiceNumber, createdAt: c.createdAt, decidedAt: c.decidedAt, receivedAt: c.receivedAt });
 const usedQuantities = (history) => { const map = new Map(); for (const c of history) if (c.status !== "rejected") for (const i of c.items) map.set(i.lineIndex, (map.get(i.lineIndex) || 0) + i.quantity); return map; };
 async function assertNoWholeReturn(order, session) {
   if (order.returnStockRestored || order.stockRestored || await querySession(OrderRequest.findOne({ order: order._id, type: "return", status: { $ne: "rejected" } }), session)) throw httpError(409, "This order already has a whole-order return or restored inventory");
@@ -29,9 +29,9 @@ function normalizeRequest(body) {
   const items = body.items.map((v) => {
     if (!v || !Number.isSafeInteger(v.lineIndex) || v.lineIndex < 0 || !Number.isSafeInteger(v.quantity) || v.quantity < 1 || v.quantity > 999 || seen.has(v.lineIndex)) throw httpError(400, "Use each order line once and a valid whole quantity");
     seen.add(v.lineIndex);
-    if (body.type === "exchange") objectId(v.replacementVariantId);
-    else if (v.replacementVariantId) throw httpError(400, "Replacement options belong to exchanges");
-    return { lineIndex: v.lineIndex, quantity: v.quantity, ...(body.type === "exchange" ? { replacementVariantId: String(v.replacementVariantId) } : {}) };
+    if (body.type === "exchange") { if (v.replacementVariantId) objectId(v.replacementVariantId); if (v.replacementProductId) objectId(v.replacementProductId); if (!v.replacementVariantId && !v.replacementProductId) throw httpError(400, "Choose a replacement product or option"); }
+    else if (v.replacementVariantId || v.replacementProductId) throw httpError(400, "Replacement options belong to exchanges");
+    return { lineIndex: v.lineIndex, quantity: v.quantity, ...(body.type === "exchange" ? { ...(v.replacementVariantId ? { replacementVariantId: String(v.replacementVariantId) } : {}), ...(v.replacementProductId ? { replacementProductId: String(v.replacementProductId) } : {}) } : {}) };
   }).sort((a, b) => a.lineIndex - b.lineIndex);
   return { key, reason, items, hash: fingerprint({ type: body.type, reason, items }) };
 }
@@ -61,22 +61,24 @@ async function createCase({ orderId, user, body }) {
       const credit = unitOrdinals.reduce((s, n) => s + floor + (n < extra ? 1 : 0), 0);
       const item = { lineIndex: v.lineIndex, unitOrdinals, product: line.product, variantId: line.variantId, name: line.name, sku: line.sku || "", size: line.size || "", color: line.color || "", unitPrice: line.price, quantity: v.quantity, discountAmount: (moneyCents(line.price) * v.quantity - credit) / 100, creditAmount: credit / 100 };
       if (body.type === "exchange") {
-        if (!line.variantId || String(line.variantId) === v.replacementVariantId) throw httpError(409, "Choose a different size/color of this product");
-        const product = await querySession(Product.findById(line.product), unit.session), replacement = selection(product, v.replacementVariantId);
-        if (moneyCents(replacement.price) !== moneyCents(line.price)) throw httpError(409, "Exchanges require the original unit price. Use a return and a new purchase for a price difference.");
+        if (String(v.replacementProductId || line.product) === String(line.product) && String(line.variantId || "") === String(v.replacementVariantId || "")) throw httpError(409, "Choose a different product, size or color");
+        const product = await querySession(Product.findById(v.replacementProductId || line.product), unit.session), replacement = selection(product, v.replacementVariantId);
+        // Preserve this line's original coupon allocation; only the net price difference is payable/refundable.
         if (replacement.stock < v.quantity) throw httpError(409, "The replacement option has insufficient stock");
-        item.replacement = { variantId: replacement.variantId, sku: replacement.sku, size: replacement.size, color: replacement.color, price: replacement.price, image: replacement.image };
+        item.replacement = { product: product._id, name: product.name, variantId: replacement.variantId, sku: replacement.sku, size: replacement.size, color: replacement.color, price: replacement.price, image: replacement.image };
       }
       items.push(item);
     }
-    const item = await insertDocument(Case, { order: order._id, user: order.user, type: body.type, requestKey: clean.key, requestFingerprint: clean.hash, reason: clean.reason, items, creditAmount: body.type === "return" ? items.reduce((s, i) => s + moneyCents(i.creditAmount), 0) / 100 : 0, status: "requested", replacementReserved: false, deadline: policy.deadline }, unit.session);
+    const exchangeBalance = body.type === "exchange" ? items.reduce((n, i) => n + Math.max(0, moneyCents(i.replacement.price) * i.quantity - moneyCents(i.discountAmount)) - moneyCents(i.creditAmount), 0) / 100 : 0;
+    if (!Number.isSafeInteger(Math.round(exchangeBalance * 100)) || Math.abs(exchangeBalance * 100) > 1e12) throw httpError(400, "The exchange adjustment exceeds the supported accounting range");
+    const item = await insertDocument(Case, { ...(body.type === "exchange" ? { exchangeBalance, exchangePaymentStatus: exchangeBalance > 0 ? "awaiting_payment" : exchangeBalance < 0 ? "refund_due" : "not_required", exchangeInvoiceNumber: "NEX-" + crypto.randomBytes(12).toString("hex").toUpperCase() } : {}), order: order._id, user: order.user, type: body.type, requestKey: clean.key, requestFingerprint: clean.hash, reason: clean.reason, items, creditAmount: body.type === "return" ? items.reduce((s, i) => s + moneyCents(i.creditAmount), 0) / 100 : Math.max(0, -exchangeBalance), status: "requested", replacementReserved: false, deadline: policy.deadline }, unit.session);
     unit.compensate(() => Case.deleteOne({ _id: item._id }));
     await audit(orderId, user, "item_" + body.type + "_requested", clean.reason, unit);
     await notify(order, item, unit);
     return safeCase(item);
   }));
 }
-const replacementItem = (line) => ({ product: line.product, variantId: line.replacement.variantId, quantity: line.quantity, name: line.name, sku: line.replacement.sku });
+const replacementItem = (line) => ({ product: line.replacement.product || line.product, variantId: line.replacement.variantId, quantity: line.quantity, name: line.replacement.name || line.name, sku: line.replacement.sku });
 async function decideCase({ id, user, body }) {
   objectId(id); const note = noteText(body.note);
   if (!["approve", "reject"].includes(body.decision)) throw httpError(400, "Choose approve or reject");
@@ -88,13 +90,14 @@ async function decideCase({ id, user, body }) {
     if (!(["requested", "approved"].includes(item.status)) || (body.decision === "approve" && item.status !== "requested")) throw httpError(409, "This request cannot receive that decision");
     await assertNoWholeReturn(order);
     if (body.decision === "approve" && (order.status !== "delivered" || !order.isPaid || order.paymentStatus !== "paid")) throw httpError(409, "Resolve the order payment review before approving this item request");
-    const source = body.decision === "approve" && item.type === "return" && item.creditAmount > 0 ? await refundSource(order) : null;
+    if (body.decision === "reject" && item.exchangeBalance > 0 && ["paid", "review", "refund_pending"].includes(item.exchangePaymentStatus)) throw httpError(409, "Resolve/refund the captured exchange adjustment before rejecting its reserved replacement");
+    const source = body.decision === "approve" && (item.type === "return" || item.exchangeBalance < 0) && item.creditAmount > 0 ? await refundSource(order) : null;
     if (source && source.scope !== "order") throw httpError(409, "The original order payment needs review");
     return withDatabaseUnit(async (unit) => {
       if (body.decision === "approve" && item.type === "exchange") {
         for (const line of item.items) {
-          const product = await querySession(Product.findById(line.product), unit.session), option = selection(product, line.replacement.variantId);
-          if (moneyCents(option.price) !== moneyCents(line.unitPrice)) throw httpError(409, "Replacement price changed. Reject this request and ask for a new selection.");
+          const product = await querySession(Product.findById(line.replacement.product || line.product), unit.session), option = selection(product, line.replacement.variantId);
+          if (moneyCents(option.price) !== moneyCents(line.replacement.price)) throw httpError(409, "Replacement price changed. Reject this request and ask for a new selection.");
           await reserveItem(replacementItem(line), unit);
         }
       }
@@ -116,6 +119,11 @@ async function decideCase({ id, user, body }) {
   });
 }
 async function receiveCase({ id, user, body }) {
+  const referenceForReceipt = await Case.findById(objectId(id));
+  if (body.items?.some(i => i.quantity !== undefined) || referenceForReceipt?.exchangeBalance) {
+    const normalized = body.items?.some(i => i.quantity !== undefined) ? body : { ...body, requestKey: "legacy-receipt-" + id, items: (body.items || []).map(i => { const line = referenceForReceipt.items.find(v => v.lineIndex === i.lineIndex); return { lineIndex: i.lineIndex, quantity: line?.quantity || 0, restockQuantity: i.restock ? line?.quantity || 0 : 0 }; }) };
+    return require("./returnLogisticsService").receivePartial({ id, user, body: normalized });
+  }
   objectId(id); const note = noteText(body.note);
   if (body.received !== true || !Array.isArray(body.items) || body.items.some((i) => !Number.isSafeInteger(i.lineIndex) || typeof i.restock !== "boolean") || new Set(body.items.map((i) => i.lineIndex)).size !== body.items.length) throw httpError(400, "Confirm receipt and choose a restock decision for each selected line");
   const decisions = [...body.items].map((i) => ({ lineIndex: i.lineIndex, restock: i.restock })).sort((a, b) => a.lineIndex - b.lineIndex), receiptFingerprint = fingerprint(decisions);
@@ -154,7 +162,7 @@ async function retryCaseRefund({ id, user, body }) {
     const item = await Case.findById(id), order = await ownedOrder(item.order, user, null, "payments");
     const replay = await Refund.findOne({ order: order._id, requestKey: key });
     if (replay) { if (String(replay.itemCase) !== String(item._id) || replay.reason !== note || moneyCents(replay.amount) !== moneyCents(item.creditAmount)) throw httpError(409, "This refund key belongs to different request details"); return replay; }
-    if (item.type !== "return" || item.status !== "received" || !item.creditNote || !item.refund) throw httpError(409, "Only a received return with a failed refund can be retried");
+    if ((item.type !== "return" && !(item.type === "exchange" && item.exchangeBalance < 0)) || item.status !== "received" || !item.creditNote || !item.refund) throw httpError(409, "Only a received return with a failed refund can be retried");
     const previous = await Refund.findById(item.refund);
     if (!previous || previous.status !== "failed") throw httpError(409, "Resolve the current refund before retrying; pending or unknown refunds must never be submitted twice");
     const source = await refundSource(order);
@@ -176,6 +184,8 @@ async function shipExchange({ id, user, body }) {
   const reference = await Case.findById(id); if (!reference) throw httpError(404, "Exchange not found");
   return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async (unit) => {
     const item = await querySession(Case.findById(id), unit.session), order = await ownedOrder(item.order, user, unit.session, "payments");
+    if (item.exchangeBalance > 0 && item.exchangePaymentStatus !== "paid") throw httpError(409, "Settle the exchange balance before replacement fulfillment");
+    if (item.exchangeBalance < 0 && item.exchangePaymentStatus !== "refunded") throw httpError(409, "Confirm the exchange difference refund before replacement fulfillment");
     if (item.type !== "exchange") throw httpError(409, "This request is not an exchange");
     if (!order.isPaid || order.paymentStatus !== "paid") throw httpError(409, "Resolve the order payment review before shipping a replacement");
     const shipment = { ...(item.shipment?.toObject?.() || item.shipment || {}) };
@@ -205,8 +215,8 @@ async function customerCases(orderId, user) {
   const items = [];
   for (let index = 0; index < order.items.length; index++) {
     const line = order.items[index], product = line.variantId ? await Product.findById(line.product) : null;
-    items.push({ ...(line.toObject?.() || line), lineIndex: index, remainingQuantity: whole ? 0 : Math.max(0, line.quantity - (used.get(index) || 0)), replacements: !product || product.isArchived || !policy.exchangeEnabled ? [] : (product.variants || []).filter((v) => v.isActive !== false && String(v._id) !== String(line.variantId) && v.stock > 0 && moneyCents(require("../utils/validation").effectivePrice(v)) === moneyCents(line.price)).map((v) => ({ _id: v._id, sku: v.sku, size: v.size, color: v.color, stock: v.stock })) });
+    items.push({ ...(line.toObject?.() || line), lineIndex: index, remainingQuantity: whole ? 0 : Math.max(0, line.quantity - (used.get(index) || 0)), replacements: !product || product.isArchived || !policy.exchangeEnabled ? [] : (product.variants || []).filter((v) => v.isActive !== false && String(v._id) !== String(line.variantId) && v.stock > 0).map((v) => ({ _id: v._id, sku: v.sku, size: v.size, color: v.color, stock: v.stock, price: require("../utils/validation").effectivePrice(v) })) });
   }
-  return { orderId: order._id, policy: { ...policy, allowed: policy.allowed && !whole }, items, cases: history.map(safeCase), shippingCredit: 0, exchangePolicy: "Equal-price size/color exchanges of the same product. Return shipping is handled by customer care; original delivery fees are not credited." };
+  return { orderId: order._id, policy: { ...policy, allowed: policy.allowed && !whole }, items, cases: history.map(safeCase), shippingCredit: 0, exchangePolicy: "Product/size/color exchanges keep the original coupon allocation. A higher net replacement price needs an additional payment; a lower price is refunded after complete receipt. Original delivery fees are not credited." };
 }
 module.exports = { createCase, decideCase, receiveCase, shipExchange, retryCaseRefund, customerCases, safeCase, usedQuantities, normalizeRequest };

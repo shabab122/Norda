@@ -19,6 +19,7 @@ const invoiceSchema = new mongoose.Schema(
     invoiceNumber: { type: String, required: true, unique: true, index: true },
     order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true, unique: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
+    customerSnapshot: { name: String, email: String, isGuest: Boolean },
     items: { type: [invoiceItemSchema], required: true },
     shippingAddress: {
       thana: String, area: String,

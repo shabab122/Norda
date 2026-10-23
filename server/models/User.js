@@ -41,6 +41,8 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
     permissions: { type: [String], enum: require("../utils/permissions").SCOPES, default: [] },
+    isGuest: { type: Boolean, default: false },
+    guestEmail: { type: String, default: "" },
     notificationPreferences: { orderUpdates: { type: Boolean, default: true }, returnUpdates: { type: Boolean, default: true }, refundUpdates: { type: Boolean, default: true } },
     address: addressSchema,
     // The original address remains available to older clients. Address-book

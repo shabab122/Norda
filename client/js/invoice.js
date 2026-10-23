@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader("orders");
   renderFooter();
-  if (!requireLogin()) return;
+  if (!requireShopper()) return;
   const orderId = new URLSearchParams(window.location.search).get("orderId");
   const root = document.getElementById("invoice-root");
   if (!orderId) {
@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
   try {
-    const invoice = await Api.get("/invoices/order/" + encodeURIComponent(orderId));
+    const invoice = await Api.get((new URLSearchParams(window.location.search).get("guest") === "1" ? "/guest/invoices/order/" : "/invoices/order/") + encodeURIComponent(orderId));
     renderInvoice(invoice);
   } catch (error) {
     root.innerHTML = `<div class="empty-state"><h1>Invoice unavailable</h1><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="orders.html">View orders</a></div>`;
@@ -38,8 +38,8 @@ function renderInvoice(invoice) {
       <div class="invoice-addresses">
         <div>
           <span>Billed to</span>
-          <strong>${escapeHtml(invoice.user?.name || "Customer")}</strong>
-          <p>${escapeHtml(invoice.user?.email || "")}</p>
+          <strong>${escapeHtml(invoice.customerSnapshot?.name || invoice.order?.customerSnapshot?.name || invoice.user?.name || "Customer")}</strong>
+          <p>${escapeHtml(invoice.customerSnapshot?.email || invoice.order?.customerSnapshot?.email || invoice.user?.email || "")}</p>
         </div>
         <div>
           <span>Deliver to</span>

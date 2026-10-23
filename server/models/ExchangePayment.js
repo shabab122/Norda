@@ -1,0 +1,5 @@
+const mongoose = require("mongoose");
+const schema = new mongoose.Schema({itemCase:{type:mongoose.Schema.Types.ObjectId,ref:"ItemReturnCase",required:true,index:true},order:{type:mongoose.Schema.Types.ObjectId,ref:"Order",required:true,index:true},user:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true},requestKey:{type:String,required:true},transactionId:{type:String,required:true,unique:true},amount:{type:Number,required:true,min:0},currency:{type:String,default:"BDT"},gateway:{type:String,enum:["sslcommerz","manual","demo"],required:true},status:{type:String,enum:["initiated","failed","cancelled","paid","review","refunded"],default:"initiated"},checkoutUrl:String,sessionKey:String,validationId:String,bankTransactionId:String,manualReference:String,intentHash:String,paidAt:Date,refund:mongoose.Schema.Types.ObjectId,failureReason:String},{timestamps:true});
+schema.index({itemCase:1,requestKey:1},{unique:true});
+schema.index({gateway:1,manualReference:1},{unique:true,partialFilterExpression:{gateway:"manual",manualReference:{$type:"string"}}});
+module.exports = mongoose.model("ExchangePayment",schema);

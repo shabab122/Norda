@@ -57,7 +57,23 @@ async function salesReport(query) {
   for (const row of sku.values()) { const p = products.get(row.product) || { product: row.product, name: row.name, units: 0, grossItems: 0, couponSavings: 0, merchandiseRevenue: 0 }; for (const key of ["units", "grossItems", "couponSavings", "merchandiseRevenue"]) p[key] += row[key]; products.set(row.product, p); }
   const moneyKeys = ["grossItems", "couponSavings", "shipping", "charged", "confirmedRefunds", "pendingRefunds", "netRevenue", "merchandiseRevenue", "savings"];
   const convert = (v) => Object.fromEntries(Object.entries(v).map(([k, n]) => { if (typeof n === "number" && !Number.isSafeInteger(n)) throw httpError(409, "Report totals exceed the safe accounting range. Choose a shorter range."); return [k, moneyKeys.includes(k) ? n / 100 : n]; }));
-  return { from, to, group, timezone: "Asia/Dhaka", currency: "BDT", basis: "Paid-order cohort; confirmed order refunds through the end date. Pending refunds are current reservations. Excludes simulations, unverified payments and extra-payment refunds. SKU revenue is after coupons, before shipping and unallocated refunds.", summary: convert(summary), topProducts: [...products.values()].sort((a, b) => b.units - a.units || b.merchandiseRevenue - a.merchandiseRevenue).slice(0, 100).map(convert), timeline: [...buckets.values()].sort((a, b) => a.period.localeCompare(b.period)).map(convert), topSkus: [...sku.values()].sort((a, b) => b.units - a.units || b.merchandiseRevenue - a.merchandiseRevenue).slice(0, 100).map(convert), coupons: [...coupons.values()].sort((a, b) => b.savings - a.savings).map(convert) };
+  // Additional exchange charges have their own receipts; never rewrite the
+  // original invoice or count them as a second order in the existing cohort.
+  const adjustments = { receipts: 0, charged: 0, confirmedRefunds: 0, pendingRefunds: 0, netRevenue: 0 };
+  const exchangePayments = orders.length ? await require("../models/ExchangePayment").find({ order: { $in: orders.map(o => o._id) }, gateway: { $ne: "demo" }, status: { $in: ["paid", "refunded"] }, paidAt: { $lt: end } }).limit(10001).lean() : [];
+  if (exchangePayments.length > 10000) throw httpError(413, "Too many exchange adjustments. Choose a shorter range.");
+  const exchangeRefunds = exchangePayments.length ? await Refund.find({ exchangePayment: { $in: exchangePayments.map(p => p._id) }, status: { $in: ["succeeded", "queued", "submitting", "pending", "unknown"] } }).limit(50001).lean() : [];
+  if (exchangeRefunds.length > 50000) throw httpError(413, "Too many exchange refunds. Choose a shorter range.");
+  adjustments.receipts = exchangePayments.length;
+  for (const payment of exchangePayments) adjustments.charged += moneyCents(payment.amount);
+  for (const refund of exchangeRefunds) {
+    if (refund.status === "succeeded" && new Date(refund.completedAt || refund.updatedAt || refund.createdAt) < end) adjustments.confirmedRefunds += moneyCents(refund.amount);
+    else if (refund.status !== "succeeded") adjustments.pendingRefunds += moneyCents(refund.amount);
+  }
+  adjustments.netRevenue = adjustments.charged - adjustments.confirmedRefunds;
+  const combined = summary.netRevenue + adjustments.netRevenue;
+  if (!Number.isSafeInteger(combined)) throw httpError(409, "Report totals exceed the safe accounting range");
+  return { from, to, group, timezone: "Asia/Dhaka", currency: "BDT", basis: "Paid-order cohort; confirmed order refunds through the end date. Pending refunds are current reservations. Original-order totals/timeline exclude simulations, unverified payments and extra-payment refunds. Separate exchange adjustments show confirmed additional receipts and their refunds for the same order cohort through the end date. SKU revenue is after coupons, before shipping and unallocated refunds.", summary: convert(summary), exchangeAdjustments: convert(adjustments), netRevenueIncludingExchanges: combined / 100, topProducts: [...products.values()].sort((a, b) => b.units - a.units || b.merchandiseRevenue - a.merchandiseRevenue).slice(0, 100).map(convert), timeline: [...buckets.values()].sort((a, b) => a.period.localeCompare(b.period)).map(convert), topSkus: [...sku.values()].sort((a, b) => b.units - a.units || b.merchandiseRevenue - a.merchandiseRevenue).slice(0, 100).map(convert), coupons: [...coupons.values()].sort((a, b) => b.savings - a.savings).map(convert) };
 }
 function reportCsv(report) {
   const headers = ["Period", "Orders", "Units", "Gross items", "Coupon savings", "Shipping", "Charged", "Confirmed refunds", "Pending refunds (current)", "Net revenue"];

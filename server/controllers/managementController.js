@@ -8,10 +8,11 @@ const { withOperationLock } = require("../services/operationLock");
 const { withDatabaseUnit, insertDocument } = require("../services/databaseUnit");
 const httpError = require("../utils/httpError");
 const handle = (fn) => async (req, res, next) => { try { res.json(await fn(req)); } catch (e) { next(e); } };
-const safeUser = (u) => ({ _id: u._id, name: u.name, email: u.email, role: u.role, permissions: u.role === "staff" ? [...(u.permissions || [])] : [], emailVerified: Boolean(u.emailVerifiedAt), createdAt: u.createdAt });
+const safeUser = (u) => ({ _id: u._id, name: u.name, email: u.isGuest ? u.guestEmail || "" : u.email, isGuest: Boolean(u.isGuest), role: u.role, permissions: u.role === "staff" ? [...(u.permissions || [])] : [], emailVerified: Boolean(u.emailVerifiedAt), createdAt: u.createdAt });
 exports.listCustomers = handle(async (req) => {
   const { page, limit } = pagination(req.query); const filter = { role: "user" };
-  if (req.query.q) { if (typeof req.query.q !== "string" || req.query.q.length > 100) throw httpError(400, "Search must be at most 100 characters"); const re = { $regex: escapeRegExp(req.query.q.trim()), $options: "i" }; filter.$or = [{ name: re }, { email: re }]; }
+  if (req.query.q) { if (typeof req.query.q !== "string" || req.query.q.length > 100) throw httpError(400, "Search must be at most 100 characters"); const re = { $regex: escapeRegExp(req.query.q.trim()), $options: "i" }; filter.$or = [{ name: re }, { email: re }, { guestEmail: re }]; }
+  filter.$and = [{ $or: [{ isGuest: { $ne: true } }, { guestEmail: { $exists: true, $ne: "" } }] }];
   const [rows, total] = await Promise.all([User.find(filter).sort({ createdAt: -1, _id: 1 }).skip((page - 1) * limit).limit(limit), User.countDocuments(filter)]);
   return { items: rows.map(safeUser), total, page, pages: Math.ceil(total / limit) || 1 };
 });
@@ -29,7 +30,7 @@ exports.saveStaff = handle(async (req) => {
   const note = noteText(req.body.note);
   return withOperationLock("staff-management", () => withDatabaseUnit(async (unit) => {
     const user = await require("../services/databaseUnit").querySession(User.findOne({ email }), unit.session);
-    if (!user) throw httpError(404, "This person must register a normal account before you grant staff access");
+    if (!user || user.isGuest) throw httpError(404, "This person must register a normal account before you grant staff access");
     if (user.role === "admin" || String(user._id) === String(req.user._id)) throw httpError(403, "Administrator access cannot be edited here");
     const permissions = req.body.role === "staff" ? [...req.body.permissions].sort() : [];
     const updated = await patch(User, user, { role: req.body.role, permissions, ...(req.body.role === "user" ? { staffMfaRequired: false } : {}) }, unit);

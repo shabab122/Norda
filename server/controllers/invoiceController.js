@@ -1,5 +1,11 @@
 const { pagination } = require("../utils/validation");
 const Invoice = require("../models/Invoice");
+const present = (invoice) => {
+  const value = invoice.toObject?.() || invoice;
+  const contact = value.customerSnapshot || value.order?.customerSnapshot;
+  if (contact?.isGuest && value.user && typeof value.user === "object") value.user = { ...value.user, name: contact.name, email: contact.email };
+  return value;
+};
 
 const canView = (invoice, user) => {
   if (require("../utils/permissions").hasPermission(user, "orders")) return true;
@@ -12,7 +18,7 @@ const getMyInvoices = async (req, res, next) => {
     const invoices = await Invoice.find({ user: req.user._id })
       .sort({ createdAt: -1 })
       .populate("order", "status paymentMethod paymentStatus");
-    res.json(invoices);
+    res.json(invoices.map(present));
   } catch (error) {
     next(error);
   }
@@ -31,7 +37,7 @@ const getInvoices = async (req, res, next) => {
         .limit(limit),
       Invoice.countDocuments(filter),
     ]);
-    res.json({ invoices, total, page, pages: Math.ceil(total / limit) || 1 });
+    res.json({ invoices: invoices.map(present), total, page, pages: Math.ceil(total / limit) || 1 });
   } catch (error) {
     next(error);
   }
@@ -41,12 +47,12 @@ const getInvoice = async (req, res, next) => {
   try {
     const invoice = await Invoice.findById(req.params.id)
       .populate("user", "name email")
-      .populate("order", "status paymentMethod paymentStatus createdAt");
+      .populate("order", "status paymentMethod paymentStatus createdAt customerSnapshot");
     if (!invoice) return res.status(404).json({ message: "Invoice not found" });
     if (!canView(invoice, req.user)) {
       return res.status(403).json({ message: "Not authorized to view this invoice" });
     }
-    res.json(invoice);
+    res.json(present(invoice));
   } catch (error) {
     next(error);
   }
@@ -56,12 +62,12 @@ const getInvoiceByOrder = async (req, res, next) => {
   try {
     const invoice = await Invoice.findOne({ order: req.params.orderId })
       .populate("user", "name email")
-      .populate("order", "status paymentMethod paymentStatus createdAt");
+      .populate("order", "status paymentMethod paymentStatus createdAt customerSnapshot");
     if (!invoice) return res.status(404).json({ message: "Invoice not found" });
     if (!canView(invoice, req.user)) {
       return res.status(403).json({ message: "Not authorized to view this invoice" });
     }
-    res.json(invoice);
+    res.json(present(invoice));
   } catch (error) {
     next(error);
   }

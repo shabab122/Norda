@@ -3,22 +3,22 @@ const supportWords = (value) => String(value || "none").replace(/_/g, " ");
 const supportRefundLabel = (value) => ({ awaiting_return: "Awaiting returned items — no payout yet", queued: "Queued", submitting: "Submitting", pending: "Awaiting confirmation", unknown: "Store reconciliation needed", succeeded: "Refund completed", failed: "Refund unsuccessful" }[value] || supportWords(value));
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready; renderHeader("orders"); renderFooter();
-  if (!requireLogin()) return;
+  if (!requireShopper()) return;
   await loadOrderSupport();
 });
 const supportOrderId = () => new URLSearchParams(window.location.search).get("orderId") || "";
 async function loadOrderSupport() {
-  const root = document.getElementById("support-root"), id = supportOrderId(), account = Api.getUser()?._id;
+  const root = document.getElementById("support-root"), id = supportOrderId(), account = shoppingIdentity();
   if (!/^[a-f0-9]{24}$/i.test(id)) { root.innerHTML = `<div class="empty-state"><h2>Order not found</h2><p>Open an order from your order history.</p></div>`; root.setAttribute("aria-busy", "false"); return; }
   try {
     const data = await Api.get("/orders/" + id + "/operations");
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     root.innerHTML = orderSupportHtml(data);
     root.setAttribute("aria-busy", "false");
     document.getElementById("support-form")?.addEventListener("submit", submitSupportRequest);
     document.getElementById("support-refresh")?.addEventListener("click", loadOrderSupport);
   } catch (error) {
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     root.innerHTML = `<div class="empty-state"><h2>Order support unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="orders.html">My orders</a></div>`; root.setAttribute("aria-busy", "false");
   }
 }
@@ -46,7 +46,7 @@ function orderSupportHtml(data) {
 }
 async function submitSupportRequest(event) {
   event.preventDefault(); if (supportBusy) return;
-  const id = supportOrderId(), account = Api.getUser()?._id, type = document.getElementById("support-type").value, reason = document.getElementById("support-reason").value.trim();
+  const id = supportOrderId(), account = shoppingIdentity(), type = document.getElementById("support-type").value, reason = document.getElementById("support-reason").value.trim();
   const alert = document.getElementById("support-alert"), button = document.getElementById("support-submit");
   const storageKey = "norda-order-request:" + account + ":" + id;
   let key;
@@ -58,11 +58,13 @@ async function submitSupportRequest(event) {
   supportBusy = true; button.disabled = true; alert.textContent = "Sending your request…";
   try {
     await Api.post("/orders/" + id + "/requests", { type, reason, requestKey: key });
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     sessionStorage.removeItem(storageKey); alert.textContent = "Your request has been sent. The store's decision will appear here."; await loadOrderSupport();
   } catch (error) {
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     if (error.status >= 400 && error.status < 500) sessionStorage.removeItem(storageKey);
     alert.textContent = error.message; button.disabled = false;
   } finally { supportBusy = false; }
 }
+
+document.addEventListener("DOMContentLoaded",async()=>{await Api.ready;const id=new URLSearchParams(window.location.search).get("orderId");if(!shoppingIdentity()||!/^[a-f0-9]{24}$/i.test(id||""))return;const a=document.createElement("a");a.className="btn btn-outline";a.href="return-pickups.html?orderId="+encodeURIComponent(id);a.textContent="Return pickup & collection history";document.querySelector("main")?.appendChild(a);});

@@ -36,7 +36,9 @@ const queueMessage = async (order, topic, suffix, unit, extra = "", reference = 
   if (staged && staged.key !== key) await OrderNotification.deleteOne({ _id: staged._id }, unit.session ? { session: unit.session } : {});
   if (await querySession(OrderNotification.findOne({ key }), unit.session)) return;
   const owner = await querySession(User.findById(order.user?._id || order.user), unit.session);
-  if (!owner || !isValidEmail(owner.email)) return;
+  if (!owner) return;
+  if (owner.isGuest) owner.email = order.customerSnapshot?.email || owner.guestEmail;
+  if (!isValidEmail(owner.email)) return;
   const [title, intro] = messages[topic], actionUrl = customerUrl(order, ["shipping", "delivery", "tracking"].includes(topic));
   const lines = (order.items || []).map((i) => "• " + i.name + (i.sku ? " [" + i.sku + "]" : "") + " × " + i.quantity).join("\n");
   const shipment = order.shipment || {};

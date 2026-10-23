@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.11.0 to 2.12.0
+## Update an existing installation to 2.13.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -15,6 +15,8 @@ npm run acceptance:preflight
 npm run verify
 npm run dev
 ```
+
+Before using the new guest, warehouse or different-price exchange workflows, upgrade every app instance sharing your database. Keep automatic warehouse allocation disabled until balances are checked. Older code is not a safe rollback target after using the new records. See [the 2.13 operating guide](docs/COMMERCE_EXPANSION.md). No setup, reseed or credential rotation is needed.
 
 Open **http://localhost:5000**. Standard customer login/signup now opens `/dashboard.html`; administrator login keeps `/admin/dashboard.html`. A shopping return URL or pending cart selection still takes priority.
 

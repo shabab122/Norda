@@ -1,0 +1,4 @@
+const mongoose = require("mongoose");
+const schema = new mongoose.Schema({order:{type:mongoose.Schema.Types.ObjectId,ref:"Order",required:true,index:true},user:{type:mongoose.Schema.Types.ObjectId,ref:"User",required:true},itemCase:mongoose.Schema.Types.ObjectId,orderRequest:mongoose.Schema.Types.ObjectId,requestKey:{type:String,required:true},intentHash:String,status:{type:String,enum:["requested","booked","picked_up","in_transit","arrived","partially_received","received","rejected","cancelled"],default:"requested"},address:mongoose.Schema.Types.Mixed,courierName:String,bookingReference:String,trackingUrl:String,scheduledFor:Date,history:[new mongoose.Schema({key:String,hash:String,status:String,note:String,actor:mongoose.Schema.Types.ObjectId,at:Date},{_id:false})]},{timestamps:true});
+schema.index({order:1,requestKey:1},{unique:true});
+module.exports = mongoose.model("ReturnPickup",schema);

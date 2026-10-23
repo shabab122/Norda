@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const user = pendingMfaChallenge ? await Api.post("/auth/mfa/verify", { challenge: pendingMfaChallenge, code: document.getElementById("login-mfa-code").value.trim() }) : await Api.post("/auth/login", { email, password });
         if (user.mfaRequired) { pendingMfaChallenge = user.challenge; document.getElementById("login-mfa-fields").classList.remove("hidden"); document.getElementById("login-mfa-code").required = true; document.getElementById("email").readOnly = true; document.getElementById("password").readOnly = true; document.getElementById("login-mfa-code").focus(); button.textContent = "Verify & sign in"; button.disabled = false; showAlert("Enter your authenticator code or one unused recovery code. Verification expires in five minutes.", "success"); return; }
         Api.setSession(user, { replaceToken: true });
+        if (typeof Guest !== "undefined") await Guest.mergeAfterSignIn();
         const params = new URLSearchParams(window.location.search);
         const next = params.get("next") ? safeNext(params.get("next")) : accountHome(user);
         const cartSelected = await finishCartIntent();
@@ -52,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const user = await Api.post("/auth/register", { name, email, password });
         Api.setSession(user, { replaceToken: true });
+        if (typeof Guest !== "undefined") await Guest.mergeAfterSignIn();
         const requested = new URLSearchParams(window.location.search).get("next");
         const next = await finishCartIntent() ? "cart.html" : requested ? safeNext(requested) : accountHome(user);
         showAlert("Account created. You can verify your email from your profile. Taking you to Norda…", "success");

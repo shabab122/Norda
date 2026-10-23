@@ -179,8 +179,8 @@ module.exports = async (t, { request, models }) => {
     assert.equal(await stock(f, 1), 6); assert.equal((await decide(made.data._id)).status, 200); assert.equal(await stock(f, 1), 4); assert.equal((await decide(made.data._id)).status, 200); assert.equal(await stock(f, 1), 4);
     assert.equal((await decide(made.data._id, "reject")).status, 200); assert.equal((await decide(made.data._id, "reject")).status, 200); assert.equal(await stock(f, 1), 6); assert.equal(await stock(f, 0), 3); assert.equal(await Refund.countDocuments({ order: f.order._id }), 0);
   });
-  await t.test("Exchange receipt and dispatch preserve the original paid order and reject unequal prices", async () => {
-    const f = await fixture(); assert.equal((await create(f, { type: "exchange", items: [{ lineIndex: 0, quantity: 1, replacementVariantId: String(f.product.variants[2]._id) }] })).status, 409);
+  await t.test("Exchange receipt and dispatch preserve the original paid order while a priced request can be withdrawn", async () => {
+    const f = await fixture(); const priced = await create(f, { type: "exchange", items: [{ lineIndex: 0, quantity: 1, replacementVariantId: String(f.product.variants[2]._id) }] }); assert.equal(priced.status, 201); assert.notEqual(priced.data.exchangeBalance, 0); assert.equal((await decide(priced.data._id, "reject")).status, 200);
     const made = await create(f, { type: "exchange", items: [{ lineIndex: 0, quantity: 1, replacementVariantId: String(f.product.variants[1]._id) }] }); await decide(made.data._id);
     const shipment = { status: "shipped", courierName: "Test Courier", trackingNumber: "EXCHANGE123", trackingUrl: "https://example.com/track", note: "Replacement handed to courier" };
     assert.equal((await call("/api/admin/item-returns/" + made.data._id + "/shipment", shipment)).status, 409);

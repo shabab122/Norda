@@ -12,6 +12,7 @@ const createInvoiceForOrder = async (order, session = null, unit = null) => {
   invoiceNumber: createInvoiceNumber(order),
   order: order._id,
   user: order.user,
+  ...(order.customerSnapshot ? { customerSnapshot: order.customerSnapshot.toObject?.() || order.customerSnapshot } : {}),
   items: order.items.map((item) => ({
     product: item.product,
     name: item.name, variantId: item.variantId, sku: item.sku, size: item.size, color: item.color,

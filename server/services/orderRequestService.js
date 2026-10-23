@@ -93,6 +93,8 @@ const receiveReturn = async ({ requestId, user, body }) => {
       if (body.restock) await restoreStock(order, unit);
       const updated = await patch(OrderRequest, request, { status: "received", restocked: body.restock, receivedAt: new Date(), receivedBy: user._id, decisionMessage: note, refundAmount: source.amount }, unit);
       order = await patchOrder(order, { returnStatus: "received", returnStockRestored: body.restock }, unit);
+      const Pickup = require("../models/ReturnPickup");
+      for (const pickup of await querySession(Pickup.find({ orderRequest: request._id, status: { $nin: ["received", "cancelled", "rejected"] } }), unit.session)) await patch(Pickup, pickup, { status: "received", history: [...(pickup.history.toObject?.() || pickup.history), { key: "whole-receipt-" + request._id, status: "received", note, at: new Date(), actor: user._id }] }, unit);
       await audit(order._id, user, "return_received", note, unit, { request: request._id });
       if (remaining > 0) await queueRefundInUnit({ order, source, amount: remaining, key: "return-" + request._id, reason: note, actor: user }, unit);
       await require("./notificationService").queueOperationMessage(order, updated, "request", unit);

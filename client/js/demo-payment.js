@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader(); renderFooter();
-  if (!requireLogin()) return;
+  if (!requireShopper()) return;
   await loadDemoPayment();
 });
 
@@ -13,9 +13,9 @@ async function loadDemoPayment() {
     return;
   }
   try {
-    const account = Api.getUser()?._id;
+    const account = shoppingIdentity();
     const session = await Api.get("/payments/demo/" + id);
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     root.innerHTML = demoPaymentHtml(session);
     root.querySelectorAll("[data-demo-outcome]").forEach((button) => {
       button.addEventListener("click", () => submitDemoOutcome(id, button.dataset.demoOutcome));
@@ -74,13 +74,13 @@ async function submitDemoOutcome(id, outcome) {
   buttons.forEach((button) => { button.disabled = true; });
   const alert = document.getElementById("demo-payment-alert");
   alert.innerHTML = `<p>Recording your payment result…</p>`;
-  const account = Api.getUser()?._id;
+  const account = shoppingIdentity();
   try {
     await Api.post("/payments/demo/" + id + "/complete", { outcome });
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     window.location.assign("payment-result.html?orderId=" + encodeURIComponent(id));
   } catch (error) {
-    if (account !== Api.getUser()?._id) return;
+    if (account !== shoppingIdentity()) return;
     alert.innerHTML = `<div class="alert alert-error">${escapeHtml(error.message)} <a href="orders.html">Check My Orders</a> for the saved status.</div>`;
     buttons.forEach((button) => { button.disabled = false; });
   }

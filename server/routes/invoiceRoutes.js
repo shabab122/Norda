@@ -5,7 +5,8 @@ const {
   getInvoices,
   getMyInvoices,
 } = require("../controllers/invoiceController");
-const { authorize, protect } = require("../middleware/auth");
+const { authorize } = require("../middleware/auth");
+const { shopper: protect } = require("../services/guestService");
 
 const router = express.Router();
 

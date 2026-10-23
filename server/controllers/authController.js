@@ -90,7 +90,7 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const isMatch = await user.matchPassword(password);
+    const isMatch = !user.isGuest && await user.matchPassword(password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid email or password" });
     }

@@ -8,7 +8,7 @@ const {
   sslcommerzIpn,
   sslcommerzSuccess,
 } = require("../controllers/paymentController");
-const { protect } = require("../middleware/auth");
+const { shopper: protect } = require("../services/guestService");
 const demo = require("../controllers/demoPaymentController");
 
 const router = express.Router();

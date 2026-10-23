@@ -58,6 +58,7 @@ const prepareReservation = async (order, unit, transactionId, renew) => {
   if (order.stockRestored) {
     if (!order.reservationExpiredAt) throw httpError(409, "This cancelled order cannot be reopened");
     for (const item of order.items) await require("./inventoryService").reserveItem(item, unit);
+    await require("./fulfillmentService").reopenParcels(order, unit);
   }
   const previous = {
     stockRestored: order.stockRestored || false, status: order.status, paymentStatus: order.paymentStatus,

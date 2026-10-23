@@ -147,7 +147,7 @@ const listProducts = async (req, res, next, management = false) => {
       { path: "category", select: "name slug" }, { path: "brandRef", select: "name slug logo" },
     ]);
     const total = result.total[0]?.count || 0;
-    res.json({ products: management ? products : products.map(publicProduct), total, page, pages: Math.ceil(total / limit) || 1 });
+    res.json({ products: management ? products : (await require("../services/fulfillmentService").enrich(products)).map(publicProduct), total, page, pages: Math.ceil(total / limit) || 1 });
   } catch (error) { next(error); }
 };
 const getProducts = (req, res, next) => listProducts(req, res, next);
@@ -159,7 +159,8 @@ const getProduct = async (req, res, next) => {
       .populate("category", "name slug")
       .populate("brandRef", "name slug logo");
     if (!product) return res.status(404).json({ message: "Product not found" });
-    const result = publicProduct(product);
+    const [available] = await require("../services/fulfillmentService").enrich([product]);
+    const result = publicProduct(available);
     res.json(result);
   } catch (error) {
     next(error);

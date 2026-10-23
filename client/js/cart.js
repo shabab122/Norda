@@ -4,7 +4,8 @@ let cartNotice = null;
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader(); renderFooter();
-  if (!requireLogin()) return;
+  if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure();
+  if (!requireShopper()) return;
   try { cartNotice = JSON.parse(sessionStorage.getItem("norda_cart_notice") || "null"); sessionStorage.removeItem("norda_cart_notice"); } catch { /* Optional feedback. */ }
   await loadCart();
 });
