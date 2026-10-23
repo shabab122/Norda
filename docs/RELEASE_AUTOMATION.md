@@ -1,4 +1,6 @@
-# Release automation, recovery and team inventory — 2.12.0
+# Release automation, recovery and team inventory — 2.12
+
+Patch 2.12.1 makes `npm run acceptance:preflight` and `npm run mail:check`/`mail:preview`/`mail:orders` load the same optional `.env.integrations` as server startup. Existing process/base `.env` values retain priority; no file or credential is rewritten. See [current acceptance evidence](VERIFICATION_RESULTS.md).
 
 Built directly from `Norda-Main-v2.11.0.zip`. The five selected development areas are implemented: deployment/release tooling, private off-host backups, independent uptime monitoring, staff invitations/authenticator MFA and advanced catalog/warehouse/email inventory tools.
 
@@ -229,7 +231,7 @@ A durable notice queues on entering a low-stock episode, rearms only after stock
 
 New routes cover `/api/auth/mfa`, `/api/auth/invitation`, full-admin `/api/admin/staff-invitations`, inventory-scoped `/api/admin/warehouses`, `/api/admin/inventory/movements|subscription|notices`, catalog-scoped `/api/admin/catalog-import`, and full-admin `/api/admin/system/offsite`. List routes use existing page/limit conventions. Secrets/raw invitation links never appear in admin history or profile responses. Backup archives remain CLI/private storage only.
 
-Run `npm run verify`. Use a dedicated `NORDA_TEST_MONGO_URI` and `npm run test:integration` for the twelve serial native entry points. They create/drop only isolated test/drill databases. [Recorded results](VERIFICATION_RESULTS.md) distinguish actual Node/Express/MongoDB tests, controlled provider responses, frontend VM checks and shell rollback simulation from real VM/provider/browser acceptance.
+Run `npm run verify`. Use a dedicated `NORDA_TEST_MONGO_URI` and `npm run test:integration` for the thirteen serial native entry points. They create/drop only isolated test/drill databases. [Recorded results](VERIFICATION_RESULTS.md) distinguish actual Node/Express/MongoDB tests, controlled provider responses, frontend VM checks and shell rollback simulation from real VM/provider/browser acceptance.
 
 The release did not contact the owner's database, send real invitations/alerts, activate paid storage, book parcels or move money. Live Docker/TLS/GitHub deployment, S3-compatible account acceptance/permissions, real alert receipt and browser/mobile/keyboard/print checks require the owner's environment. All prior SSLCOMMERZ/courier/cloud acceptance boundaries remain.
 

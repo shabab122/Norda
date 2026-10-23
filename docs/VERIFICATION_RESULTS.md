@@ -1,45 +1,60 @@
-# Verification results — NORDA 2.12.0
+# Verification results — NORDA 2.12.1
 
-Recorded 23 October 2026 (Asia/Dhaka) using Node.js 24.19.0, npm 11.9.0 and native MongoDB 7.0.45. Built directly from `Norda-Main-v2.11.0.zip`.
+Recorded **23 October 2026 (Asia/Dhaka)** using Node.js 24.19.0, npm 11.9.0 and native MongoDB 7.0.45. This acceptance patch starts from the exact delivered `Norda-Main-v2.12.0.zip`.
 
-| Check | Recorded result |
+## Result and change
+
+The automated commerce/security/recovery checks pass. One configuration mismatch was found: application startup reads `.env.integrations`, but the acceptance and mail CLI commands previously read only `.env`. Those commands now load the optional integration file using the same precedence as startup. Existing process values and base `.env` values, including explicit empty values, retain priority. No environment file is rewritten.
+
+There is no storefront or commerce behavior change. All original client files, assets, credential files, seed/config values and dependency selections are retained. The package version, native test command, relevant documentation and additional tests are updated.
+
+## Measured checks
+
+| Check | Result |
 |---|---|
-| JavaScript syntax | **268 files** including new independent operations scripts |
-| Default `npm run verify` | **453 reported: 441 passed, 0 failed, 12 native entry points skipped** without an explicit test URI |
-| Native standalone | **197 passed**, 0 failed/skipped; compensation path |
-| Native single-member replica set | **197 passed**, 0 failed/skipped; transaction path |
-| Additional server/preflight smoke | 1 passed on each topology: actual server/all workers, optional config, readiness, clean shutdown and production preflight accepting replica/rejecting standalone |
-| Focused compatibility | New HTTP/security/inventory, infrastructure/rollback and frontend cases passed; MFA device rotation/password-change compatibility also rechecked on both native topologies |
-| Dependency audit | **0 vulnerabilities**; dependency selections unchanged |
-| Configuration/shell | Compose and all three workflow YAML files parsed; Bash syntax and actual release-script candidate-failure/rollback harness passed |
-| Pages/resources | All **48 HTML pages**, local scripts/styles/assets and unique static IDs checked through existing HTTP/static regressions |
-| Preservation | All 372 input files retained; original `.env`, config/seed data, catalog/brand assets and dependency selections preserved |
+| JavaScript syntax | **273 files passed** |
+| Default `npm run verify` | **467 reported: 454 passed, 0 failed, 13 native entry points skipped** without an explicit test URI |
+| Native standalone | **198 passed**, 0 failed/skipped; handled-failure compensation |
+| Native single-member replica set | **198 passed**, 0 failed/skipped; transaction path |
+| Dependencies | **0 vulnerabilities** in the fresh npm audit; dependency selections unchanged |
+| Pages/resources | All **48 HTML pages**, local script/style/asset references and unique static IDs checked by retained HTTP/static tests |
+| Frontend | Retained VM tests for rendering, account/session guards, MFA, cart/checkout recovery, returns and inventory passed |
+| Configuration and shell | All three workflow YAML files and both Compose files parsed; Bash syntax and the controlled candidate-failure/rollback harness passed |
+| Preservation | Every original archive file retained; original `.env`, client files/assets and dependency selections compared against the input |
 
-## New coverage
+Thirteen native entries run serially on independently started standalone and single-member replica-set servers. They use explicit loopback test URIs and create/drop only random `norda_test_*` databases and isolated restore targets. No owner's Atlas/local database was contacted. No credential was rotated; no real mail, money, parcel or storage-provider action was submitted.
 
-- **Deployment:** isolated environment validation, unchanged input credentials, forbidden staging live effects, permanent separation from ports 3000/3002, serialized shell release and a fake Docker executable that rejects a candidate and confirms restoration of the recorded previous code/shared state. Real production preflight is also run against isolated standalone/replica MongoDB and requires the new MFA capability.
-- **Off-host backup:** the actual encrypted backup service and real MongoDB with intercepted signed S3 requests. Lost PUT response leaves one object; HEAD/readback recovery avoids duplicate upload. Fetch/checksum failure, authenticated archive verification, private latest pointer, guarded minimum-copy retention and another namespace's protection pass. A drill restores BSON/indexes/media into a new random target, checks/restores data and removes only that target.
-- **Independent monitor:** controlled stopped-host/network failure without application MongoDB, durable state, one outage/recovery transition, finite maintenance grace, URL validation and alert-data redaction.
-- **MFA:** RFC 6238 SHA-1 published vectors including post-2038 timestamps; encrypted pending/active secrets, hashed recovery codes, password checks, consumed OTP/recovery replay, challenge attempt bounds/expiry, token/revision guards, old-style token rejection and verified device session rotation/password-change compatibility.
-- **Staff:** full-admin versus scoped/customer isolation, existing-password preservation, matching-email acceptance, required enrollment, demotion policy, revoke/expiry, retained delivery failure and new-token resend.
-- **Inventory:** exact SKU transfers, satellite-versus-online saleability, request replay/mismatch, stale counts, handled write rollback, edit/archive protection, base-SKU identity guards and unchanged checkout stock behavior.
-- **Catalog CSV:** strict quoted/multiline framing, exact preview hash, unique new product/SKU validation, unsafe images/invalid input rejection, retained import history, replay and all-new-record rollback after an injected failure.
-- **Stock mail:** initial low episode, no repeat while still low, rearm after replenishment, unsubscribe and local-versus-SMTP acceptance state. No actual inbox is used.
-- **Frontend:** MFA challenge does not create a session or finish a pending guest cart early; required enrollment/scoped navigation, account-switch secret/status guards and stale CSV preview rejection.
-- **Signing:** actual SigV4 GET calculation matches the official AWS published example signature; provider protocol fixtures also check headers/payload hashes and namespace use.
+## Requested acceptance areas
 
-The full previous account/cart/checkout/payment/review/refund/return/courier/variant/coupon/wishlist/settings/report/staff/device/SEO/cloud/backup suites remain included. Deliberate injected failures print bounded redacted diagnostics in passing runs.
+| Area | Verified here | Still pending |
+|---|---|---|
+| Customer/admin journey | Actual Express HTTP and MongoDB: registration/login, account isolation, categories/SKUs/cart, totals, COD, invoice snapshots, inventory/delivery/cancellation, returns, refund/credit-note synchronization and replay/failure safeguards | Visible journey with the owner's existing accounts in the target browser/environment |
+| SSLCOMMERZ sandbox | Actual adapter request formats and endpoint selection; callback/IPN, validation, failure/cancel/replay, late/risky payments, retry/expiry and refund state handling with controlled responses and real database persistence | Real hosted merchant sandbox success/failure/cancel/repeated IPN/refund settlement and public callback reachability |
+| Browser/mobile/keyboard/print | HTTP/static resources, markup/reference checks, frontend VM behavior and retained responsive/print CSS | Live visual checks at 360/768/1024/1440 px, keyboard/zoom, actual phone and invoice/credit-note print acceptance |
+| Deployment/recovery | Actual server/all workers, graceful stop/restart and cookie/cart persistence; production preflight rejects standalone and accepts replica set; YAML/Bash/controlled rollback; actual encrypted archive/index/media verification and isolated restore | Actual Docker build/container run, domain/DNS/HTTPS/Caddy, SSH/GitHub deployment, target-host rollback and promotion from recovery |
+| External services | Actual Nodemailer SMTP protocol against a disposable local receiver; account/operations/independent-monitor mail, rejection and required-TLS failure; native invitation/MFA tests; courier/cloud/S3 protocol and recovery fixtures | Owner inbox/Spam, authenticator device enrollment, real courier/Cloudinary/S3 permissions and notifications from a genuinely independent host |
 
-## Execution and limits
+## Additional coverage in this patch
 
-Twelve native entries run serially on independently started standalone and single-member replica-set servers. Each owns only new random `norda_test_*` databases and isolated restore targets. Provider responses are intercepted, not live account calls. No owner's Atlas/local database was contacted, no real invitations/alerts were sent, no storage account/VM was activated and no money or parcels moved.
+- Optional integration settings are recognized without overwriting a supplied JWT secret, MongoDB URI or base SMTP identity; the private files remain byte-for-byte intact. An absent optional file keeps local development working.
+- A loopback SMTP receiver exercises real Nodemailer greeting, mail DATA, recipient rejection and production STARTTLS requirements. Account action links survive MIME wrapping. Operations and independent uptime alerts use the same SMTP transport. This receiver does not relay messages or prove public inbox placement.
+- Hosted-session creation preserves order snapshots, callback/IPN URLs, identity and server-only credentials. Invalid JSON, failed/unsafe gateway responses and absent merchant settings fail safely. Validation requests select sandbox/live endpoints correctly. No public payment request is made.
+- The opt-in runtime test launches the actual `server.js` with all workers on a disposable port/database, logs in, saves a cart, shuts down cleanly, restarts and confirms its cookie/cart and untouched stock. It also runs the actual production preflight against each native topology.
+- The retained suites cover customer/staff permissions, MFA/recovery/session revocation, inventory/coupons/wishlist/settings, reports, payment review, cancellation/returns/refunds/exchanges/credit notes, courier events, queued email, cloud references, monitoring and encrypted local/off-host recovery. Deliberate fault-injection diagnostics are expected in passing runs.
 
-Startup tests run the actual `server.js` and all workers using an isolated URI, temporary integration file and disabled external side effects. Their configuration is not shipped. S3 readback/restore tests use real encrypted archive bytes and actual MongoDB persistence, but do not prove a particular S3-compatible account's permissions or network behavior.
+## Concrete environment limits
 
-Docker/Compose/Caddy artifacts were checked statically and the shell workflow was exercised with a controlled Docker executable. This environment did not provide a live Docker daemon/target VM/domain, so an actual image build, certificate/SSH/public deployment and real GitHub-hosted run remain owner acceptance. GitHub schedules are best effort, not an uptime SLA.
+The supplied ZIP has no configured SSLCOMMERZ merchant ID/password and no actual SMTP or optional provider credentials. The owner's later laptop `.env` may contain newer working settings; retain it when copying this patch. Public gateway/provider acceptance cannot be inferred from mocks, configuration flags or local simulations.
 
-A reliable live browser/device visual pass was unavailable; HTTP/static/VM tests do not establish mobile/keyboard/print acceptance. Actual SMTP/inbox/Spam, authenticator-device setup, real alert receiver, bucket lifecycle/retention permissions, public SSLCOMMERZ/courier/cloud account acceptance and deployment capacity must be checked in the owner's environment.
+The available cloud browser could not reach the isolated loopback test server; the browser access was blocked. No browser/mobile/keyboard/print journey is marked passed, and no alternate browser path was used to bypass the restriction. HTTP/static/VM tests do not establish visual acceptance.
 
-Warehouse stock uses one existing online fulfillment location plus satellite balances moved through audited transfers. Automatic order splitting/routing, passkeys, multi-part archives over 5 GiB, local archive retention and production restore promotion are separate scope. SMTP delivery is at least once; stable IDs help with uncertain-send deduplication. Standalone compensation handles managed errors; public production uses replica-set transactions.
+No Docker/Podman/build daemon, target VM/domain or configured public staging host was available. Compose/workflow parsing and a controlled Docker shell harness do not establish a real image build, certificate or live deployment. The store has not been published by this work.
 
-Keep working laptop credentials/uploads and upgrade all shared-DB app servers before enabling MFA. New secrets stay in a private optional integration file. See [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md).
+S3-compatible recovery uses real encrypted archives and real isolated MongoDB restore with intercepted provider traffic. It does not prove the owner's bucket policy, network or lifecycle settings. Email tests prove local SMTP acceptance/rejection, not arrival in an external inbox. MFA math/HTTP/replay/session checks do not replace actual authenticator setup on the intended devices.
+
+## Target-environment follow-up
+
+1. Retain your working `.env`, optional `.env.integrations` and uploaded media; no setup, reseed or manual migration is needed. From `server/`, run `npm ci`, `npm run verify`, `npm run acceptance:preflight` and `npm run mail:check` as applicable. These read your configured environment; do not post their private files or tokens.
+2. Complete the customer/admin, two-account, mobile/keyboard/print and public gateway matrix in [ACCEPTANCE_CHECKLIST.md](ACCEPTANCE_CHECKLIST.md). Keep sandbox credentials in your own environment and confirm real public callbacks/refunds before live payments.
+3. Before enabling new external integrations, follow [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md) and [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) on isolated staging. Confirm actual inbox/alert receipt, courier/media/storage behavior and a recovery drill before production promotion.
+4. Upgrade every app server sharing the database before enabling MFA and use the same private MFA key. Keep GitStack/Gitea ports 3000/3002 separate; NORDA's normal port remains 5000.

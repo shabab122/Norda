@@ -1,5 +1,11 @@
 # Future NORDA development
 
+## Acceptance patch 2.12.1
+
+- Align acceptance/mail CLI configuration with application startup without modifying credentials or business workflows.
+- Expand SMTP, payment-protocol and actual-server restart verification; retain the native commerce/recovery suites.
+- Public merchant/provider, Docker/TLS/target-host and browser/mobile/print acceptance remain pending; see [the measured report](VERIFICATION_RESULTS.md).
+
 ## Completed in 2.12.0
 
 - Docker/Caddy HTTPS/restart/persistence, staging isolation, verified GitHub/SSH releases and health-checked application rollback.
@@ -98,7 +104,7 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 ## Phase 1 — account and checkout recovery
 
 - Optional recipient names and additional address formats
-- Optional MFA/passkeys and ongoing dependency auditing
+- Optional passkeys and ongoing dependency auditing (authenticator TOTP MFA is implemented)
 
 ## Phase 2 — order operations
 

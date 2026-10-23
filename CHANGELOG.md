@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.12.1 — 2026-10-23
+
+- Make acceptance preflight and mail commands load optional integration settings with the same precedence as application startup. Existing process/base environment values and private files remain intact.
+- Add integration configuration/credential preservation checks, real loopback SMTP account/operations/uptime delivery and rejection/TLS checks, and hosted-session/validation request/response protocol coverage.
+- Add an opt-in native actual-server test for worker startup, graceful restart, cookie/cart persistence and production topology preflight; include it in the integration command.
+- Repeat the retained commerce/security/refund/backup suites and record the exact automated evidence and remaining real-provider/browser/host acceptance boundaries. No storefront, commerce logic, credentials or dependency selections change.
+
 ## 2.12.0 — 2026-10-23
 
 - Add Docker/Caddy HTTPS/restart and persistent storage configuration, isolated staging/production preflight, pinned SSH deployment, verified source transfer and health-checked code rollback. Rollback can run even if candidate validation fails.
