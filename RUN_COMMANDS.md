@@ -2,7 +2,7 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update from 2.2–2.10.0 to 2.11.0
+## Update from 2.2–2.11.0 to 2.12.0
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -182,3 +182,19 @@ npm run backup:restore -- --file /absolute/private/path/actual-backup.ndb --data
 ```
 
 Use the actual generated archive path and a fresh target/folder. Restore refuses the original or an existing database and leaves the working `MONGO_URI` unchanged. Schedule/off-host retention and recovery promotion are described in the guide.
+
+## Release/MFA/warehouse additions — 2.12
+
+Normal local run commands stay the same. Preserve current credentials and use only optional `.env.integrations` for the new separate MFA key/off-host settings. On shared Atlas, upgrade all active PCs before enabling MFA and securely share the same MFA key. Do not reseed.
+
+After configuring encrypted local/private remote backup, from `server/`:
+
+```bash
+npm run backup:create
+npm run backup:upload -- --run ACTUAL_BACKUP_RUN_ID
+npm run backup:fetch -- --output /absolute/private/recovery/latest.ndb
+npm run backup:retention
+npm run backup:drill
+```
+
+Actual host/domain deployment, pinned SSH, GitHub settings, independent monitor commands and private recovery procedures are in [RELEASE_AUTOMATION.md](docs/RELEASE_AUTOMATION.md). These workflows are not activated by a local `npm run dev`.

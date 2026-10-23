@@ -20,3 +20,10 @@ server/.envy
 server/.backups/
 *.ndb
 norda_restore_*/
+
+# Production secrets and recovery/monitor state
+**/.backup-tmp/
+**/.monitor-state/
+**/monitor.env
+**/deploy.env
+**/private-state/

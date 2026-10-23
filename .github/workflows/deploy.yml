@@ -1,0 +1,74 @@
+name: Deploy NORDA
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        default: staging
+        required: true
+      action:
+        type: choice
+        options: [deploy, rollback]
+        default: deploy
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: norda-deploy-${{ inputs.environment || 'staging' }}
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: vars.NORDA_DEPLOY_ENABLED == 'true' && inputs.action != 'rollback'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - run: npm run verify
+      - run: npm audit --audit-level=moderate
+  deploy:
+    if: always() && vars.NORDA_DEPLOY_ENABLED == 'true' && (inputs.action == 'rollback' || needs.validate.result == 'success')
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: ${{ inputs.environment || 'staging' }}
+    env:
+      TARGET_ENVIRONMENT: ${{ inputs.environment || 'staging' }}
+      DEPLOY_ACTION: ${{ inputs.action || 'deploy' }}
+      DEPLOY_HOST: ${{ secrets.NORDA_DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.NORDA_DEPLOY_USER }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure pinned SSH identity
+        env:
+          SSH_KEY: ${{ secrets.NORDA_DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.NORDA_DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/norda_deploy
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/norda_deploy ~/.ssh/known_hosts
+          [[ "$DEPLOY_HOST" =~ ^[a-zA-Z0-9.-]+$ && "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]]
+          [[ "$GITHUB_SHA" =~ ^[a-f0-9]{40}$ ]]
+      - name: Transfer tracked source without credentials or runtime data
+        if: env.DEPLOY_ACTION == 'deploy'
+        run: |
+          git archive --format=tar.gz --output=norda-release.tar.gz "$GITHUB_SHA" -- . ":!**/.env" ":!**/.env.*" ":!**/.envy" ":!**/node_modules/**" ":!server/uploads/**" ":!**/.backups/**" ":!**/.local-mail/**" ":!**/.backup-tmp/**" ":!**/.monitor-state/**"
+          sha256sum norda-release.tar.gz > norda-release.sha256
+          ssh -i ~/.ssh/norda_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p /opt/norda/$TARGET_ENVIRONMENT/releases/$GITHUB_SHA"
+          scp -i ~/.ssh/norda_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes norda-release.tar.gz norda-release.sha256 "$DEPLOY_USER@$DEPLOY_HOST:/opt/norda/$TARGET_ENVIRONMENT/releases/$GITHUB_SHA/"
+          ssh -i ~/.ssh/norda_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" "cd /opt/norda/$TARGET_ENVIRONMENT/releases/$GITHUB_SHA && sha256sum -c norda-release.sha256 && tar --no-same-owner -xzf norda-release.tar.gz && bash deploy/release.sh $TARGET_ENVIRONMENT $GITHUB_SHA"
+      - name: Roll back recorded application release
+        if: env.DEPLOY_ACTION == 'rollback'
+        run: |
+          ssh -i ~/.ssh/norda_deploy -o BatchMode=yes -o StrictHostKeyChecking=yes "$DEPLOY_USER@$DEPLOY_HOST" "bash /opt/norda/$TARGET_ENVIRONMENT/releases/\$(cat /opt/norda/$TARGET_ENVIRONMENT/current)/deploy/release.sh $TARGET_ENVIRONMENT --rollback"

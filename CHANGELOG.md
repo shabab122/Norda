@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.12.0 — 2026-10-23
+
+- Add Docker/Caddy HTTPS/restart and persistent storage configuration, isolated staging/production preflight, pinned SSH deployment, verified source transfer and health-checked code rollback. Rollback can run even if candidate validation fails.
+- Add private SigV4 S3-compatible encrypted archive replication, conditional same-key recovery, full readback verification, a disaster recovery pointer, opt-in retention and isolated scheduled restore drills.
+- Add an independent monitor and GitHub-hosted workflow with persisted outage/recovery state, bounded checks, maintenance grace and optional webhook/SMTP alerting.
+- Add full-admin expiring staff invitations with one-use acceptance, existing-password preservation, revoke/resend, MFA-required onboarding and audited access changes.
+- Add encrypted authenticator TOTP, one-use hashed recovery codes, bounded challenges, replay/version checks and verified MFA proof on device sessions. Existing accounts are not silently enrolled.
+- Add previewed new-product/SKU CSV creation, satellite warehouse stock/counts/transfers/edit/archive safeguards and subscribed low-stock email queues. Existing online checkout stock behavior is retained.
+- Correct premature success HTTP status on asynchronous tool errors; extend native, protocol, fault-injection, frontend and shell/config checks. Preserve input credentials, dependencies and previous features.
+
 ## 2.11.0 — 2026-10-22
 
 - Add optional eCourier REST v5.5 booking, package charges, trusted PDF labels, opt-in automatic booking, authenticated tracking and audited exception review. Preserve manual tracking for orders without active API parcels.

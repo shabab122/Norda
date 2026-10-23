@@ -1,0 +1,7 @@
+{
+    email {$NORDA_ACME_EMAIL}
+}
+{$NORDA_DOMAIN} {
+    encode zstd gzip
+    reverse_proxy app:5000
+}

@@ -1,0 +1,64 @@
+name: Independent uptime
+on:
+  schedule:
+    - cron: '3-59/5 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: norda-independent-uptime
+  cancel-in-progress: false
+jobs:
+  monitor:
+    if: vars.NORDA_MONITOR_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci --prefix server --omit=dev
+      - name: Find previous independent state
+        id: previous
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const response = await github.rest.actions.listArtifactsForRepo({owner: context.repo.owner, repo: context.repo.repo, name: 'norda-uptime-state', per_page: 100});
+            const latest = response.data.artifacts.filter(a => !a.expired).sort((a,b) => b.created_at.localeCompare(a.created_at))[0];
+            core.setOutput('run', latest?.workflow_run?.id || '');
+      - uses: actions/download-artifact@v4
+        if: steps.previous.outputs.run != ''
+        with:
+          name: norda-uptime-state
+          path: .monitor-state
+          run-id: ${{ steps.previous.outputs.run }}
+          github-token: ${{ github.token }}
+      - name: Probe outside the store host
+        id: probe
+        continue-on-error: true
+        run: node ops/uptime.js --once
+        env:
+          NODE_ENV: production
+          MONITOR_TARGETS_JSON: ${{ vars.NORDA_MONITOR_TARGETS_JSON }}
+          MONITOR_STATE_FILE: .monitor-state/state.json
+          MONITOR_ALERT_WEBHOOK_URL: ${{ secrets.MONITOR_ALERT_WEBHOOK_URL }}
+          MONITOR_ALERT_EMAIL: ${{ secrets.MONITOR_ALERT_EMAIL }}
+          MAIL_TRANSPORT: smtp
+          SMTP_HOST: ${{ secrets.MONITOR_SMTP_HOST }}
+          SMTP_PORT: ${{ vars.MONITOR_SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.MONITOR_SMTP_USER }}
+          SMTP_PASS: ${{ secrets.MONITOR_SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MONITOR_MAIL_FROM }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: norda-uptime-state
+          path: .monitor-state/state.json
+          if-no-files-found: error
+          retention-days: 14
+      - if: steps.probe.outcome == 'failure'
+        run: exit 1

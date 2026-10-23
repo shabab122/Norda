@@ -125,6 +125,7 @@ function renderFooter() {
 }
 
 function accountHome(user = Api.getUser()) {
+  if (user?.staffMfaRequired && !user.mfaEnabled) return "authenticator.html";
   return user?.role === "admin" ? "admin/dashboard.html" : user?.role === "staff" ? "admin/workspace.html" : "dashboard.html";
 }
 function accountInitials(name) {
@@ -168,12 +169,13 @@ function requireLogin(redirectTo = "login.html") {
 }
 
 function requireAdmin() {
+  if (Api.getUser()?.staffMfaRequired && !Api.getUser()?.mfaEnabled) { window.location.href = "../authenticator.html"; return false; }
   document.body.dataset.protected = "admin";
   if (Api.isAdmin()) return true;
   if (Api.getUser()?.role === "staff") {
     const page = window.location.pathname.split("/").pop();
-    const scopes = { "courier.html": "orders", "media.html": "catalog", "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
-    if (page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
+    const scopes = { "advanced-inventory.html": "inventory", "courier.html": "orders", "media.html": "catalog", "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
+    if ((page === "advanced-inventory.html" && Api.can("catalog")) || page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
     window.location.href = "workspace.html"; return false;
   }
   window.location.href = "../login.html";

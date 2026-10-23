@@ -1,0 +1,17 @@
+.git
+**/node_modules
+**/.env
+**/.env.*
+**/.envy
+**/.local-mail
+**/.backups
+**/.monitor-state
+**/uploads/*
+**/*.log
+**/*.ndb
+**/*.zip
+coverage
+
+**/.backup-tmp
+**/monitor.env
+**/deploy.env

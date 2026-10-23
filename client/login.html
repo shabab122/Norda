@@ -40,7 +40,7 @@
             <input type="password" id="password" required autocomplete="current-password" />
           </div>
           <a href="forgot-password.html" class="text-link account-help-link">Forgot your password?</a>
-          <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+          <div class="field hidden" id="login-mfa-fields"><label for="login-mfa-code">Authenticator or recovery code</label><input id="login-mfa-code" autocomplete="one-time-code" maxlength="32" /><small>Use the next authenticator code if the previous one was already used. <a href="login.html">Restart sign-in</a></small></div><button type="submit" class="btn btn-primary btn-block">Sign in</button>
         </form>
         <p class="form-foot">New to Norda? <a class="text-link" href="register.html">Create an account</a></p>
       </section>

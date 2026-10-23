@@ -1,4 +1,7 @@
-# NORDA 2.11 testing and acceptance
+# NORDA 2.12 testing and acceptance
+
+> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
@@ -16,7 +19,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The ten real database test entry points are intentionally skipped without an explicit test URI:
+The twelve real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
@@ -193,3 +196,11 @@ Use the laptop acceptance matrix in [MANAGEMENT_RETURNS.md](MANAGEMENT_RETURNS.m
 `productionToolsHttp.test.js` and `mongoProductionTools.test.js` share 24 HTTP journeys: scope/privacy, initial SEO, booking replay/uncertainty, tracking/invoice/COD guards, exceptions/cancellation, automatic/prepaid/manual-dispatch rules, cloud upload/migration/reference-safe cleanup, maintenance/writer drainage and redacted alert transport. `providerProtocols.test.js` exercises the actual eCourier/Cloudinary REST adapters with intercepted network responses. Unit and frontend VM suites check authenticated archive framing, logical text-index restoration, safe structured data, scoped pages and account-response races.
 
 `mongoBackup.test.js` exercises encrypted BSON/index/local/cloud-byte backup, wrong-key/tamper rejection, isolated restore, source/existing-target refusal and missing-media failure on real MongoDB. All provider calls remain controlled fixtures. Follow [the production guide](PRODUCTION_TOOLS.md) for actual provider/off-host/SEO acceptance.
+
+## Release tools regressions — 2.12
+
+`releaseToolsHttp.test.js` and `mongoReleaseTools.test.js` share 18 actual HTTP journeys for MFA setup/session proof/replay/recovery/attempt bounds, staff invitation ownership/expiry/resend/demotion, exact-SKU warehouse transfers/rollback/archiving/saleability, CSV creation/replay/rollback and low-stock mail episodes/preferences. `mongoOffsiteBackup.test.js` exercises real encrypted archives and isolated MongoDB restore with intercepted S3 operations, including a lost PUT response, hash readback, recovery pointer, retention and drill cleanup.
+
+`releaseInfra.test.js` checks published RFC 6238 SHA-1 vectors, independent outage/recovery without the app DB, finite maintenance grace, staging isolation, SigV4 request shape, CSV framing and the actual Bash release script with a fake Docker executable that rejects a candidate and verifies rollback. `releaseFrontend.test.js` checks MFA-before-session/cart continuation, required enrollment, scoped navigation and stale secret/preview/recovery responses.
+
+YAML parsing and Bash syntax checks do not prove a live Docker/TLS/SSH deployment. See [recorded evidence](VERIFICATION_RESULTS.md) and [owner activation](RELEASE_AUTOMATION.md).
