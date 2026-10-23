@@ -57,9 +57,19 @@ const normalizeCheckoutKey = (value) => {
   return value;
 };
 
-const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "", couponCode = "", expectedTotals }) => {
+const createOrderFromCart = async (input, guestLocked = false) => {
+  const { user, shippingAddress, paymentMethod, checkoutKey, paymentChannel = "", couponCode = "", expectedTotals } = input;
+  // Contact changes, account linking and checkout share one guest identity lock.
+  // Re-read after acquiring it: a request authenticated before linking must not
+  // create another order for the retired guest identity.
+  if (user.isGuest && !guestLocked) return withOperationLock("guest:" + user._id, async () => {
+    const current = await User.findById(user._id);
+    if (!current?.isGuest || !await require("../models/GuestSession").exists({ user: user._id, expiresAt: { $gt: new Date() } })) throw httpError(401, "Guest shopping session expired; refresh before checkout");
+    return createOrderFromCart({ ...input, user: current }, true);
+  });
   if (!["cod", "sslcommerz", "demo"].includes(paymentMethod)) throw httpError(400, "Unsupported payment method");
   if (paymentMethod === "demo" && !["mobile_banking", "card_bank"].includes(paymentChannel)) throw httpError(400, "Choose a payment channel");
+  if (user.isGuest && !require("../utils/validation").isValidEmail(user.guestEmail || "")) throw httpError(400, "Enter your guest contact name and email before checkout");
   const address = normalizeShippingAddress(shippingAddress);
   const key = normalizeCheckoutKey(checkoutKey);
   const code = coupons.normalizeCode(couponCode);
@@ -94,13 +104,14 @@ const createOrderFromCart = async ({ user, shippingAddress, paymentMethod, check
     }
     // Register each successful write immediately; exceptions on the next item
     // therefore compensate all prior decrements on standalone MongoDB too.
-    for (const item of items) await reserveItem(item, unit);
+    for (const item of items) await require("./fulfillmentService").reserve(item, unit);
     const order = await insertDocument(Order, {
-      user: user._id, items, shippingAddress: address, ...totals, ...(quote.coupon ? { coupon: quote.coupon } : {}), currency: store.currency,
+      user: user._id, items, shippingAddress: address, ...(user.isGuest ? { customerSnapshot: { name: user.name, email: user.guestEmail, isGuest: true } } : {}), ...(items.some(i => i.fulfillmentAllocations?.length) ? { fulfillmentManaged: true } : {}), ...totals, ...(quote.coupon ? { coupon: quote.coupon } : {}), currency: store.currency,
       paymentMethod, paymentChannel, paymentStatus: "pending", returnPolicy: { returnWindowDays: config.returnWindowDays, exchangeEnabled: config.exchangeEnabled },
       ...(paymentMethod !== "cod" ? { reservationExpiresAt: nextReservationDeadline() } : {}), ...(key ? { checkoutKey: key } : {}),
     }, session);
     compensate(() => Order.deleteOne({ _id: order._id }));
+    await require("./fulfillmentService").createParcels(order, unit);
     await coupons.recordRedemption(order, unit);
     const invoice = await createInvoiceForOrder(order, session, unit);
     const previousAddress = user.address?.toObject ? user.address.toObject() : user.address;
@@ -126,6 +137,7 @@ const cancelInUnit = async (order, reason, unit, options = {}) => {
     await syncInvoicePayment(order, session);
     return order;
   }
+  await require("./fulfillmentService").assertCancelable(order._id, unit.session);
   await require("./courierService").assertNoActiveBooking(order._id, unit.session);
   if (order.isPaid || order.paymentStatus === "review") throw httpError(409, "This payment needs to be resolved before cancellation");
   if (!["pending", "processing"].includes(order.status)) throw httpError(409, "Only pending or processing unpaid orders can be cancelled");
@@ -146,6 +158,7 @@ const cancelInUnit = async (order, reason, unit, options = {}) => {
     await syncInvoicePayment({ ...order.toObject(), ...previous });
   });
   await syncInvoicePayment(updated, session, unit, previous);
+  await require("./fulfillmentService").cancelParcels(order._id, unit);
   return updated;
 };
 
@@ -155,7 +168,7 @@ const cancelOrderAndRestoreStock = (order, reason = "") => withOperationLock("or
   return cancelInUnit(fresh, reason, unit);
 }));
 
-const updateOrderInUnit = async (id, body, actor = null, unit) => {
+const updateOrderInUnit = async (id, body, actor = null, unit, internal = {}) => {
   const { session, compensate } = unit;
   const order = await querySession(Order.findById(id), session);
   if (!order) throw httpError(404, "Order not found");
@@ -164,6 +177,7 @@ const updateOrderInUnit = async (id, body, actor = null, unit) => {
   const requestedStatus = eventStatus || body.status || order.status;
   if (actor && (input || requestedStatus !== order.status || body.isPaid !== undefined)) { const carrier = await querySession(require("../models/CourierBooking").findOne({ order: id, status: { $nin: ["cancelled", "rejected"] } }), session); if (carrier && requestedStatus !== "cancelled") throw httpError(409, "Use carrier synchronization or cancel/reconcile the active parcel before manual fulfillment or payment changes"); }
   if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before changing fulfillment or cash payment");
+  await require("./fulfillmentService").legacyStatus(order, requestedStatus, unit, internal.parcel === true);
   if (!canTransitionOrder(order.status, requestedStatus)) throw httpError(409, "Order cannot move from " + order.status + " to " + requestedStatus);
   if (body.isPaid !== undefined && typeof body.isPaid !== "boolean") throw httpError(400, "Payment confirmation must be true or false");
   if (requestedStatus === "cancelled") {
@@ -175,6 +189,7 @@ const updateOrderInUnit = async (id, body, actor = null, unit) => {
   }
   if (body.isPaid === false && order.isPaid) throw httpError(409, "A paid order cannot be marked unpaid");
   if (body.isPaid === true && order.paymentMethod !== "cod") throw httpError(409, "Online payments are confirmed by validated gateway callbacks");
+  if (body.isPaid === true && order.fulfillmentManaged && requestedStatus !== "delivered" && await querySession(require("../models/FulfillmentParcel").exists({ order: id, status: { $ne: "delivered" } }), session)) throw httpError(409, "Confirm all warehouse deliveries before recording COD payment");
   const shipping = await shipmentFields(order, requestedStatus, input, unit, actor);
   if (shipping.replay) return order;
   const previous = { status: order.status, isPaid: order.isPaid, paymentStatus: order.paymentStatus, paidAt: order.paidAt || null, shipment: order.shipment?.toObject ? order.shipment.toObject() : order.shipment || {} };
@@ -189,6 +204,7 @@ const updateOrderInUnit = async (id, body, actor = null, unit) => {
     await syncInvoicePayment({ ...order.toObject(), ...previous });
   });
   await syncInvoicePayment(updated, session, unit, previous);
+  if (!internal.parcel) await require("./fulfillmentService").syncSingle(updated, unit);
   if (shipping.record && !["shipped", "delivered"].includes(shipping.record.event) && updated.status === "shipped") await require("./notificationService").queueMessage(updated, "tracking", String(shipping.record._id), unit, [shipping.record.location, shipping.record.note].filter(Boolean).join(" — "));
   return updated;
 };

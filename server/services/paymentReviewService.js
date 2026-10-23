@@ -60,7 +60,10 @@ const reviewOrder = async ({ orderId, user, body }) => {
     if (charges.some((source) => source !== selected && returned(source, true) < moneyCents(source.amount))) throw httpError(409, "Refund the additional validated charges before approving the retained payment");
     return withDatabaseUnit(async (unit) => {
       order = await querySession(Order.findById(orderId), unit.session);
-      if (order.stockRestored) for (const item of order.items) await require("./inventoryService").reserveItem(item, unit);
+      if (order.stockRestored) {
+        for (const item of order.items) await require("./inventoryService").reserveItem(item, unit);
+        await require("./fulfillmentService").reopenParcels(order, unit);
+      }
       await patch(Payment, selected.payment, { status: "paid", paidAt: selected.payment.paidAt || new Date() }, unit);
       const updated = await patchOrder(order, { isPaid: true, paymentStatus: "paid", paidAt: order.paidAt || new Date(), paidTransactionId: selected.payment.transactionId,
         status: "processing", stockRestored: false, reservationExpiredAt: null, cancelledAt: null, cancelReason: "",

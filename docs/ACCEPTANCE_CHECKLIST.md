@@ -1,8 +1,24 @@
-# NORDA 2.12.1 acceptance checklist
+# NORDA 2.13.0 acceptance checklist
 
-> Current patch: preflight and mail commands now read optional integration settings without replacing existing values. See [measured acceptance results](VERIFICATION_RESULTS.md) for the current test record and the checks that remain blocked. No owner database or credentials were changed.
+> Current extension: the six commerce operations workflows are implemented. See [the operational guide](COMMERCE_EXPANSION.md) and [measured results](VERIFICATION_RESULTS.md). Existing credentials are preserved; no owner database or real provider was used for release testing. Browser/provider acceptance is still a target-environment step.
 
 > Version 2.10 extension: see [Management, notifications, devices and item returns](MANAGEMENT_RETURNS.md) for scoped staff access, device revocation, return/refund email preferences, delivery outcomes, selected-item returns/exchanges and credit notes. Earlier workflows below remain available.
+
+## New commerce workflows — 2.13
+
+Run these on isolated staging/test merchandise, using the existing private environment settings:
+
+- Guest: browse → exact variant → cart quantity/removal → enter contact/shipping → COD or configured payment → own order/invoice. Use another browser profile to confirm isolation. Recover through the actual inbox link, then merge a guest cart and link orders to its matching verified account. A different verified email must not claim them.
+- Settlement: preview/import a partial COD statement and its fee, import the balance, compare net, reject a repeated provider reference, inspect unpaid/overpayment exceptions and audit an exclusion. Match a real refunded exchange charge and its separate negative refund line. An import must not mark an unpaid order paid.
+- Exchanges: select higher-, lower- and equal-price products/variants with a coupon. Approve, check exact reserved replacement SKU, collect/validate an extra payment or hold the lower-price refund, receive in two parts, then complete the actual refund/payment and dispatch. Compare original invoice, adjustment and credit note.
+- Reverse pickup: request on an approved return, arrange the actual carrier booking, record its real reference/appointment, progress to arrival and receive partial quantities. Repeated receipt must not restock twice. Whole-order pickup must link to the earlier whole-order receipt tool.
+- Warehouses: verify location balances before opting in. Enable priorities, try split and single-source-per-SKU modes, place a multi-location order, inspect parcel totals/tracking, confirm partial delivery does not mark COD paid and cancellation is blocked after dispatch. Test unpaid expiry/retry and late-payment review without changing parcel IDs.
+- Availability: verified customer subscribes to the sold-out exact SKU; restock another SKU (no alert), then the followed SKU (one accepted notification). Check actual inbox/Spam, unsubscribe and a later sold-out re-subscription. An alert must not reserve stock.
+- Staff: verify payments, inventory and orders scopes expose only their respective policy/parcel/ledger/receipt screens and APIs. Keep full-admin MFA/invitation rules unchanged.
+- Visual: inspect all eight new screens on desktop/phone, keyboard and 200% zoom. Print the exchange adjustment and compare it with the original invoice and lower-price credit note. No automated VM test is a substitute for this visual acceptance.
+- Providers: complete the public **exchange** SSLCOMMERZ session/success/fail/cancel/IPN/replay/risk/review/refund matrix as well as the existing original-order matrix. Verify actual SMTP order-recovery/stock emails. Reverse bookings and split-parcel shipping confirmations require the actual carrier arrangement.
+
+Upgrade every server sharing the DB before activation; older versions cannot safely process these new records. Keep backups and use a compatible release for rollback.
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 

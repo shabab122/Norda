@@ -30,6 +30,7 @@ const stockWrite = (item, delta, reserve = false) => {
   return { filter, update: { $inc: increment } };
 };
 const reserveItem = async (item, unit) => {
+  if (item.fulfillmentAllocations?.length) return require("./fulfillmentService").reservePlanned(item, unit);
   const { filter, update } = stockWrite(item, -item.quantity, true);
   const result = await Product.findOneAndUpdate(filter, update, writeOptions(unit.session, { new: true }));
   if (!result) throw httpError(409, "Not enough stock for " + item.name + (item.sku ? " (" + item.sku + ")" : ""));
@@ -38,6 +39,7 @@ const reserveItem = async (item, unit) => {
   return result;
 };
 const restoreItem = async (item, unit, strict = true) => {
+  if (item.fulfillmentAllocations?.length) return require("./fulfillmentService").restore(item, unit, strict);
   const { filter, update } = stockWrite(item, item.quantity);
   const result = await Product.updateOne(filter, update, writeOptions(unit.session));
   if (!result.matchedCount) { if (strict) throw httpError(409, "A historical product or variant is missing. Inventory needs store review."); return false; }

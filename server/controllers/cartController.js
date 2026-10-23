@@ -7,26 +7,35 @@ const { withOperationLock } = require("../services/operationLock");
 const cartProductFields = "name images price discountPrice stock isArchived variants";
 const serializeCart = (cart, userId) => {
   if (!cart) return { user: userId, items: [] };
-  const value = cart.toObject();
+  const value = cart.toObject ? cart.toObject() : cart;
   value.items = value.items.map((item) => {
     try { const selected = selection(item.product, item.variantId); return { ...item, ...selected, unavailable: false }; }
     catch (error) { return { ...item, unavailable: true, unavailableReason: error.message }; }
   });
   return value;
 };
+async function presentedCart(cart, userId) {
+  if (!cart) return serializeCart(cart, userId);
+  const value = cart.toObject(), products = value.items.map(i => i.product).filter(Boolean);
+  const available = await require("../services/fulfillmentService").enrich(products);
+  const lookup = new Map(available.map(p => [String(p._id), p]));
+  value.items = value.items.map(i => ({ ...i, product: i.product ? lookup.get(String(i.product._id)) || i.product : null }));
+  return serializeCart(value, userId);
+}
 const getCart = async (req, res, next) => {
   try {
     // Reading/badge refresh does not save a stale cart over concurrent changes.
     const cart = await Cart.findOne({ user: req.user._id }).populate("items.product", cartProductFields);
-    res.json(serializeCart(cart, req.user._id));
+    res.json(await presentedCart(cart, req.user._id));
   } catch (error) { next(error); }
 };
 const mutateCart = (req, work) => withOperationLock("cart:" + req.user._id, async () => {
+  if (req.user.isGuest) await require("../services/guestService").active(req);
   const cart = await Cart.findOneAndUpdate({ user: req.user._id }, { $setOnInsert: { user: req.user._id, items: [] } }, { new: true, upsert: true, setDefaultsOnInsert: true });
   await work(cart);
   await cart.save();
   await cart.populate("items.product", cartProductFields);
-  return serializeCart(cart, req.user._id);
+  return presentedCart(cart, req.user._id);
 });
 const addToCart = async (req, res, next) => {
   try {
@@ -37,7 +46,8 @@ const addToCart = async (req, res, next) => {
       if (!product || product.isArchived) {
         const error = new Error("This product is no longer available"); error.statusCode = 404; throw error;
       }
-      const selected = selection(product, req.body.variantId);
+      const [available] = await require("../services/fulfillmentService").enrich([product]);
+      const selected = selection(available, req.body.variantId);
       const existing = cart.items.find((item) => item.product.toString() === product._id.toString() && String(item.variantId || "") === String(selected.variantId || ""));
       const requested = quantity + (existing?.quantity || 0);
       if (!isPositiveInteger(requested) || requested > selected.stock) {
@@ -57,7 +67,8 @@ const updateCartItem = async (req, res, next) => {
       const item = cart.items.id(req.params.itemId);
       if (!item) { const error = new Error("Cart item not found"); error.statusCode = 404; throw error; }
       const product = await Product.findById(item.product);
-      const selected = selection(product, item.variantId);
+      const [available] = await require("../services/fulfillmentService").enrich(product ? [product] : []);
+      const selected = selection(available, item.variantId);
       if (quantity > selected.stock) {
         const error = new Error("This quantity is unavailable. Please review your cart."); error.statusCode = 409; throw error;
       }

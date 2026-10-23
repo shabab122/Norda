@@ -3,6 +3,7 @@ const couponSnapshotSchema = new mongoose.Schema({ _id: mongoose.Schema.Types.Ob
 
 const orderItemSchema = new mongoose.Schema(
   {
+    fulfillmentAllocations: { type: [new mongoose.Schema({ warehouse: String, warehouseName: String, quantity: Number }, { _id: false })], default: undefined },
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
     variantId: mongoose.Schema.Types.ObjectId, sku: { type: String, default: "" },
     size: { type: String, default: "" }, color: { type: String, default: "" },
@@ -34,6 +35,8 @@ const orderSchema = new mongoose.Schema(
       trackingUrl: { type: String, default: "", maxlength: 500 }, state: { type: String, default: "", enum: ["", "shipped", "in_transit", "out_for_delivery", "delivery_attempted", "delivered"] },
       shippedAt: Date, deliveredAt: Date, lastUpdatedAt: Date,
     },
+    fulfillmentManaged: { type: Boolean, default: false },
+    customerSnapshot: { name: String, email: String, isGuest: Boolean },
     subtotal: { type: Number, required: true, min: 0, default: 0 },
     shippingFee: { type: Number, required: true, min: 0, default: 0 },
     discountAmount: { type: Number, min: 0, default: 0 },

@@ -1,5 +1,15 @@
 # Future NORDA development
 
+## Completed in 2.13.0
+
+- Reviewed gateway/COD/exchange/refund settlement statements, fees, partial remittances and exception resolution.
+- Different-price product/variant exchanges, additional charge receipts, difference refunds/credit notes and funding guards.
+- Confirmed reverse pickup history and partial item/quantity receipts with inspected restocking.
+- Private full guest cart/checkout, one-use order-access recovery, safe cart merge and verified-email order linking.
+- Opt-in automatic warehouse routing/splitting, source recovery and per-parcel customer progress/COD completion.
+- Exact-option customer back-in-stock subscriptions, verified email, durable delivery/retry and unsubscribe.
+- See [behavior and operating boundaries](COMMERCE_EXPANSION.md).
+
 ## Acceptance patch 2.12.1
 
 - Align acceptance/mail CLI configuration with application startup without modifying credentials or business workflows.
@@ -41,7 +51,7 @@
 - Account wishlists and safe cart continuation, including exact variant selection.
 - Product/SKU stock CSV export/preview/import, durable results and individual low-stock thresholds/alerts.
 - Admin storefront banner/announcement/contact/FAQ/policy/delivery settings and public help pages.
-- See [the complete feature guide](COMMERCE_TOOLS.md). New catalog/SKU creation, satellite warehouse tooling and stock-email subscriptions are added in 2.12. Automatic multi-location order routing remains future scope.
+- See [the complete feature guide](COMMERCE_TOOLS.md). New catalog/SKU creation, satellite warehouse tooling and stock-email subscriptions are added in 2.12. Opt-in multi-location order routing is implemented in 2.13.
 
 ## Completed in 2.8.0
 
@@ -108,16 +118,16 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 2 — order operations
 
-- Additional courier adapters, authenticated provider webhooks, reverse pickup and broader address/fractional-collection contracts
+- Additional carrier adapters, automatic reverse-booking APIs, authenticated provider webhooks and broader address/fractional-collection contracts
 - Optional SMS provider, provider-specific mail adapters and delivery/complaint remediation tooling
-- Price-difference exchanges, partial-parcel receipt, discretionary refund deductions and external credit-note/accounting integration
+- Discretionary refund deductions, partial receipts on the legacy whole-order flow, multiple receiving warehouses and external credit-note/accounting integration
 - Optional passkeys/device trust and further organization-specific permission expansion (TOTP/invitations are implemented)
 
 ## Phase 3 — catalog and experience
 
-- Optional automatic warehouse fulfillment routing/order splitting, warehouse bulk operations and customer back-in-stock subscriptions
-- Optional full guest cart/checkout
-- Bank settlement/cash-flow reconciliation reports, optional comparison/recently viewed products
+- Per-parcel carrier API booking/labels, warehouse bulk operations and capacity-aware routing beyond configured priorities
+- Guest data-retention tooling and optional additional purchase identity verification
+- Provider-specific automatic statement ingestion, accounting exports and optional comparison/recently viewed products
 - Dedicated category landing pages, final-domain SEO validation and Search Console follow-up
 
 ## Phase 4 — public operations

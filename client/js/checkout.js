@@ -2,21 +2,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader();
   renderFooter();
-  if (!requireLogin()) return;
+  if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure();
+  if (!requireShopper()) return;
   await loadCheckout();
 });
 
 async function loadCheckout() {
-  checkoutOwner = Api.getUser()?._id;
+  checkoutOwner = shoppingIdentity();
   const root = document.getElementById("checkout-root");
   try {
     const [cart, profile, paymentConfig, store] = await Promise.all([
       Api.get("/cart"),
-      Api.get("/auth/profile"),
+      Api.isLoggedIn() ? Api.get("/auth/profile") : Promise.resolve({ address: {}, addresses: [], ...(Guest.current || {}) }),
       Api.get("/payments/config"),
       getStoreConfig(),
     ]);
-    if (Api.getUser()?._id !== checkoutOwner) return;
+    if (shoppingIdentity() !== checkoutOwner) return;
     const items = cart.items || [];
     if (items.some((item) => item.unavailable || !item.product || item.quantity > (item.stock ?? item.product.stock))) {
       root.innerHTML = `<div class="empty-state"><h2>Your cart needs a quick review</h2><p>An item or quantity is no longer available. Your selection has been kept.</p><a class="btn btn-primary" href="cart.html">Review cart</a></div>`;
@@ -43,7 +44,7 @@ async function loadCheckout() {
           <section class="checkout-card">
             <div class="checkout-card-head"><span>01</span><div><h2>Delivery details</h2><p>Choose a saved address or enter the delivery details for this order.</p></div></div>
             <div id="checkout-alert" aria-live="polite"></div>
-            ${checkoutAddressPicker(profile)}
+            ${!Api.isLoggedIn() ? `<div class="form-grid two"><div class="field"><label for="guest-name">Your name</label><input id="guest-name" name="guest-name" required maxlength="80" autocomplete="name" value="${escapeHtml(Guest.current?.name === "Guest shopper" ? "" : Guest.current?.name || "")}" /></div><div class="field"><label for="guest-email">Order email</label><input id="guest-email" name="guest-email" type="email" required maxlength="254" autocomplete="email" value="${escapeHtml(Guest.current?.email || "")}" /></div></div><p class="field-help">We will send order updates here. You can link your purchase to a matching verified account later.</p>` : checkoutAddressPicker(profile)}
             <div class="form-grid two">
               <div class="field field-wide">
                 <label for="address-line">Street address</label>
@@ -183,7 +184,7 @@ function bindCheckoutForm() {
   document.getElementById("checkout-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const button = document.getElementById("place-order-btn");
-    if (button.disabled || couponBusy || checkoutSubmitting || Api.getUser()?._id !== checkoutOwner) return;
+    if (button.disabled || couponBusy || checkoutSubmitting || shoppingIdentity() !== checkoutOwner) return;
     checkoutSubmitting = true;
     const alert = document.getElementById("checkout-alert");
     const paymentMethod = document.querySelector('input[name="payment-method"]:checked').value;
@@ -192,6 +193,7 @@ function bindCheckoutForm() {
     alert.innerHTML = "";
 
     try {
+      if (!Api.isLoggedIn()) { Guest.current = await Api.post("/guest/contact", { name: document.getElementById("guest-name").value.trim(), email: document.getElementById("guest-email").value.trim() }); }
       if (paymentMethod.startsWith("demo_")) {
         const result = await Api.post("/payments/demo/initiate", {
           shippingAddress: shippingPayload(), channel: paymentMethod.slice(5),
@@ -272,14 +274,19 @@ function renderCheckoutQuote() {
   document.getElementById("remove-coupon").hidden = !checkoutCouponCode;
 }
 async function updateCheckoutCoupon(code) {
-  if (couponBusy || checkoutSubmitting || Api.getUser()?._id !== checkoutOwner) return;
+  if (couponBusy || checkoutSubmitting || shoppingIdentity() !== checkoutOwner) return;
   couponBusy = true;
   const ids = ["apply-coupon", "remove-coupon", "checkout-coupon", "place-order-btn"];
   ids.forEach((id) => document.getElementById(id).disabled = true);
   const feedback = document.getElementById("coupon-feedback"); feedback.textContent = "Checking your current cart…";
   try {
+    if (code.trim() && !Api.isLoggedIn()) {
+      const name = document.getElementById("guest-name"), email = document.getElementById("guest-email");
+      if (!name.value.trim() || !email.value.trim() || !email.checkValidity()) throw new Error("Enter your name and valid order email before applying a coupon.");
+      Guest.current = await Api.post("/guest/contact", { name: name.value.trim(), email: email.value.trim() });
+    }
     const quote = await Api.post("/coupons/preview", { code: code.trim() });
-    if (Api.getUser()?._id !== checkoutOwner) return;
+    if (shoppingIdentity() !== checkoutOwner) return;
     if (quote.cartSignature !== checkoutCartSignature) throw new Error("Your cart or prices changed. Refresh checkout to review the current items.");
     checkoutCouponCode = quote.coupon?.code || "";
     checkoutQuote = Object.fromEntries(["subtotal", "shippingFee", "discountAmount", "totalAmount"].map((key) => [key, quote[key]]));
@@ -288,5 +295,5 @@ async function updateCheckoutCoupon(code) {
     feedback.textContent = checkoutCouponCode ? checkoutCouponCode + " applied. You save " + money(quote.discountAmount) + "." : "No coupon applied.";
     renderCheckoutQuote();
   } catch (error) { feedback.textContent = error.message + (checkoutCouponCode ? " Current coupon: " + checkoutCouponCode + "." : ""); }
-  finally { couponBusy = false; if (Api.getUser()?._id === checkoutOwner) ids.forEach((id) => document.getElementById(id).disabled = false); }
+  finally { couponBusy = false; if (shoppingIdentity() === checkoutOwner) ids.forEach((id) => document.getElementById(id).disabled = false); }
 }

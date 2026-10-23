@@ -6,6 +6,7 @@ const orderView = (order, options = {}) => {
   // New operational evidence belongs to administrators. Keep the original
   // customer order contract while excluding private resolution/bank fields.
   if (options.includeInternal !== true) for (const field of ["reviewResolutionNote", "reviewedBy", "settledPayment", "settledValidationId", "settledBankTransactionId"]) delete data[field];
+  if (data.customerSnapshot?.isGuest && data.user && typeof data.user === "object" && data.user.name) data.user = { ...data.user, name: data.customerSnapshot.name, email: data.customerSnapshot.email, isGuest: true };
   const review = data.paymentStatus === "review";
   const recoverable = !hasBlockingOperation(data) && !data.isPaid && !review && (data.status === "pending" || data.status === "processing" || (data.status === "cancelled" && Boolean(data.reservationExpiredAt)));
   return { ...data, paymentRecovery: {

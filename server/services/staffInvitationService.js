@@ -10,7 +10,7 @@ async function create(actor, body) {
   if (requireMfa) require("./mfaService").key(); const intentHash = hash(JSON.stringify([email, [...permissions].sort(), requireMfa]));
   return withOperationLock("staff-management", async () => {
     const previous = await Invitation.findOne({ requestKey: key }); if (previous) { if (previous.intentHash !== intentHash) throw httpError(409, "This request key belongs to a different invitation"); return safe(previous); }
-    const existing = await User.findOne({ email }); if (existing && existing.role !== "user") throw httpError(409, "This account already has staff/administrator access; use the existing access editor");
+    const existing = await User.findOne({ email }); if (existing?.isGuest || email.endsWith(".invalid")) throw httpError(400, "Invite a real registered or new staff email"); if (existing && existing.role !== "user") throw httpError(409, "This account already has staff/administrator access; use the existing access editor");
     const token = crypto.randomBytes(32).toString("hex"); link(token);
     const row = await withDatabaseUnit(async unit => { for (const prior of await querySession(Invitation.find({ email, status: "pending" }), unit.session)) await patch(Invitation, prior, { status: "revoked" }, unit); const invite = await insertDocument(Invitation, { email, permissions: [...permissions].sort(), requireMfa, requestKey: key, intentHash, tokenHash: hash(token), createdBy: actor._id, expiresAt: new Date(Date.now() + 172800000), status: "pending" }, unit.session); unit.compensate(() => Invitation.deleteOne({ _id: invite._id })); return invite; });
     return send(row, token);
@@ -20,7 +20,7 @@ async function lookup(token) { if (typeof token !== "string" || !/^[a-f0-9]{64}$
 async function inspect(token) { const row = await lookup(token); return { ...safe(row), existingAccount: Boolean(await User.exists({ email: row.email })) }; }
 async function accept(actor, body) { return withOperationLock("staff-management", () => withDatabaseUnit(async unit => {
   const row = await lookup(body.token); let user = await querySession(User.findOne({ email: row.email }), unit.session);
-  if (user) { if (!actor || String(actor._id) !== String(user._id) || (actor.tokenVersion || 0) !== (user.tokenVersion || 0)) throw httpError(403, "Sign in with the invited email before accepting this invitation"); if (user.role !== "user") throw httpError(409, "This account's access changed. Ask the administrator to review it."); }
+  if (user) { if (user.isGuest || !actor || String(actor._id) !== String(user._id) || (actor.tokenVersion || 0) !== (user.tokenVersion || 0)) throw httpError(403, "Sign in with the invited email before accepting this invitation"); if (user.role !== "user") throw httpError(409, "This account's access changed. Ask the administrator to review it."); }
   else {
     if (actor) throw httpError(403, "Sign out of the other account before creating the invited account");
     if (typeof body.name !== "string" || !body.name.trim() || body.name.trim().length > 80 || !require("./accountRecoveryService").validPassword(body.password)) throw httpError(400, "Provide your name and a password of at least 8 characters (up to 72 UTF-8 bytes)");

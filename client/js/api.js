@@ -34,6 +34,8 @@ const Api = {
   },
   async request(path, { method = "GET", body, isForm = false, signal } = {}) {
     const headers = { Accept: "application/json" };
+    if (typeof Guest !== "undefined" && Guest.current && !this.isLoggedIn() && !path.startsWith("/auth/") && !path.startsWith("/admin/")) { headers["X-Norda-Guest"] = "1"; headers["X-Norda-Guest-ID"] = Guest.current.id; }
+    if (typeof Guest !== "undefined" && Guest.current && path.startsWith("/guest/") && !["/guest/session", "/guest/recover", "/guest/recovery"].includes(path)) headers["X-Norda-Guest-ID"] = Guest.current.id;
     const token = this.getToken();
     if (token) headers.Authorization = "Bearer " + token;
     if (body !== undefined && !isForm) headers["Content-Type"] = "application/json";
@@ -55,8 +57,12 @@ const Api = {
       const error = new Error(data?.message || "Request failed with status " + response.status);
       error.status = response.status; error.orderId = data?.orderId; error.invoiceNumber = data?.invoiceNumber;
       if (response.status === 401 && !path.includes("/auth/login")) {
-        this.logout();
-        window.dispatchEvent(new CustomEvent("norda:session-expired"));
+        if (path.startsWith("/guest/") || headers["X-Norda-Guest"] === "1") {
+          if (typeof Guest !== "undefined") { Guest.current = null; Guest.changed(); }
+        } else {
+          this.logout();
+          window.dispatchEvent(new CustomEvent("norda:session-expired"));
+        }
       }
       throw error;
     }

@@ -1,4 +1,6 @@
 let currentPage = "";
+function shoppingIdentity() { return Api.getUser()?._id || (typeof Guest !== "undefined" ? Guest.current?.id : null); }
+function requireShopper() { if (shoppingIdentity()) { if (document.body) document.body.dataset.protected = "shopper"; return true; } window.location.href = "guest-orders.html"; return false; }
 function renderHeader(activePage = "") {
   currentPage = activePage;
   enableSkipLink();
@@ -28,6 +30,7 @@ function renderHeader(activePage = "") {
             ${user ? `<a href="orders.html" class="${activePage === "orders" ? "active" : ""}">Orders</a>` : ""}
             ${user && user.role !== "admin" ? `<a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">My account</a>` : ""}
             ${!user ? `<a href="register.html">Create account</a>` : ""}
+            ${typeof Guest !== "undefined" && Guest.current ? `<a href="guest-orders.html">Guest orders</a>` : ""}
           </nav>
           <form class="search-form" id="global-search-form" role="search">
             <label class="sr-only" for="global-search">Search products</label>
@@ -98,7 +101,7 @@ function renderFooter() {
           <h4>Account</h4>
           <ul>
             <li><a href="${Api.getUser() ? accountHome() : "login.html"}">${Api.getUser() ? "My dashboard" : "Sign in or create account"}</a></li>
-            <li><a href="profile.html">Profile</a></li>
+            <li><a href="profile.html">Profile</a></li><li><a href="stock-alerts.html">Availability alerts</a></li><li><a href="guest-orders.html">Guest orders & access</a></li>
             <li><a href="orders.html">Orders & invoices</a></li>
             ${!Api.getUser() ? `<li><a href="register.html">Create account</a></li>` : ""}
           </ul>
@@ -134,7 +137,7 @@ function accountInitials(name) {
 
 async function refreshCartBadge() {
   const badge = document.getElementById("cart-count");
-  if (!badge || !Api.isLoggedIn()) {
+  if (!badge || !shoppingIdentity()) {
     badge?.classList.add("hidden");
     return;
   }
@@ -174,8 +177,8 @@ function requireAdmin() {
   if (Api.isAdmin()) return true;
   if (Api.getUser()?.role === "staff") {
     const page = window.location.pathname.split("/").pop();
-    const scopes = { "advanced-inventory.html": "inventory", "courier.html": "orders", "media.html": "catalog", "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
-    if ((page === "advanced-inventory.html" && Api.can("catalog")) || page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
+    const scopes = { "settlements.html": "payments", "fulfillment.html": "orders", "return-pickups.html": "orders", "exchange-payments.html": "payments", "advanced-inventory.html": "inventory", "courier.html": "orders", "media.html": "catalog", "dashboard.html": "reports", "reports.html": "reports", "products.html": "catalog", "categories.html": "catalog", "brands.html": "catalog", "inventory.html": "inventory", "coupons.html": "marketing", "store-settings.html": "settings", "orders.html": "orders", "shipments.html": "orders", "invoices.html": "orders", "operations.html": "payments", "item-returns.html": "payments", "notifications.html": "notifications", "customers.html": "customers" };
+    if (((page === "advanced-inventory.html" && Api.can("catalog")) || (page === "fulfillment.html" && Api.can("inventory"))) || page === "workspace.html" || (scopes[page] && Api.can(scopes[page]))) return true;
     window.location.href = "workspace.html"; return false;
   }
   window.location.href = "../login.html";
@@ -198,9 +201,9 @@ function takeCartIntent() {
 }
 let cartWriteQueue = Promise.resolve();
 function enqueueCartWrite(work) {
-  const userId = Api.getUser()?._id;
+  const userId = shoppingIdentity();
   const next = cartWriteQueue.then(() => {
-    if (!userId || userId !== Api.getUser()?._id) throw new Error("Your account changed. Please refresh before updating your cart.");
+    if (!userId || userId !== shoppingIdentity()) throw new Error("Your account changed. Please refresh before updating your cart.");
     return work();
   });
   cartWriteQueue = next.catch(() => {});
@@ -209,7 +212,8 @@ function enqueueCartWrite(work) {
 async function addProductToCart(productId, quantity = 1, variantId) {
   if (variantId !== undefined && !/^[a-f0-9]{24}$/i.test(variantId)) throw new Error("Choose a valid product option.");
   if (!Number.isSafeInteger(quantity) || quantity < 1) throw new Error("Choose a positive whole-number quantity.");
-  if (!Api.isLoggedIn()) { rememberCartIntent(productId, quantity, variantId); requireLogin(); return false; }
+  if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure();
+  if (!Api.isLoggedIn() && !shoppingIdentity()) { rememberCartIntent(productId, quantity, variantId); requireLogin(); return false; }
   await enqueueCartWrite(() => Api.post("/cart", { productId, quantity, ...(variantId ? { variantId } : {}) }));
   return true;
 }

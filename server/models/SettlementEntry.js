@@ -1,0 +1,4 @@
+const mongoose = require("mongoose");
+const schema = new mongoose.Schema({batch:{type:mongoose.Schema.Types.ObjectId,ref:"SettlementBatch",required:true,index:true},kind:{type:String,enum:["gateway_sale","cod_remittance","gateway_refund","exchange_sale"],required:true},provider:String,reference:{type:String,required:true},order:{type:mongoose.Schema.Types.ObjectId,ref:"Order",required:true,index:true},transactionId:String,refundId:mongoose.Schema.Types.ObjectId,gross:{type:Number,required:true},fee:{type:Number,required:true},net:{type:Number,required:true},currency:String,settledAt:Date,status:{type:String,enum:["matched","unmatched","mismatch","accepted_adjustment","excluded"],required:true},reason:String,resolutions:[new mongoose.Schema({status:String,note:String,actor:mongoose.Schema.Types.ObjectId,at:Date},{_id:false})]},{timestamps:true});
+schema.index({provider:1,reference:1},{unique:true});
+module.exports = mongoose.model("SettlementEntry",schema);

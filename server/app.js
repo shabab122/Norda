@@ -32,7 +32,7 @@ const allowedOrigins = String(process.env.CLIENT_URL || "")
 // Gateway form redirects/IPN are cross-origin server notifications; browser
 // CORS rules apply to storefront API calls, not these validated callbacks.
 app.use((req, res, next) => {
-  const gatewayCallback = /^\/api\/payments\/sslcommerz\/(success|fail|cancel|ipn)$/.test(req.path);
+  const gatewayCallback = /^\/api\/(?:payments|exchange-payments)\/sslcommerz\/(success|fail|cancel|ipn)$/.test(req.path);
   cors({
     origin(origin, callback) {
       if (gatewayCallback) return callback(null, false);
@@ -77,6 +77,7 @@ app.use("/api", (req, res, next) => { res.setHeader("Cache-Control", "no-store")
 app.get("/uploads/:filename", require("./services/mediaService").legacyRedirect);
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { fallthrough: false }));
 app.post("/api/mail/delivery-events", async (req, res, next) => { try { const s = require("./services/notificationDeliveryService"); s.verifyWebhook(req); res.json(await s.recordDelivery(req.body)); } catch (e) { next(e); } });
+app.use("/api", require("./routes/commerceExpansionRoutes"));
 app.use("/api", require("./routes/releaseToolsRoutes"));
 app.use("/api", require("./routes/productionToolsRoutes"));
 app.use("/api/auth", authRoutes);

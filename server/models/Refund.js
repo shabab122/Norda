@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const schema = new mongoose.Schema({
+  exchangePayment: { type: mongoose.Schema.Types.ObjectId, ref: "ExchangePayment" },
   order: { type: mongoose.Schema.Types.ObjectId, ref: "Order", required: true, index: true },
   user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   payment: { type: mongoose.Schema.Types.ObjectId, ref: "Payment" },

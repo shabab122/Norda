@@ -1,0 +1,4 @@
+const mongoose = require("mongoose");
+const schema = new mongoose.Schema({order:{type:mongoose.Schema.Types.ObjectId,ref:"Order",required:true,index:true},warehouse:{type:String,required:true},warehouseName:String,items:[new mongoose.Schema({lineIndex:Number,quantity:Number,product:mongoose.Schema.Types.ObjectId,variantId:mongoose.Schema.Types.ObjectId,sku:String,name:String},{_id:false})],amount:{type:Number,required:true,min:0},status:{type:String,enum:["pending","processing","shipped","delivered","cancelled"],default:"pending"},courierName:String,trackingNumber:String,trackingUrl:String,shippedAt:Date,deliveredAt:Date,history:[new mongoose.Schema({key:String,hash:String,status:String,note:String,at:Date,actor:mongoose.Schema.Types.ObjectId},{_id:false})]},{timestamps:true});
+schema.index({order:1,warehouse:1},{unique:true});
+module.exports = mongoose.model("FulfillmentParcel",schema);
