@@ -1,4 +1,7 @@
-> Current version: 2.11.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+> Current version: 2.12.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
+
+> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
@@ -270,3 +273,15 @@ Policies, APIs and acceptance examples: [MANAGEMENT_RETURNS.md](MANAGEMENT_RETUR
 | OPS-03 | Readiness, redacted incident history and optional bounded alerts | Owner SMTP/HTTPS receiver plus external uptime monitor |
 
 Existing requirements remain in force. See [PRODUCTION_TOOLS.md](PRODUCTION_TOOLS.md) and [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md).
+
+## Release/security/inventory requirements — 2.12
+
+| ID | Implemented behavior | Owner activation |
+|---|---|---|
+| DEP-01 | HTTPS/restart/persistent data, staging isolation, verified releases and code rollback | VM, DNS, SSH pinning, separate database/provider settings and GitHub Environments |
+| OPS-04 | Private encrypted off-host replication, guarded retention and scheduled isolated restore | Private S3-compatible account/key/namespace and backup/drill permissions |
+| OPS-05 | Independent stateful readiness/outage/recovery monitoring | GitHub-hosted or separate-host execution and actual alert channel |
+| SEC-01 | Expiring staff invitations, TOTP/recovery proof and verified MFA sessions | SMTP and separate shared MFA encryption key; stop old app versions |
+| INV-02 | New catalog/SKU CSV creation, satellite stock/transfer history and stock email queue | Actual warehouse counts, permitted staff and SMTP subscription |
+
+Existing functional requirements remain. Multi-warehouse order splitting, passkeys and multipart archives above 5 GiB remain future scope.

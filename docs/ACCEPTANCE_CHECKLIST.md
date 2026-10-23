@@ -122,3 +122,14 @@ Automated HTTP/native/protocol/VM checks passed; owner-account/browser acceptanc
 6. Verify readiness during maintenance and receive a controlled operational alert through actual SMTP/HTTPS. Use an external monitor for a stopped host/process.
 
 These checks do not replace the retained public SSLCOMMERZ sandbox success/failure/cancel/IPN/refund acceptance matrix.
+
+## Release/team/inventory acceptance — 2.12
+
+1. Upgrade both shared-DB laptops, retain their working `.env` and configure the same new MFA key. Verify old credentials still work, then enroll one account and check two-step login/recovery/session revocation.
+2. Invite a new staff member and an existing account; inspect actual email links, matching-account acceptance, expiry/resend/revoke, required MFA enrollment and scoped tools. Existing passwords/history must remain.
+3. Preview/import a small real catalog CSV, then test warehouse counts/online transfers and a stale adjustment. Online checkout must ignore satellite-only stock. Check stock shortage, replenishment/rearm, unsubscribe and actual inbox/Spam.
+4. On isolated staging, build/run the Docker image, verify DNS/TLS/restart/persistent uploads and preflight. Complete a customer/admin journey, deploy a compatible release and exercise code rollback. Only then promote production through the configured Environment.
+5. With the real private bucket, create/upload/read back an encrypted archive, fetch it without relying on the store database and perform an isolated drill. Confirm retention preserves the minimum copies and leaves other namespaces alone.
+6. Run the independent monitor outside the store host, stop staging and observe one outage/recovery notification. Confirm state survives restarts and alerts reach the actual receiver.
+
+Actual Docker/TLS/provider/browser acceptance is distinct from the automated fixture/native tests. See [the guide](RELEASE_AUTOMATION.md); do not disrupt the working production database to perform these checks.

@@ -1,4 +1,7 @@
-# Norda 2.11 — API Reference
+# Norda 2.12 — API Reference
+
+> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
@@ -274,3 +277,19 @@ CSV query parameters: `status`, `paymentStatus`, `from=YYYY-MM-DD` and `to=YYYY-
 See [the route table and request semantics](PRODUCTION_TOOLS.md#api-additions). New `/api/admin/courier` routes require the `orders` scope, media read/reconcile requires `catalog`, and migration/cleanup/system history requires full administrator access. Owner-scoped carrier tracking is at `GET /api/orders/:id/courier`. Readiness is `GET /api/health/ready`. Backup data is CLI-only.
 
 Checkout shipping addresses accept optional trimmed `thana` and `area`; old address shapes remain compatible. During a consistent backup, API mutations temporarily return 503 with `Retry-After: 30`; retry the same idempotency/request key.
+
+## Release/team/inventory APIs — 2.12
+
+| Access | Routes | Purpose |
+|---|---|---|
+| Password login, then opaque challenge | `POST /api/auth/mfa/verify` | Issue a verified session only after second factor |
+| Signed-in account | `GET /api/auth/mfa`, `POST /setup`, `/enable`, `/disable`, `/recovery` under that prefix | Status, password-protected enrollment and code/proof-protected changes |
+| Invitation token, matching account when registered | `POST /api/auth/invitation/inspect`, `/accept` | Inspect/accept one expiring invitation |
+| Full admin | `GET/POST /api/admin/staff-invitations`, `POST /:id/revoke`, `/:id/resend` | Invitation management; no raw token in responses |
+| Inventory scope | `GET/POST /api/admin/warehouses`, `PUT /:id` | Warehouses/balances and guarded edit/archive |
+| Inventory scope | `GET/POST /api/admin/inventory/movements` | Audited, keyed transfer/count adjustment |
+| Inventory scope, current recipient | `GET/PUT /api/admin/inventory/subscription`, `GET /notices`, `POST /notices/:id/retry` | Stock mail preferences/history/manual failed retry |
+| Catalog scope | `GET /api/admin/catalog-import`, `/template`; `POST /preview`, `POST /api/admin/catalog-import` | New catalog CSV preview/create/history |
+| Full admin | `GET /api/admin/system/offsite` | Safe archive replication/drill history |
+
+Login can return `{mfaRequired:true, challenge, expiresIn}` without setting a session. Do not treat it as a user profile. Verification returns the existing profile/session shape. Codes/secrets are not returned by profile/history. See [request policies and procedures](RELEASE_AUTOMATION.md).

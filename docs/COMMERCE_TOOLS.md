@@ -1,5 +1,8 @@
 # Coupons, wishlist, inventory tools and store settings — 2.9.0
 
+> v2.12 extension: [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md) adds release automation, private off-host recovery, independent monitoring, invitations/MFA and advanced warehouse/catalog/email tools. Earlier workflows below remain supported.
+
+
 This update starts from the latest `Norda-Main-v2.8.0.zip`, including the user-selected professional README. It adds four connected customer/admin features without resetting the database, replacing credentials or reseeding existing products. Existing orders, invoices, payments, accounts, recovery links, saved addresses, variants, courier history, refunds and email settings remain compatible.
 
 ## Apply the update

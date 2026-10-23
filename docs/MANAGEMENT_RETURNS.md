@@ -1,5 +1,8 @@
 # NORDA 2.10 — Management, notifications, devices and item returns
 
+> v2.12 extension: [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md) adds release automation, private off-host recovery, independent monitoring, invitations/MFA and advanced warehouse/catalog/email tools. Earlier workflows below remain supported.
+
+
 This release extends v2.9 without resetting data or changing any database, JWT, administrator, gateway or SMTP credential. Keep your currently working `server/.env`, uploads and Git history when updating. Run `npm ci`, `npm run verify` and `npm run dev` from `server/`; no seed/setup/manual migration is required. New indexes initialize before the API starts. Use a replica set for transactional recovery across process/database failures; standalone support retains handled-error compensations.
 
 ## Where to find the tools

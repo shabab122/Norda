@@ -1,0 +1,60 @@
+services:
+  app:
+    image: ${NORDA_IMAGE_REF:?Use the release script to select an immutable release image}
+    restart: unless-stopped
+    init: true
+    stop_grace_period: 150s
+    env_file:
+      - ${NORDA_SHARED_DIRECTORY:?}/.env.integrations
+      - ${NORDA_SHARED_DIRECTORY:?}/.env
+    environment:
+      NODE_ENV: production
+      PORT: '5000'
+      NORDA_ENVIRONMENT: ${NORDA_ENVIRONMENT:?}
+      NORDA_RELEASE_SHA: ${NORDA_RELEASE_SHA:?}
+      CLIENT_URL: https://${NORDA_DOMAIN:?}
+      CLIENT_APP_URL: https://${NORDA_DOMAIN:?}
+      SERVER_URL: https://${NORDA_DOMAIN:?}
+      SITE_URL: https://${NORDA_DOMAIN:?}
+      BACKUP_DIRECTORY: /app/server/.backups
+      TMPDIR: /app/server/.backup-tmp
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=1g,mode=1777
+    volumes:
+      - ${NORDA_SHARED_DIRECTORY:?}/uploads:/app/server/uploads
+      - ${NORDA_SHARED_DIRECTORY:?}/backups:/app/server/.backups
+      - ${NORDA_SHARED_DIRECTORY:?}/backup-tmp:/app/server/.backup-tmp
+      - ${NORDA_SHARED_DIRECTORY:?}/mail-preview:/app/server/.local-mail
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      NORDA_DOMAIN: ${NORDA_DOMAIN:?}
+      NORDA_ACME_EMAIL: ${NORDA_ACME_EMAIL:?}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      app:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '3'
+volumes:
+  caddy_data:
+  caddy_config:

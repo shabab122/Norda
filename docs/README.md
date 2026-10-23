@@ -1,5 +1,8 @@
 # Documentation index
 
+> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+
+
 - [Production tools](PRODUCTION_TOOLS.md) — v2.11 eCourier, SEO, Cloudinary media, encrypted backup/restore and monitoring.
 
 - [Management, devices and item returns](MANAGEMENT_RETURNS.md) — 2.10 workflows, permission scopes, reports, preferences/outcomes, device revocation, returns/exchanges and credit notes.

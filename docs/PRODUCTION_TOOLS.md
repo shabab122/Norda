@@ -1,5 +1,8 @@
 # Production tools — NORDA 2.11.0
 
+> v2.12 extension: [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md) adds release automation, private off-host recovery, independent monitoring, invitations/MFA and advanced warehouse/catalog/email tools. Earlier workflows below remain supported.
+
+
 Built from `Norda-Main-v2.10.0.zip`. This release adds eCourier REST integration, server-rendered SEO, optional Cloudinary storage, encrypted BSON/media backups and operational monitoring. Existing commerce, account, payment and administration workflows remain covered by regression tests.
 
 ## Update without changing credentials

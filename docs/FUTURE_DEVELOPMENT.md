@@ -1,5 +1,15 @@
 # Future NORDA development
 
+## Completed in 2.12.0
+
+- Docker/Caddy HTTPS/restart/persistence, staging isolation, verified GitHub/SSH releases and health-checked application rollback.
+- Private S3-compatible encrypted archive replication/readback, same-key uncertainty recovery, guarded retention and isolated scheduled restore drills.
+- Independent GitHub-hosted/separate-host readiness monitoring with persisted outage/recovery alerts.
+- Expiring one-use staff invitations, MFA-required onboarding, encrypted TOTP, hashed recovery codes and verified MFA device sessions.
+- Previewed new product/SKU CSV creation, satellite warehouse stock/transfers/count/edit/archive safeguards and opted-in low-stock mail.
+- See [setup and scope](RELEASE_AUTOMATION.md). Actual VM/TLS/provider/alert/mobile acceptance and operator recovery promotion remain deployment work.
+
+
 ## Completed in 2.11.0
 
 - Optional eCourier REST booking, package charges, labels, opt-in automatic submission, authenticated polling, uncertainty recovery and exception review.
@@ -25,7 +35,7 @@
 - Account wishlists and safe cart continuation, including exact variant selection.
 - Product/SKU stock CSV export/preview/import, durable results and individual low-stock thresholds/alerts.
 - Admin storefront banner/announcement/contact/FAQ/policy/delivery settings and public help pages.
-- See [the complete feature guide](COMMERCE_TOOLS.md). Bulk creation of new catalog/SKU identities, stock-email subscriptions and multi-warehouse tooling remain separate future scope.
+- See [the complete feature guide](COMMERCE_TOOLS.md). New catalog/SKU creation, satellite warehouse tooling and stock-email subscriptions are added in 2.12. Automatic multi-location order routing remains future scope.
 
 ## Completed in 2.8.0
 
@@ -95,11 +105,11 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 - Additional courier adapters, authenticated provider webhooks, reverse pickup and broader address/fractional-collection contracts
 - Optional SMS provider, provider-specific mail adapters and delivery/complaint remediation tooling
 - Price-difference exchanges, partial-parcel receipt, discretionary refund deductions and external credit-note/accounting integration
-- Optional staff MFA, invitation lifecycle and organization-specific permission expansion
+- Optional passkeys/device trust and further organization-specific permission expansion (TOTP/invitations are implemented)
 
 ## Phase 3 — catalog and experience
 
-- Optional bulk creation of new catalog/SKU records, warehouse inventory and low-stock email subscriptions
+- Optional automatic warehouse fulfillment routing/order splitting, warehouse bulk operations and customer back-in-stock subscriptions
 - Optional full guest cart/checkout
 - Bank settlement/cash-flow reconciliation reports, optional comparison/recently viewed products
 - Dedicated category landing pages, final-domain SEO validation and Search Console follow-up
@@ -107,8 +117,8 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 ## Phase 4 — public operations
 
 - Actual Cloudinary account acceptance and optional additional object-storage adapters
-- Secure off-host backup replication/retention, scheduled owner restore drills and production recovery promotion
-- Actual alert receiver acceptance, external uptime checks and operational response policies
-- Deployment/HTTPS configuration, release automation and rollback planning
+- Actual private-storage/provider acceptance, larger multipart backups, key-rotation policy and deliberate production recovery promotion
+- Actual alert receiver/independent runner acceptance and operational response policies
+- Actual target-host HTTPS/staging/production rollout, compatible rollback drills, capacity checks and ongoing dependency auditing
 
 Dates and exact priorities can be decided in the next development session.

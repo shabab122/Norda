@@ -11,7 +11,7 @@ const BackupRun = require("../models/BackupRun");
 const { withBackupGate } = require("./maintenanceService");
 const httpError = require("../utils/httpError");
 const MAGIC = Buffer.from("NORDA_BACKUP_V1\n");
-const EXCLUDED = new Set(["authsessions", "operationlocks", "maintenancegates", "operationalevents", "backupruns"]);
+const EXCLUDED = new Set(["authsessions", "operationlocks", "maintenancegates", "operationalevents", "backupruns", "mfachallenges", "offsitebackups", "restoredrills"]);
 const backupDirectory = () => path.resolve(process.env.BACKUP_DIRECTORY || path.join(__dirname, "../.backups"));
 function encryptionKey() { const raw = process.env.BACKUP_ENCRYPTION_KEY || ""; if (!/^[a-zA-Z0-9+/]{43}=$/.test(raw) || Buffer.from(raw, "base64").length !== 32) throw httpError(503, "Configure your own 32-byte base64 BACKUP_ENCRYPTION_KEY before creating or restoring backups"); return Buffer.from(raw, "base64"); }
 const digestFile = async (filename) => { const hash = crypto.createHash("sha256"); for await (const chunk of createReadStream(filename)) hash.update(chunk); return hash.digest("hex"); };

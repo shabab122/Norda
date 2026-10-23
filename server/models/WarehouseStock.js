@@ -1,0 +1,2 @@
+const m = require("mongoose"), s = new m.Schema({ warehouse: { type: m.Schema.Types.ObjectId, ref: "Warehouse", required: true }, product: { type: m.Schema.Types.ObjectId, ref: "Product", required: true }, variantKey: { type: String, required: true }, quantity: { type: Number, min: 0, default: 0 }, lowStockThreshold: { type: Number, min: 0, default: 5 } }, { timestamps: true });
+s.index({ warehouse: 1, product: 1, variantKey: 1 }, { unique: true }); module.exports = m.model("WarehouseStock", s);

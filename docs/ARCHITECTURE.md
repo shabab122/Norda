@@ -1,4 +1,7 @@
-# Norda 2.11 — Architecture and Data Model
+# Norda 2.12 — Architecture and Data Model
+
+> Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
+
 
 ## Coupons, wishlist, inventory and store content — 2.9.0
 
@@ -152,3 +155,11 @@ New `CourierBooking` and `CourierEvent` records coordinate one external parcel w
 The `Upload` record retains local identities while tracking optional Cloudinary ownership/lifecycle. Guarded catalog/settings writes and cleanup share a reference lock. SEO HTML is generated before static hosting without changing browser product behavior.
 
 `MaintenanceGate` coordinates mutation/worker leases across upgraded application processes; backup drains writers before BSON/media capture. `BackupRun` records outcomes; `.ndb` authenticated archives restore only into a new target. `OperationalEvent` stores bounded redacted incidents/alert claims, and readiness separates liveness from database/maintenance status. See [production boundaries](PRODUCTION_TOOLS.md) for other writers, media recovery, provider contracts and off-host operations.
+
+## Release/team/inventory coordination — 2.12
+
+`MfaChallenge` binds a hashed opaque login attempt to the current user token/MFA revision. Encrypted user enrollment/secret fields and hashed recovery codes are private selections; security changes compare current versions and rotate sessions. `AuthSession.mfaVerifiedRevision` prevents password-only/earlier tokens being accepted for MFA accounts. Staff invitations coordinate existing-user ownership, one-use tokens and staff audit under the existing staff-management lock.
+
+`Warehouse` and `WarehouseStock` hold satellite inventory. `InventoryMovement` records request-key replay and reasons; transfers atomically move existing online SKU stock versus satellite balances using transaction/compensation units. The storefront still reads online stock. `CatalogImport` retains one previewed creation result; managed-media locks protect its references. `StockSubscription`/`StockNotice` implement permission-aware shortage episodes and out-of-transaction SMTP claims/retry.
+
+`OffsiteBackup` tracks one encrypted local archive/destination/key/hash and readback confirmation. `RestoreDrill` records isolated target creation/cleanup. These telemetry records and transient MFA challenges are omitted from backup restore; warehouse, catalog and account records are retained. Independent monitoring persists only its safe transition state outside application MongoDB. Deployment code/data/secrets are separated on the target VM; rollback retains live database/media state.

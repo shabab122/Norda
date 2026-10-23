@@ -1,0 +1,19 @@
+# Run this on ANOTHER host. No dependency on the application server/database.
+services:
+  monitor:
+    image: ${NORDA_MONITOR_IMAGE:?Build the supplied Dockerfile on the monitor host}
+    restart: unless-stopped
+    init: true
+    command: [node, ../ops/uptime.js]
+    env_file: ${NORDA_MONITOR_ENV_FILE:?}
+    environment:
+      MONITOR_STATE_FILE: /state/state.json
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - ${NORDA_MONITOR_STATE_DIRECTORY:?}:/state
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m,mode=1777
+    healthcheck:
+      disable: true

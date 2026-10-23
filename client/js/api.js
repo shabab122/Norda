@@ -6,7 +6,7 @@ const Api = {
     const old = this.getUser();
     if (user.token) this.writeStorage("norda_token", user.token);
     else if (replaceToken || (old && old._id !== user._id)) this.writeStorage("norda_token", null);
-    this.writeStorage("norda_user", JSON.stringify({ _id: user._id, name: user.name, email: user.email, role: user.role, permissions: user.permissions || [], address: user.address || null }));
+    this.writeStorage("norda_user", JSON.stringify({ _id: user._id, name: user.name, email: user.email, role: user.role, permissions: user.permissions || [], mfaEnabled: Boolean(user.mfaEnabled), staffMfaRequired: Boolean(user.staffMfaRequired), address: user.address || null }));
     this.currentUser = user;
   },
   getUser() {
@@ -16,7 +16,7 @@ const Api = {
   isLoggedIn() { return Boolean(this.getUser()); },
   isAdmin() { return this.getUser()?.role === "admin"; },
   isStaff() { return this.getUser()?.role === "staff"; },
-  can(scope) { const u = this.getUser(); return u?.role === "admin" || (u?.role === "staff" && (u.permissions || []).includes(scope)); },
+  can(scope) { const u = this.getUser(); return u?.role === "admin" || (u?.role === "staff" && (!u.staffMfaRequired || u.mfaEnabled) && (u.permissions || []).includes(scope)); },
   logout() {
     this.currentUser = null;
     this.writeStorage("norda_token", null); this.writeStorage("norda_user", null);

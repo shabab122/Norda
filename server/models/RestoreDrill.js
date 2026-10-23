@@ -1,0 +1,1 @@
+const m = require("mongoose"); module.exports = m.model("RestoreDrill", new m.Schema({ backup: { type: m.Schema.Types.ObjectId, ref: "OffsiteBackup" }, status: { type: String, enum: ["running", "succeeded", "failed"], required: true }, database: String, startedAt: Date, completedAt: Date, collections: Number, documents: Number, cleanupComplete: Boolean }, { timestamps: true }));

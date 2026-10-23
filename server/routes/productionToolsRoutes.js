@@ -3,7 +3,7 @@ const { protect, authorize, adminOnly } = require("../middleware/auth");
 const { pagination } = require("../utils/validation");
 const { objectId } = require("../services/orderOperationStore");
 const courier = require("../services/courierService"), media = require("../services/mediaService"), ops = require("../services/operationsService");
-const handle = (fn, status = 200) => async (req, res, next) => { try { res.status(status).json(await fn(req)); } catch (e) { next(e); } };
+const handle = (fn, status = 200) => async (req, res, next) => { try { const data = await fn(req); res.status(status).json(data); } catch (e) { next(e); } };
 router.get("/health/ready", async (req, res) => { const data = await ops.readiness(); res.status(data.status === "ready" ? 200 : 503).set("Cache-Control", "no-store").json(data); });
 router.use(["/admin/courier", "/admin/media", "/admin/system", "/orders/:id/courier"], protect);
 router.get("/admin/courier/config", authorize("orders"), handle(() => { const c = require("../services/ecourierService").configuration(); return { provider: c.provider, mode: c.mode, configured: c.ready, automaticBooking: c.auto, addressMaxLength: 40, amounts: "Whole-BDT COD collection, or merchant-confirmed zero-collection prepaid mapping" }; }));
