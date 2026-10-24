@@ -2,9 +2,24 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update an existing installation to 2.14.2 · Local Final
+## Requested acceptance tools
 
-Install the retained dependencies with `npm ci`. This maintenance release retains existing commerce behavior and fixes search/password controls plus guest/admin order workflows. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
+Keep your existing SMTP settings and use your own actual recipient:
+
+```bash
+cd server
+npm run mail:diagnose
+npm run mail:check
+npm run mail:send-test -- --to your-own-email@example.com
+```
+
+File preview is not inbox delivery; `mail:diagnose` exits 2 when SMTP is absent. After observing the message, use `npm run mail:confirm -- --confirm REFERENCE --location inbox` (or `spam`). See [local acceptance](docs/LOCAL_ACCEPTANCE.md).
+
+For the optional reverse-pickup/statement demonstration, run `npm run connector:demo` in one terminal and `npm run dev:operations-demo` in another **instead of** the ordinary app command. Existing environment files are preserved; demo statements are preview-only. See [connector instructions](docs/LOCAL_CONNECTOR.md). Return to normal mode by stopping both and using `npm run dev`.
+
+## Update an existing installation to 2.14.3 · Local Acceptance
+
+Install the retained dependencies with `npm ci`. This update retains existing commerce behavior and adds explicit email acceptance tools, a runnable local operations connector demonstration and focused keyboard/print refinements. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -159,7 +174,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c fix/storefront-flow-2.14.2
+git switch -c feat/local-acceptance-2.14.3
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
@@ -179,7 +194,7 @@ cd /path/to/your/existing/Norda-repository
 git status
 git add .
 git commit -m "fix: harden guest checkout, security and release UI"
-git push -u origin fix/storefront-flow-2.14.2
+git push -u origin feat/local-acceptance-2.14.3
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

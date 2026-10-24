@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.14.2 · Local Final</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.14.3 · Local Acceptance</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,23 +32,23 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.14.2** |
+| Application version | **2.14.3** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Final localhost scope: search/password controls and guest/admin order workflows clarified, existing features retained; live merchant activation and production hosting deferred |
+| Development status | Fixed localhost scope; existing commerce retained, local connector and email acceptance tools included; visible/inbox acceptance recorded separately |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
 ## Local Final Release
 
-**2.14.2** builds directly on delivered **2.14.1** and addresses the requested storefront and shopping-flow issues. Header search uses one complete bordered control and submits only nonempty text, including category names. Password fields have accessible show/hide controls. Guest order tracking/recovery, admin processing and the distinction between guest/account orders are clearer.
+**2.14.3** builds directly on delivered **2.14.2 Local Final**. It adds a runnable private localhost reverse-pickup/statement connector demonstration, explicit SMTP delivery probes and receipt recording, and focused keyboard/mobile/print refinements. The prior search/password, guest/admin and commerce features are retained.
 
-Guests reach their own history after COD checkout, can follow every order stage and warehouse parcel, and retain private tracking when a separate account is signed in. Admin order actions lead to the correct courier/parcel workspace. A local operator-only `npm run admin:ensure` command can prepare a missing configured administrator without changing existing credentials or catalog data; public signup remains customer-only.
+The connector keeps stable booking references and immutable statement pages through restart. Demo stages require explicit control, no real carrier label is invented, and demo statements can be previewed/acknowledged without writing a financial ledger. Existing merchant HTTPS mode and background jobs remain separated from local demo mode.
 
-Read [the shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) for the complete guest → store processing → tracking flow, private recovery, account linking and admin access. The [local final guide](docs/LOCAL_FINAL_RELEASE.md) records evidence and the fixed localhost scope. Domain/production and unconfigured real merchant activation remain deferred, with no new future-feature backlog assigned.
+Read [local acceptance](docs/LOCAL_ACCEPTANCE.md), [connector commands](docs/LOCAL_CONNECTOR.md) and [the shopping/admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md). Actual inbox receipt and visible browser/print inspection require observation in the owner's environment; they are not certified by SMTP acceptance or controlled DOM tests. The owner's three [reserved integrations](docs/reserved/README.md) remain deferred, with no new feature phase assigned.
 
 ## Implemented Features
 
@@ -116,6 +116,13 @@ Read [the shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) for the co
 - Shared operation locks, checkout request keys and conditional stock updates to handle overlapping requests.
 - MongoDB transactions when available; compensating writes for handled failures on standalone development databases.
 - Compact simulated-payment/no-charge information on relevant customer and invoice views; local simulator payments are excluded from administrator revenue.
+
+### Local Operations and Email Acceptance
+
+- Optional private localhost connector with reference-safe booking/query/cancel, durable atomic state, explicit demonstration stages and immutable cursor pages.
+- Server-enforced demo/live mode separation; demo statement preview/acknowledgement cannot create reconciliation ledger entries or transfer funds.
+- Explicit single-recipient SMTP probe, private receipt, operator-observed Inbox/Spam confirmation and clear file-preview diagnostics; remote authenticated SMTP requires TLS.
+- The three deferred integrations have dedicated reference folders under `docs/reserved/`. Existing production/provider code and credentials are retained.
 
 ### Courier API, SEO, Cloud Media and Operations
 
@@ -195,7 +202,7 @@ Read [the shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) for the co
 
 | Requirement | Details |
 |---|---|
-| Node.js | **22 or newer**, as declared in `server/package.json`; recorded release checks used Node.js 24.19.0 |
+| Node.js | **22 or newer**, as declared in `server/package.json`; recorded release checks used Node.js 24.22.1 |
 | npm | Available with the Node.js installation; use the committed server lockfile with `npm ci` |
 | MongoDB | A running instance reachable through `MONGO_URI`; native release verification used MongoDB 7.0.45 |
 | Database topology | Standalone supported for local development; use a replica set for public-store transaction guarantees |
@@ -286,7 +293,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.2 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.3 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -483,12 +490,12 @@ Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.14.2 | **337 files passed** |
-| Default suite, v2.14.2 | **590 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.14.2 | **269 passed**, compensation path |
-| Native single-member replica set, v2.14.2 | **269 passed**, transaction path |
-| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.14.1 |
-| Frontend | 16 new frontend checks for search/password controls, guest/account separation, linking guards and admin dispatch; 61 pages / 146 local page-resource URLs returned 200 |
+| JavaScript syntax, v2.14.3 | **345 files passed** |
+| Default suite, v2.14.3 | **608 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.14.3 | **274 passed**, compensation path |
+| Native single-member replica set, v2.14.3 | **274 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.14.2 |
+| Frontend | Controlled DOM checks cover prior shopping flows and mobile-menu Escape/focus; actual CLI/HTTP smoke serves 61 pages / 148 local targets; visible layout inspection remains unperformed |
 | Browser/mobile/keyboard/print | Static/VM/HTTP and print rules passed; cloud browser access was blocked, so visible device/print inspection is not certified |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
@@ -515,7 +522,7 @@ Follow the [acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md) for the complete
 
 ## Roadmap
 
-The **localhost release scope is fixed and closed** at the existing 2.14 feature set plus the owner-requested search/password and flow fixes. This maintenance release does not assign another feature phase. The agreed status and concrete testing limits are recorded in [Local final release](docs/LOCAL_FINAL_RELEASE.md).
+The **localhost feature scope remains fixed** at the existing 2.14 feature set plus the requested maintenance and local acceptance tools. This maintenance release does not assign another feature phase. The agreed status and concrete testing limits are recorded in [Local final release](docs/LOCAL_FINAL_RELEASE.md).
 
 Production deployment/domain/HTTPS, live merchant reverse/statement activation and real-account service acceptance are deferred until the owner chooses to activate those services. They do not block using this final source locally. Optional comparison, SMS, passkeys, more carriers and accounting vendor integrations are not assigned work for this release.
 
@@ -559,6 +566,9 @@ Historical development is recorded in [Changelog](CHANGELOG.md). Further develop
 
 | Document | Purpose |
 |---|---|
+| [Local acceptance](docs/LOCAL_ACCEPTANCE.md) | Exact browser/customer/admin criteria and actual email probe/receipt steps |
+| [Local connector](docs/LOCAL_CONNECTOR.md) | Runnable reverse-pickup/statement demonstration and safe mode boundaries |
+| [Reserved integrations](docs/reserved/README.md) | The three owner-deferred activation areas |
 | [Shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) | Search, password visibility, guest tracking/recovery/linking and staff/admin order processing |
 | [Local final release](docs/LOCAL_FINAL_RELEASE.md) | Fixed localhost scope, final fixes, evidence and deferred external activation |
 | [Advanced operations](docs/ADVANCED_OPERATIONS.md) | Current four-feature guide, configuration, provider contracts, permissions and API |

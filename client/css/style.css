@@ -92,6 +92,13 @@ body[data-account-changing="true"] main,body[data-account-changing="true"] #site
 @media(max-width:360px){.header-actions.has-account{gap:12px}.account-link-copy{max-width:106px}.account-link{gap:7px}.account-avatar{width:30px;height:30px}}
 @media print{.invoice-sheet{break-inside:auto;overflow:visible}.invoice-table thead{display:table-header-group}.invoice-table tr,.invoice-header,.invoice-meta,.invoice-addresses,.invoice-totals{break-inside:avoid}.invoice-table td:first-child{overflow-wrap:anywhere}}
 
+/* The semantic step list is distinct from the retained compact order-card bar. */
+ol.order-progress{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;list-style:none;padding:0;margin:18px 0;border:0}
+ol.order-progress>li{min-width:0;overflow-wrap:anywhere}
+.invoice-actions{flex-wrap:wrap}.invoice-totals>div>span{min-width:0;overflow-wrap:anywhere}
+@media(max-width:420px){ol.order-progress{gap:8px}.invoice-table th,.invoice-table td{padding:10px 7px}.invoice-table{font-size:.71rem}}
+@media print{.invoice-header,.invoice-totals{print-color-adjust:exact}.invoice-table{width:100%;table-layout:auto}.invoice-table td:first-child{max-width:95mm}.invoice-totals strong{white-space:nowrap}.invoice-foot{break-inside:avoid}}
+
 .demo-notice { padding: 14px 16px; border: 1px solid #e8d391; background: #fff9e9; color: #6a541c; border-radius: 10px; font-size: .82rem; line-height: 1.65; }
 
 /* Saved products and published store content. */

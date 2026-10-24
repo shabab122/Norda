@@ -26,7 +26,7 @@ function mailConfiguration() {
     options: {
       host: process.env.SMTP_HOST, port, secure,
       // Local mail catchers may use plain SMTP. Real deployments require TLS.
-      requireTLS: process.env.NODE_ENV === "production" && !secure,
+      requireTLS: !secure && (process.env.NODE_ENV === "production" || Boolean(process.env.SMTP_USER) && !["localhost", "127.0.0.1", "::1"].includes(process.env.SMTP_HOST.toLowerCase())),
       ...(process.env.SMTP_USER ? { auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } } : {}),
       connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
       disableFileAccess: true, disableUrlAccess: true,

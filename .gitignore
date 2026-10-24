@@ -28,3 +28,7 @@ norda_restore_*/
 **/deploy.env
 **/private-state/
 !.env.operations.example
+
+# Private local acceptance receipts and connector demonstration state
+server/.mail-checks/
+server/.local-connector/

@@ -1,3 +1,5 @@
+> **2.14.3 local addition:** a runnable demonstration service is now supplied; see [LOCAL_CONNECTOR.md](LOCAL_CONNECTOR.md). The merchant contract below still requires an actual approved upstream provider for real operations. Demo mode cannot import financial statement entries.
+
 # Advanced operations — NORDA 2.14.0
 
 This release starts from the delivered **2.13.1** archive. Keep the existing database, uploads and private credentials. No setup, reseed, credential rotation or manual data migration is needed. Normal startup initializes the additional collections/indexes. Upgrade every instance sharing the store before activating the new workflows; old code does not understand their guards and is not a safe rollback target after activation.

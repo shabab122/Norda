@@ -1,5 +1,9 @@
 # Documentation index
 
+- [Local acceptance — 2.14.3](LOCAL_ACCEPTANCE.md) — customer/admin manual criteria, real SMTP probes and exact evidence limits.
+- [Runnable local connector](LOCAL_CONNECTOR.md) — durable demo reverse pickup/statements, commands and mode isolation.
+- [Reserved integrations](reserved/README.md) — the three owner-deferred areas.
+
 - [Shopping and admin guide — 2.14.2](SHOPPING_AND_ADMIN_GUIDE.md) — the requested search/password controls and clear guest/admin order workflow.
 
 - [Local final release — 2.14.1](LOCAL_FINAL_RELEASE.md) — fixed localhost scope, final maintenance fixes and verification boundaries.

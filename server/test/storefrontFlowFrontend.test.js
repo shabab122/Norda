@@ -32,6 +32,14 @@ test("Prefilled search is usable and visitors can find order recovery before a g
   assert.equal(x.el("global-search").value, "Books"); assert.equal(x.el("global-search-submit").disabled, false);
   assert.match(x.el("site-header").innerHTML, /href="guest-orders.html">Track order/);
 });
+test("Escape closes the mobile menu and returns keyboard focus to its toggle", () => {
+  const x = setup(null, { guest: true }); x.scope.renderHeader(); let focused = false, removed = false;
+  x.el("mobile-toggle").focus = () => { focused = true; };
+  x.el("header-menu").classList.remove = value => { removed = value === "open"; };
+  x.el("mobile-toggle").events.click(); assert.equal(x.el("mobile-toggle").attrs["aria-expanded"], "true");
+  x.el("header-menu").events.keydown({ key: "Escape" });
+  assert.equal(x.el("mobile-toggle").attrs["aria-expanded"], "false"); assert.equal(focused, true); assert.equal(removed, true);
+});
 test("Password eye controls preserve values and distinguish their own field without submitting", () => {
   const x = setup(), parent = node(), first = node("input"), second = node("input");
   Object.assign(first, { id: "password", type: "password", value: "A typed password" }); Object.assign(second, { id: "confirmation", type: "password", value: "A confirmation" }); parent.appendChild(first); parent.appendChild(second);

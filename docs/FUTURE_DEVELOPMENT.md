@@ -1,9 +1,7 @@
-# NORDA — fixed local release scope
+# NORDA — fixed localhost scope
 
-The owner has fixed the current project at the implemented **2.14 feature set**, with **2.14.2** as its localhost maintenance/final release, including the owner-requested search/password and guest/admin flow fixes. No new feature is assigned by this document.
+**2.14.3** builds on 2.14.2 with local acceptance tools, a runnable local operations demonstration and focused UI refinements. No new product feature is assigned.
 
-Current completion work is limited to existing customer/admin journeys, return/refund/stock/payment safeguards, frontend/form/print checks, local backup/monitor verification, bug fixes and coherent release documentation. See [the fixed scope](LOCAL_FINAL_RELEASE.md) and [measured results](VERIFICATION_RESULTS.md).
+Actual SSLCOMMERZ, domain/production deployment and courier/cloud/remote-backup activation are reserved in [three deferred-integration folders](reserved/README.md), as requested. Existing optional code and credentials remain intact.
 
-Domain purchase, production hosting/TLS, real merchant/provider activation, approved reverse/statement connector deployment, public callbacks and real-account acceptance are deferred outside this local release. Their existing code/contracts are retained and no credential is changed.
-
-Earlier optional ideas are not a completion requirement or active backlog for this release. New product features, carriers, SMS, passkeys, accounting vendors, geocoding or deployment work will be considered only after a new explicit request. Completed development history remains in [Changelog](../CHANGELOG.md) and the retained versioned feature guides.
+The current observation limits are [explicitly documented](LOCAL_ACCEPTANCE.md): visible browser/mobile/print acceptance, actual SMTP inbox receipt and the absence of a selected real reverse/statement provider. A working localhost connector demonstration is included; it is not a claim of real provider integration. These boundaries do not expand the feature roadmap.
