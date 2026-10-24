@@ -306,6 +306,11 @@ function closeDialog(id) {
   if (modal.dataset.busy === "true") return; modal.classList.add("hidden");
   modal.removeEventListener("keydown", modal._keyboard); document.body.classList.remove("modal-open"); modal._returnFocus?.focus();
 }
+window.addEventListener("norda:guest-expired", () => {
+  if (document.body?.dataset.protected === "shopper" && !Api.isLoggedIn()) {
+    window.location.replace("guest-orders.html");
+  } else if (document.getElementById("site-header")) renderHeader(currentPage);
+});
 window.addEventListener("norda:session-expired", () => {
   if (document.body?.dataset.protected) {
     const admin = document.body.dataset.protected === "admin";

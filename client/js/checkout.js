@@ -2,7 +2,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader();
   renderFooter();
-  if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure();
+  try { if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure(); }
+  catch (error) { document.getElementById("checkout-root").innerHTML = `<div class="empty-state"><h2>Checkout unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="cart.html">Return to cart</a></div>`; return; }
   if (!requireShopper()) return;
   await loadCheckout();
 });
@@ -132,6 +133,7 @@ async function loadCheckout() {
     const offeredCode = new URLSearchParams(window.location.search).get("coupon");
     if (offeredCode) { document.getElementById("checkout-coupon").value = offeredCode.slice(0, 32); await updateCheckoutCoupon(offeredCode); }
   } catch (error) {
+    if (shoppingIdentity() !== checkoutOwner) return;
     root.innerHTML = `<div class="empty-state"><h2>Checkout unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="cart.html">Return to cart</a></div>`;
   }
 }
@@ -193,12 +195,13 @@ function bindCheckoutForm() {
     alert.innerHTML = "";
 
     try {
-      if (!Api.isLoggedIn()) { Guest.current = await Api.post("/guest/contact", { name: document.getElementById("guest-name").value.trim(), email: document.getElementById("guest-email").value.trim() }); }
+      if (!Api.isLoggedIn()) { const contact = await Api.post("/guest/contact", { name: document.getElementById("guest-name").value.trim(), email: document.getElementById("guest-email").value.trim() }); if (shoppingIdentity() !== checkoutOwner) return; Guest.current = contact; }
       if (paymentMethod.startsWith("demo_")) {
         const result = await Api.post("/payments/demo/initiate", {
           shippingAddress: shippingPayload(), channel: paymentMethod.slice(5),
           checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
         });
+        if (shoppingIdentity() !== checkoutOwner) return;
         clearCheckoutKey();
         window.location.assign(result.checkoutUrl);
         return;
@@ -208,6 +211,7 @@ function bindCheckoutForm() {
           shippingAddress: shippingPayload(),
           checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
         });
+        if (shoppingIdentity() !== checkoutOwner) return;
         clearCheckoutKey();
         window.location.assign(result.alreadyPaid ? "orders.html" : result.checkoutUrl);
         return;
@@ -217,6 +221,7 @@ function bindCheckoutForm() {
         paymentMethod: "cod",
         checkoutKey: checkoutKey(paymentMethod), couponCode: checkoutCouponCode, expectedTotals: checkoutQuote,
       });
+      if (shoppingIdentity() !== checkoutOwner) return;
       clearCheckoutKey();
       const query = new URLSearchParams({
         placed: order._id,
@@ -224,6 +229,7 @@ function bindCheckoutForm() {
       });
       window.location.href = "orders.html?" + query.toString();
     } catch (error) {
+      if (shoppingIdentity() !== checkoutOwner) return;
       if (error.orderId) {
         clearCheckoutKey();
         alert.innerHTML = `<div class="alert alert-warning"><strong>Your order is saved.</strong><p>${escapeHtml(error.message)}</p><p><a href="orders.html">View your order and payment status</a> before starting another checkout.</p></div>`;
@@ -283,7 +289,9 @@ async function updateCheckoutCoupon(code) {
     if (code.trim() && !Api.isLoggedIn()) {
       const name = document.getElementById("guest-name"), email = document.getElementById("guest-email");
       if (!name.value.trim() || !email.value.trim() || !email.checkValidity()) throw new Error("Enter your name and valid order email before applying a coupon.");
-      Guest.current = await Api.post("/guest/contact", { name: name.value.trim(), email: email.value.trim() });
+      const contact = await Api.post("/guest/contact", { name: name.value.trim(), email: email.value.trim() });
+      if (shoppingIdentity() !== checkoutOwner) return;
+      Guest.current = contact;
     }
     const quote = await Api.post("/coupons/preview", { code: code.trim() });
     if (shoppingIdentity() !== checkoutOwner) return;
@@ -294,6 +302,6 @@ async function updateCheckoutCoupon(code) {
     document.getElementById("checkout-coupon").value = checkoutCouponCode;
     feedback.textContent = checkoutCouponCode ? checkoutCouponCode + " applied. You save " + money(quote.discountAmount) + "." : "No coupon applied.";
     renderCheckoutQuote();
-  } catch (error) { feedback.textContent = error.message + (checkoutCouponCode ? " Current coupon: " + checkoutCouponCode + "." : ""); }
+  } catch (error) { if (shoppingIdentity() === checkoutOwner) feedback.textContent = error.message + (checkoutCouponCode ? " Current coupon: " + checkoutCouponCode + "." : ""); }
   finally { couponBusy = false; if (shoppingIdentity() === checkoutOwner) ids.forEach((id) => document.getElementById(id).disabled = false); }
 }

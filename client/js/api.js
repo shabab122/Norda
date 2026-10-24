@@ -59,6 +59,7 @@ const Api = {
       if (response.status === 401 && !path.includes("/auth/login")) {
         if (path.startsWith("/guest/") || headers["X-Norda-Guest"] === "1") {
           if (typeof Guest !== "undefined") { Guest.current = null; Guest.changed(); }
+          window.dispatchEvent(new CustomEvent("norda:guest-expired"));
         } else {
           this.logout();
           window.dispatchEvent(new CustomEvent("norda:session-expired"));

@@ -7,4 +7,10 @@ async function loadExchangeAdmin() {
     root.querySelector("#exchange-manual")?.addEventListener("submit", e => exchangeAdminSubmit(e, "/admin/exchanges/" + id + "/payment")); root.querySelectorAll("[data-exchange-resolve]").forEach(f => f.addEventListener("submit", e => exchangeAdminSubmit(e, "/admin/exchange-payments/" + f.dataset.exchangeResolve + "/resolve")));
   } catch (e) { managementAlert(e.message, "error"); }
 }
-async function exchangeAdminSubmit(e, path) { e.preventDefault(); if (exchangeAdminBusy || exchangeAdminOwner !== Api.getUser()?._id) return; exchangeAdminBusy = true; const form = e.currentTarget, body = Object.fromEntries(new FormData(form)); if (form.elements.confirmed) body.confirmed = form.elements.confirmed.checked; if (form.elements.acknowledgeRisk) body.acknowledgeRisk = form.elements.acknowledgeRisk.checked; body.requestKey = managementKey("exchange-admin:" + path, body); try { await Api.post(path, body); managementAlert("Exchange adjustment updated."); await loadExchangeAdmin(); } catch (err) { managementAlert(err.message, "error"); } finally { exchangeAdminBusy = false; } }
+async function exchangeAdminSubmit(event, path) {
+  event.preventDefault(); if (exchangeAdminBusy || exchangeAdminOwner !== Api.getUser()?._id) return;
+  const form = event.currentTarget, button = form.querySelector("button"); exchangeAdminBusy = true; if (button) button.disabled = true;
+  try { const body = Object.fromEntries(new FormData(form)); if (form.elements.confirmed) body.confirmed = form.elements.confirmed.checked; if (form.elements.acknowledgeRisk) body.acknowledgeRisk = form.elements.acknowledgeRisk.checked; body.requestKey = managementKey("exchange-admin:" + path, body); await Api.post(path, body); if (exchangeAdminOwner !== Api.getUser()?._id) return; managementAlert("Exchange adjustment updated."); await loadExchangeAdmin(); }
+  catch (error) { if (exchangeAdminOwner === Api.getUser()?._id) managementAlert(error.message, "error"); }
+  finally { exchangeAdminBusy = false; if (button && exchangeAdminOwner === Api.getUser()?._id) button.disabled = false; }
+}

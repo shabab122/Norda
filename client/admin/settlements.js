@@ -1,10 +1,15 @@
-let settlementOwner, settlementRead = 0, settlementHash, settlementBusy = false;
+let settlementOwner, settlementRead = 0, settlementHash, settlementBusy = false, settlementPreviewRead = 0, settlementFileRead = 0;
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready; if (!requireAdmin()) return; renderAdminShell("settlements"); settlementOwner = Api.getUser()._id;
-  const invalidate = () => { settlementHash = null; document.getElementById("settlement-apply").disabled = true; };
+  const invalidate = () => { settlementPreviewRead++; settlementFileRead++; settlementHash = null; document.getElementById("settlement-apply").disabled = true; };
   document.getElementById("settlement-csv").addEventListener("input", invalidate);
   document.getElementById("settlement-name").addEventListener("input", invalidate);
-  document.getElementById("settlement-file").addEventListener("change", async e => { const file = e.target.files[0]; if (!file) return; if (file.size > 500000) return managementAlert("Use a CSV under 500 KB.", "error"); document.getElementById("settlement-csv").value = await file.text(); invalidate(); });
+  document.getElementById("settlement-file").addEventListener("change", async e => {
+    invalidate(); const read = settlementFileRead, file = e.target.files[0]; if (!file || settlementOwner !== Api.getUser()?._id) return;
+    if (file.size > 500000) return managementAlert("Use a CSV under 500 KB.", "error");
+    try { const csv = await file.text(); if (read !== settlementFileRead || settlementOwner !== Api.getUser()?._id) return; document.getElementById("settlement-csv").value = csv; invalidate(); }
+    catch { if (read === settlementFileRead && settlementOwner === Api.getUser()?._id) managementAlert("This file could not be read. Choose it again or paste the CSV below.", "error"); }
+  });
   document.getElementById("settlement-template").addEventListener("click", () => Api.download("/admin/settlements/template.csv", "norda-settlements.csv").catch(e => managementAlert(e.message, "error")));
   document.getElementById("settlement-export").addEventListener("click", () => Api.download("/admin/settlements/export.csv", "norda-settlement-ledger.csv").catch(e => managementAlert(e.message, "error")));
   document.getElementById("settlement-preview").addEventListener("click", previewSettlement);
@@ -20,16 +25,26 @@ async function loadSettlements(page = 1) {
     document.getElementById("settlement-stats").innerHTML = Object.entries(d.totals).map(([k, v]) => `<div class="management-stat"><span>${escapeHtml(k)}</span><strong>${money(v)}</strong></div>`).join("");
     document.getElementById("settlement-outstanding").innerHTML = d.outstanding.length ? managementTable(["Order", "Method", "Expected", "Reconciled", "Remaining"], d.outstanding.map(o => [escapeHtml(String(o.orderId).slice(-8).toUpperCase()), escapeHtml(o.method), money(o.expected), money(o.settled), money(o.remaining)])) : '<p class="management-empty">No outstanding balances in this view.</p>';
     const root = document.getElementById("settlement-entries"); root.innerHTML = d.entries.length ? settlementTable(d.entries) : '<p class="management-empty">Import a statement to start reconciliation.</p>'; managementPager(root, d, loadSettlements);
-    root.querySelectorAll("[data-settlement-resolve]").forEach(f => f.addEventListener("submit", async e => { e.preventDefault(); if (settlementBusy) return; settlementBusy = true; try { await Api.post("/admin/settlements/" + f.dataset.settlementResolve + "/resolve", Object.fromEntries(new FormData(f))); await loadSettlements(page); managementAlert("Resolution recorded. Order payment state was kept intact."); } catch (err) { managementAlert(err.message, "error"); } finally { settlementBusy = false; } }));
+    root.querySelectorAll("[data-settlement-resolve]").forEach(f => f.addEventListener("submit", e => resolveSettlement(e, page)));
     document.getElementById("settlement-history").innerHTML = managementTable(["Statement", "Rows", "Matched", "Exceptions", "Imported"], d.batches.map(b => [escapeHtml(b.sourceName), b.rows, b.matched, b.exceptions, escapeHtml(formatDate(b.createdAt, true))]));
-  } catch (e) { if (settlementOwner === Api.getUser()?._id) managementAlert(e.message, "error"); }
+  } catch (e) { if (read === settlementRead && settlementOwner === Api.getUser()?._id) managementAlert(e.message, "error"); }
 }
 async function previewSettlement() {
+  if (settlementBusy || settlementOwner !== Api.getUser()?._id) return;
+  const read = ++settlementPreviewRead;
   const csv = document.getElementById("settlement-csv").value, name = document.getElementById("settlement-name").value; settlementHash = null; document.getElementById("settlement-apply").disabled = true;
-  try { const d = await Api.post("/admin/settlements/preview", { csv }); if (settlementOwner !== Api.getUser()?._id || csv !== document.getElementById("settlement-csv").value || name !== document.getElementById("settlement-name").value) return; settlementHash = d.sourceHash; document.getElementById("settlement-preview-root").innerHTML = `<p>${d.matched} matched · ${d.exceptions} exceptions to review</p>` + settlementTable(d.entries, true); document.getElementById("settlement-apply").disabled = false; } catch (e) { managementAlert(e.message, "error"); }
+  try { const d = await Api.post("/admin/settlements/preview", { csv }); if (read !== settlementPreviewRead || settlementOwner !== Api.getUser()?._id || csv !== document.getElementById("settlement-csv").value || name !== document.getElementById("settlement-name").value) return; settlementHash = d.sourceHash; document.getElementById("settlement-preview-root").innerHTML = `<p>${d.matched} matched · ${d.exceptions} exceptions to review</p>` + settlementTable(d.entries, true); document.getElementById("settlement-apply").disabled = false; } catch (e) { if (read === settlementPreviewRead && settlementOwner === Api.getUser()?._id) managementAlert(e.message, "error"); }
 }
 async function importSettlement() {
   if (!settlementHash || settlementBusy || settlementOwner !== Api.getUser()?._id) return; settlementBusy = true; const button = document.getElementById("settlement-apply"); button.disabled = true;
-  const body = { csv: document.getElementById("settlement-csv").value, sourceHash: settlementHash, sourceName: document.getElementById("settlement-name").value.trim() }; body.requestKey = managementKey("settlement-import", body);
-  try { await Api.post("/admin/settlements/import", body); settlementHash = null; document.getElementById("settlement-preview-root").innerHTML = ""; managementAlert("Statement imported. Review any unmatched lines below."); await loadSettlements(); } catch (e) { managementAlert(e.message, "error"); button.disabled = false; } finally { settlementBusy = false; }
+  const body = { csv: document.getElementById("settlement-csv").value, sourceHash: settlementHash, sourceName: document.getElementById("settlement-name").value.trim() };
+  try { body.requestKey = managementKey("settlement-import", body); await Api.post("/admin/settlements/import", body); if (settlementOwner !== Api.getUser()?._id) return; settlementHash = null; document.getElementById("settlement-preview-root").innerHTML = ""; managementAlert("Statement imported. Review any unmatched lines below."); await loadSettlements(); } catch (e) { if (settlementOwner === Api.getUser()?._id) { managementAlert(e.message, "error"); button.disabled = !settlementHash; } } finally { settlementBusy = false; }
+}
+
+async function resolveSettlement(event, page = 1) {
+  event.preventDefault(); if (settlementBusy || settlementOwner !== Api.getUser()?._id) return;
+  const form = event.currentTarget, button = form.querySelector("button"); settlementBusy = true; if (button) button.disabled = true;
+  try { await Api.post("/admin/settlements/" + form.dataset.settlementResolve + "/resolve", Object.fromEntries(new FormData(form))); if (settlementOwner !== Api.getUser()?._id) return; await loadSettlements(page); managementAlert("Resolution recorded. Order payment state was kept intact."); }
+  catch (error) { if (settlementOwner === Api.getUser()?._id) managementAlert(error.message, "error"); }
+  finally { settlementBusy = false; if (button && settlementOwner === Api.getUser()?._id) button.disabled = false; }
 }

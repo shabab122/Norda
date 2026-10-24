@@ -1,5 +1,7 @@
 # Documentation index
 
+- [Final maintenance release — 2.13.1](FINAL_RELEASE.md) — six-area results, security/bug fixes and owner-environment acceptance.
+
 > Current extension: [Commerce operations — 2.13](COMMERCE_EXPANSION.md). Settlement, price-difference exchanges, reverse pickups/partial receipts, guest checkout, warehouse allocation and availability alerts.
 
 - [Release automation, recovery and team inventory](RELEASE_AUTOMATION.md) — retained 2.12 infrastructure/security/inventory tooling.
@@ -23,7 +25,7 @@ See [COMMERCE_TOOLS.md](COMMERCE_TOOLS.md) for implemented behavior, usage/limit
 - `ASSET_NOTES.md` — source and prompts for storefront/catalog visuals
 - `reference/` — original supplied flow sketches
 
-- `UPDATE_REPORT.md` — 2.8 changes, data compatibility and verification boundaries
+- `UPDATE_REPORT.md` — current maintenance changes, data compatibility and verification boundaries
 - `ACCEPTANCE_CHECKLIST.md` — recorded automated evidence and pending laptop/public-gateway acceptance
 - `CATALOG_GUIDE.md` — import, product list, login/cart checks and admin product entry
 - `DEPENDENCY_AUDIT.json` — release audit with zero reported vulnerabilities

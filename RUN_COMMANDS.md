@@ -2,7 +2,9 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update an existing installation to 2.13.0
+## Update an existing installation to 2.13.1
+
+Install from the updated lockfile with `npm ci` to receive the two security-fixed dependencies. See [the final report](docs/FINAL_RELEASE.md) for scoped fixes, measured tests and remaining provider/browser acceptance.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -134,9 +136,8 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/tracking-notifications-variants
-rsync -av --exclude='.git/' --exclude='.env' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
-git rm --ignore-unmatch server/.envy
+git switch -c fix/final-release-2.13.1
+rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
 npm run acceptance:preflight
@@ -144,7 +145,7 @@ npm run verify
 npm run dev
 ```
 
-The copy command preserves your existing Git history, environment and upload folder. It intentionally does not use `--delete`. The explicit `git rm` removes the legacy tracked credential file from the next commit. Rotate any old JWT/admin credentials that were previously used or shared; source removal cannot erase old GitHub commits.
+The copy command preserves your existing Git history, environment and upload folder. It intentionally does not use `--delete`. Existing private settings are preserved; this patch requires no credential changes.
 
 For an existing installation, keep `MONGO_URI` pointing at the original NORDA database. Use `npm run seed:catalog` to import samples without creating or changing an administrator account. On a fresh database, `npm run seed` creates the admin plus catalog instead.
 
@@ -154,8 +155,8 @@ After review:
 cd /path/to/your/existing/Norda-repository
 git status
 git add .
-git commit -m "feat: add courier tracking, order notifications and product variants"
-git push -u origin feat/tracking-notifications-variants
+git commit -m "fix: harden guest checkout, security and release UI"
+git push -u origin fix/final-release-2.13.1
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

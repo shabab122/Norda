@@ -6,23 +6,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   const callbackHint = params.get("status") || "unknown";
   const orderId = params.get("orderId") || "";
   const root = document.getElementById("payment-result");
+  const owner = shoppingIdentity();
   let verifiedStatus = "unknown";
   let orderSummary = "";
   let isDemo = false;
 
-  if (orderId && Api.isLoggedIn()) {
+  if (/^[a-f0-9]{24}$/i.test(orderId) && owner) {
     try {
       const order = await Api.get("/orders/" + encodeURIComponent(orderId));
+      if (owner !== shoppingIdentity()) return;
       isDemo = order.paymentMethod === "demo";
       verifiedStatus = order.paymentStatus === "paid" ? "success" : order.paymentStatus === "review" ? "review" : order.reservationExpiredAt ? "expired" : order.paymentStatus;
       orderSummary = `
         <div class="result-order">
-          <span>Order</span><strong>#${order._id.slice(-8).toUpperCase()}</strong>
+          <span>Order</span><strong>#${escapeHtml(order._id.slice(-8).toUpperCase())}</strong>
           <span>Amount</span><strong>${money(order.totalAmount)}</strong>
           <span>Payment</span><strong>${escapeHtml(paymentLabel(order.paymentStatus))}</strong>
         </div>
       `;
     } catch {
+      if (shoppingIdentity() && owner !== shoppingIdentity()) return;
       verifiedStatus = "unknown";
     }
   }
@@ -68,8 +71,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     kicker: "Payment update",
     title: "The payment status is unclear.",
     copy: callbackHint === "success"
-      ? "The gateway returned you to Norda, but this screen could not verify the order. Sign in and check your order history."
-      : "Check your order history before trying anything again.",
+      ? "The gateway returned you to Norda, but this screen could not verify the order. Check your order history or recover guest access before trying another payment."
+      : "Check your order history or recover guest access before trying another payment.",
     className: "warning",
   };
 
@@ -91,6 +94,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       ${orderSummary}
       <div class="result-actions">
         <a class="btn btn-primary" href="orders.html">View my orders</a>
+        ${verifiedStatus === "unknown" ? '<a class="text-link" href="guest-orders.html">Recover a guest order</a>' : ""}
         ${["pending", "unknown"].includes(verifiedStatus) ? `<button class="btn btn-outline" type="button" id="refresh-payment">Check again</button>` : `<a class="btn btn-outline" href="products.html">Continue shopping</a>`}
       </div>
     </section>
