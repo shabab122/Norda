@@ -107,11 +107,11 @@ async function requestRecovery(body) {
   if (user?.isGuest && user.guestEmail === email && order.customerSnapshot?.email === email) {
     await withOperationLock("guest-recovery:" + user._id, async () => {
       if (await Recovery.exists({ user: user._id, requestedAt: { $gt: new Date(Date.now() - 60000) } })) return;
-      const token = crypto.randomBytes(32).toString("hex"), row = await Recovery.create({ user: user._id, tokenHash: hash(token), expiresAt: new Date(Date.now() + 3600000), requestedAt: new Date() });
-      const base = process.env.CLIENT_APP_URL || "http://localhost:5000";
-      const url = new URL("guest-orders.html", base.replace(/\/?$/, "/")); url.hash = token;
+      const token = crypto.randomBytes(32).toString("hex");
+      const url = new URL(require("./accountRecoveryService").accountActionUrl("guest", token));
+      const row = await Recovery.create({ user: user._id, tokenHash: hash(token), expiresAt: new Date(Date.now() + 3600000), requestedAt: new Date() });
       try { await require("./mailService").sendAccountMail({ to: email, subject: "Access your Norda guest orders", text: "Use this one-use link within one hour to access your guest orders: " + url.href, kind: "guest_access", actionUrl: url.href }); }
-      catch { await Recovery.deleteOne({ _id: row._id }); }
+      catch (failure) { await Recovery.deleteOne({ _id: row._id }); require("./accountRecoveryService").safeMailError(failure); }
     });
   }
   return { message: "If those guest order details match, an access link will be emailed." };

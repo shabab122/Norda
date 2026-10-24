@@ -83,5 +83,5 @@ function renderInvoice(invoice) {
       </footer>
     </article>
   `;
-  document.getElementById("print-invoice").addEventListener("click", () => window.print());
+  bindReceiptPrint(document.getElementById("print-invoice"), document.getElementById("invoice-root"));
 }

@@ -1,33 +1,36 @@
-# Verification results — NORDA 2.14.3 · Local Acceptance
+# Verification results — NORDA 2.14.4 · Local Final
 
-Verified **24 October 2026, Asia/Dhaka**, using Node.js **24.22.1**, npm **11.9.0** and native MongoDB **7.0.45**. Baseline: delivered **2.14.2 Local Final**. No owner database or actual merchant/SMTP account was used.
+Verified **25 October 2026, Asia/Dhaka**, using Node.js **24.22.1**, npm **11.9.0** and native MongoDB **7.0.45**. Baseline: delivered **2.14.3 Local Acceptance**. Tests use isolated/randomized databases and disposable local services; no owner database or actual merchant/SMTP account was used.
 
 | Executed check | Result |
 |---|---|
-| `npm run verify` | **345 JavaScript syntax files; 623 results: 608 passed, 0 failed, 15 deliberate native skips** without an explicit URI |
-| Full native standalone suite | **274 passed, 0 failed, 0 skipped** |
-| Full native single-member replica-set suite | **274 passed, 0 failed, 0 skipped** |
-| Focused connector/SMTP/frontend/operations suite | **73 passed, 0 failed**, included in the full default coverage |
-| Actual CLI startup + isolated Express HTTP | Connector and demo-app entry points start; health 200; **61 pages / 148 distinct local targets**, all 200 |
-| Dependency audit | **0 vulnerabilities**, dependency graph retained |
-| Archived mail diagnosis | **File preview, SMTP absent, inbox unconfirmed**; expected exit 2; no external message sent |
+| Full `npm run verify` | **349 syntax files; 636 results: 620 passed, 0 failed, 16 deliberate native skips** without an explicit test URI |
+| Full native standalone suite | **280 passed, 0 failed, 0 skipped** |
+| Full native single-member replica-set suite | **280 passed, 0 failed, 0 skipped** |
+| Focused frontend + HTTP/SMTP recovery checks | **66 passed, 0 failed**, included in full default coverage |
+| Received application mail links | **5 shared HTTP/SMTP scenarios**, passed on the memory adapter and both native topologies |
+| Actual CLI startup + isolated HTTP smoke | Connector/app startup and shutdown passed; **61 pages / 148 distinct local targets**, all 200; health 200 |
+| Dependency audit | **0 vulnerabilities**, dependency selections unchanged |
+| Current archived mail diagnosis | **File preview / SMTP absent / inbox unconfirmed**; expected exit 2; no external message sent |
 
-## Current coverage
+## Whole-project coverage retained
 
-The new private service is exercised through actual loopback HTTP and the unmocked merchant client. Tests cover private authentication/origin rejection, production/URL gates, concurrent same-reference booking, changed-intent/duplicate-pickup rejection, restart/replay, exact tracking identity, explicit monotonic stage control, cancellation, immutable balanced statement pages, stable/idle/unknown cursors and fail-closed disk-write recovery. The real app routes and both native topologies cover booking → tracking, no automatic stock/refund on arrival, demo/merchant job/feed isolation, preview-only statement data, permissions, ledger import rejection, acknowledgement replay and recovery from a failed cursor write.
+Full suites cover public catalog/search/filters/variants, authentication/recovery/address book, guest/member cart/coupons/checkout, one-order/invoice replay and price/stock integrity. Existing administrative inventory/warehouse/parcel, cancellation, return/partial receipt, exchange, payment review/refund/credit-note, reconciliation, scoped staff, MFA/session and notification journeys pass. Provider-protocol, local connector, backup/isolated restore, monitor and actual server worker/restart checks remain covered. External providers are controlled fixtures, not real merchant acceptance.
 
-A disposable SMTP receiver exercises Nodemailer itself. Tests retain account/operations/monitor mail and add one-recipient probes, SMTP acceptance versus operator-observed Inbox/Spam receipt, recipient failure/uncertainty, file-preview refusal and remote-authenticated TLS requirements. The test mailbox never relays to an external recipient.
+## Final fixes and direct evidence
 
-Frontend controlled-DOM tests retain prior search/password/guest/admin behavior and add mobile-menu Escape/focus. Narrow invoice/print CSS and semantic order-progress collision fixes are present. All earlier customer/admin, stock/warehouse, payment, cancellation/return/exchange/refund/credit/settlement, security/MFA/session, notification, backup/monitor and server restart suites pass.
+Guest email now uses the same trusted-origin/no-credentials/no-query/no-fragment URL checks as account email, including HTTPS in production. Validation runs before a recovery record is created. Mail rejection removes only the failed intent and logs a redacted diagnostic.
 
-The CLI smoke starts the real connector and app with a randomized test database on a separate loopback MongoDB instance, reads the local pages/resources, stops both processes and drops only its fixture database. It is an HTTP smoke, not browser rendering or a production load benchmark.
+Actual Express requests register a customer, send through Nodemailer to a disposable SMTP receiver, extract the received verification link, open its application page and consume it once. The received reset link changes only its owner password, invalidates the old session/password and rejects reuse. A received guest link restores just its guest history/invoice; ordinary member access remains denied. Invalid configured origins send no mail and create no recovery intent. Rejected SMTP clears the intent and a fresh successful attempt works. These five scenarios also pass on native standalone/replica MongoDB.
 
-## Evidence limits
+Six controlled-DOM receipt scenarios execute invoice, credit-note and exchange-adjustment rendering and Print buttons. They verify escaped item names, branding and normal printing, then prove that account changes/guest expiry disable printing and clear stale document data/title. The browser-menu `beforeprint` path is covered. Existing mobile-menu/search/password/frontend identity/error/retry checks remain intact.
 
-The earlier cloud-browser access/policy restriction was respected. **Visible desktop/mobile, keyboard-navigation observation and printed-PDF inspection were not completed.** Executing controlled DOM scripts and serving HTTP resources do not certify visible layout.
+The CLI smoke uses the actual local connector and demo-app entry points, a separate MongoDB process and a randomized test database. It reads local pages/resources, gracefully stops the processes and drops only its fixture database. This is an HTTP smoke, not rendered browser acceptance or a load certification.
 
-The archived configuration contains no SMTP settings and no actual test recipient was supplied. **No actual inbox/spam receipt was obtained.** The new commands allow the owner to test with their retained laptop SMTP settings and record an observation. SMTP acceptance alone never appears as inbox confirmation.
+## Observation limits
 
-No actual reverse-pickup/settlement provider was selected. The shipped service is **local-demo**: no courier booking, provider PDF or real remittance is fabricated; demo financial imports are blocked. Actual provider integration still needs its approved API/account when selected.
+The earlier browser access/policy restriction was respected. **Visible desktop/mobile layout, physical keyboard observation and rendered/printed A4 PDF were not observed in this session.** The user will manually inspect this final source and report concrete defects; controlled DOM and print CSS checks are not presented as visual proof.
 
-Actual SSLCOMMERZ acceptance, public domain/deployment and courier/cloud/remote-backup activation remain the owner's three [reserved integrations](reserved/README.md). These are explicitly deferred, not newly added features. See [local acceptance](LOCAL_ACCEPTANCE.md), [connector instructions](LOCAL_CONNECTOR.md) and [source preservation](SOURCE_PRESERVATION.md).
+The archived ZIP has no SMTP configuration and no actual recipient was supplied. **No external inbox/spam receipt is claimed.** Actual application delivery through local SMTP was verified; retain the laptop's working settings for external receipt and use the existing mail probe/confirmation commands. SMTP acceptance and operator-observed inbox receipt remain explicitly different.
+
+The existing reverse-pickup/statement connector stays a functioning **local demo**, without a real courier/PDF/remittance. Actual SSLCOMMERZ, domain/deployment and courier/cloud/remote-backup activation remain the owner's three [reserved integrations](reserved/README.md). No new feature phase is assigned. See [update report](UPDATE_REPORT.md), [local acceptance](LOCAL_ACCEPTANCE.md) and [source preservation](SOURCE_PRESERVATION.md).

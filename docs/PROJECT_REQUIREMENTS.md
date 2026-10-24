@@ -1,4 +1,4 @@
-> Current local maintenance release: **2.14.3**. The stable requirement IDs below preserve the historical baseline; current scope/evidence is in [Local final release](LOCAL_FINAL_RELEASE.md) and [Local acceptance](LOCAL_ACCEPTANCE.md). The three reserved integrations are explicitly deferred.
+> Current local maintenance release: **2.14.4**. The stable requirement IDs below preserve the historical baseline; current scope/evidence is in [Local final release](LOCAL_FINAL_RELEASE.md) and [Local acceptance](LOCAL_ACCEPTANCE.md). The three reserved integrations are explicitly deferred.
 
 > Current version: 2.12.0. Stable baseline requirement IDs are retained; newer account, recovery and order-operation requirements extend them. See `ACCOUNT_RECOVERY.md`, `CHECKOUT_RECOVERY.md`, `ORDER_OPERATIONS.md` and `UPDATE_REPORT.md`. Historical branch/commit references describe the original delivery, not a required local branch.
 

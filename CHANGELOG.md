@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.14.4 — 2026-10-25 · Final local maintenance
+
+- Validate guest recovery links through the same trusted-origin/HTTPS rules as account email before creating a retry/cooldown intent; redact mail failure logging and preserve immediate retry after rejection.
+- Guard invoice, credit-note and exchange-adjustment printing against changed/expired shopping identities, including the browser Print menu. Clear stale document data/title and retain normal printing for the current owner.
+- Add actual HTTP → SMTP → received verification/reset/guest-access link journeys, rejection/retry checks and native MongoDB coverage; add six controlled-DOM receipt render/print/isolation scenarios.
+- Run full regression/native/audit and actual CLI/resource smoke. Retain configuration, credentials, catalog/media, dependencies and deferred integrations. Visible browser/PDF and external inbox receipt remain unobserved; no new feature scope is assigned.
+
 ## 2.14.3 — 2026-10-24 · Local acceptance tools
 
 - Add a private, runnable localhost operations connector: durable idempotent demo reverse bookings, explicit stage control, immutable demo statement pages and cursor-safe preview acknowledgement.

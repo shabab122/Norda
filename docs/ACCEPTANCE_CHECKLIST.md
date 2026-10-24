@@ -1,20 +1,17 @@
-# NORDA 2.14.3 — fixed local acceptance
+# NORDA 2.14.4 — final local review record
 
-The current feature scope remains fixed. The three owner-deferred integrations are in [reserved](reserved/README.md). No new feature backlog is assigned.
+The feature scope is fixed. The owner will manually inspect the delivered source and report specific defects. No new feature phase is assigned.
 
 ## Executed
 
-- Full guest/member/customer/admin commerce, isolation, warehouse, return/exchange/refund/credit and settlement tests.
-- Actual private localhost connector booking/control/query/cancel, restart, disk failure and immutable statement pages.
-- Actual app + both native topologies: demo booking/tracking, mode separation, statement preview, blocked financial import, acknowledgement/cursor failure recovery.
-- SMTP protocol delivery/rejection, explicit probe receipts, file-preview refusal and remote TLS guards.
-- Controlled frontend mobile Escape/focus and retained shopping flows; 61 pages / 148 HTTP targets, actual CLI startup, existing backup/monitor/restart suites.
+- Full guest/member/customer/admin commerce, isolation, warehouse, cancellation/return/exchange/refund/credit and settlement suites.
+- Actual application HTTP → SMTP messages → one-use verification/reset/guest recovery links, including old-session invalidation, unknown-email privacy, rejected mail retry and invalid-origin guards.
+- Actual invoice/credit/exchange scripts: escaped rendering, working Print controls and `beforeprint` privacy on changed/expired shopping identity.
+- Retained mobile menu/search/password/forms/error/retry checks, local connector replay/disk/cursor/mode checks and SMTP/TLS diagnostics.
+- Both native MongoDB topologies; backup/monitor/server workers/restart; actual connector/app CLI and 61 pages / 148 HTTP targets.
 
-## Still requires an observation in the owner's environment
+## Owner's planned manual review
 
-- Visible customer/admin desktop/mobile/keyboard journey and A4 invoice/credit printing.
-- Received verification/reset/guest-recovery emails using the laptop's working SMTP settings; record the one-recipient test result only after actually seeing it.
+Follow [Local acceptance](LOCAL_ACCEPTANCE.md) to inspect visible desktop/mobile/keyboard and A4 invoice/credit output, then received emails using the laptop's existing SMTP settings. These observations were not completed by the assistant: browser access remained restricted and actual SMTP settings/recipient were absent. Passing controlled DOM/SMTP tests is not recorded as visible rendering or external inbox proof.
 
-Follow [the exact acceptance steps](LOCAL_ACCEPTANCE.md). The browser access restriction was respected, and the archived SMTP configuration was absent, so these observations are not claimed as complete.
-
-The supplied reverse/settlement service is a working **local demonstration**. An actual provider-connected service requires a selected approved API/account; no real courier collection, PDF or money receipt is claimed.
+The three [reserved integrations](reserved/README.md) remain deferred. The reverse/statement service is the existing runnable local demo, without a contracted provider/courier or genuine money receipt. No extra product work is added by this record.

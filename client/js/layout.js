@@ -44,6 +44,21 @@ function isGuestOrderView() {
 }
 function shoppingIdentity() { return isGuestOrderView() ? (typeof Guest !== "undefined" ? Guest.current?.id : null) : Api.getUser()?._id || (typeof Guest !== "undefined" ? Guest.current?.id : null); }
 function orderHistoryUrl() { return isGuestOrderView() || !Api.getUser() ? "guest-orders.html" : "orders.html"; }
+const receiptPrintBindings = new WeakMap();
+function bindReceiptPrint(button, root) {
+  const owner = shoppingIdentity(), previous = receiptPrintBindings.get(root);
+  if (previous) for (const event of ["beforeprint", "norda:guest-expired", "norda:session-expired"]) window.removeEventListener?.(event, previous);
+  const guard = () => {
+    if (owner && owner === shoppingIdentity() && document.body?.dataset.accountChanging !== "true") return true;
+    button.disabled = true;
+    root.innerHTML = '<p class="management-empty">Access changed. Reopen this document from your own order history.</p>';
+    document.title = "Document unavailable — Norda";
+    return false;
+  };
+  receiptPrintBindings.set(root, guard);
+  button.addEventListener("click", () => { if (guard()) window.print(); });
+  for (const event of ["beforeprint", "norda:guest-expired", "norda:session-expired"]) window.addEventListener(event, guard);
+}
 function orderProgressHtml(status) {
   if (status === "cancelled") return '<p class="order-progress-cancelled">This order was cancelled. Refund updates remain separate.</p>';
   const steps = [["pending", "Order placed"], ["processing", "Preparing"], ["shipped", "Shipped"], ["delivered", "Delivered"]], current = steps.findIndex(([key]) => key === status);

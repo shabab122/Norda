@@ -1,20 +1,20 @@
-# Source preservation — NORDA 2.14.3
+# Source preservation — NORDA 2.14.4
 
-Input: delivered `Norda-Main-v2.14.2-Local-Final.zip`, SHA-256 `eb33b1d561cefcfd28cb02f167aa41f22fe0157253c99e630566b84f97d041d4`. Work starts directly from this archive.
+Input: delivered `Norda-Main-v2.14.3-Local-Acceptance.zip`, SHA-256 `b28882471a2f7506c5c730d07a231f73eb727b4fe85cae0f2df4aa802529a0bf`. Work starts directly from this archive.
 
 | Check | Result |
 |---|---|
-| Original files retained | **510 of 510**, no removals |
-| Original files byte-identical | **477** |
-| Modified original files | **33**, selected connector/email/UI, tests, metadata and documentation |
-| Added source/document files | **14** |
-| ZIP members | **524** |
+| Original files retained | **524 of 524**, no removals |
+| Original files byte-identical | **500** |
+| Modified original files | **24**, guest recovery/receipt print fixes, tests, metadata and documentation |
+| Added source/document files | **4** |
+| ZIP members | **528** |
 | Catalog/brand assets | All **42** byte-identical |
 | Environment/config/seed files | All **11** byte-identical |
 | Dependencies | Selection/lock graph unchanged; root version and optional CLI scripts updated |
 | Owner database / external messages / actual merchant actions | None |
 
-Necessary implementation changes add optional demo-mode fields to logistics/feed records, private localhost contract handling, preview-only demo statement safeguards, SMTP diagnostics/probes/TLS and targeted mobile/print behavior. Existing ordinary merchant mode, credentials, catalog/stock/order rules and source files are retained. The owner database was never connected; test DBs were randomized/isolated. No setup, reseed, credential rotation or manual migration is required.
+Necessary implementation changes validate guest email URLs before intent creation, add redacted mail failure handling and guard existing receipt printing after identity changes. Existing local connector, ordinary merchant mode, credentials, catalog/stock/order rules and source files are retained. Added files are isolated HTTP/SMTP recovery tests and a separate native test entry point; no new product feature is added. The owner database was never connected; test DBs were randomized/isolated. No setup, reseed, credential rotation or manual migration is required.
 
 The local service/private token, probe receipts, dependencies, logs, mail previews and runtime/backup fixtures are excluded. All ZIP member CRCs and exact source bytes are checked after construction. Preserve newer laptop environment settings/uploads when applying source.
 

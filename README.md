@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.14.3 · Local Acceptance</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.14.4 · Local Final</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.14.3** |
+| Application version | **2.14.4** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
@@ -44,11 +44,11 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 ## Local Final Release
 
-**2.14.3** builds directly on delivered **2.14.2 Local Final**. It adds a runnable private localhost reverse-pickup/statement connector demonstration, explicit SMTP delivery probes and receipt recording, and focused keyboard/mobile/print refinements. The prior search/password, guest/admin and commerce features are retained.
+**2.14.4** starts directly from delivered **2.14.3 Local Acceptance**. This final maintenance pass keeps the existing feature set and configuration. It hardens guest recovery email URLs/error handling and prevents stale invoice, credit-note or exchange-adjustment printing after account/guest access changes.
 
-The connector keeps stable booking references and immutable statement pages through restart. Demo stages require explicit control, no real carrier label is invented, and demo statements can be previewed/acknowledged without writing a financial ledger. Existing merchant HTTPS mode and background jobs remain separated from local demo mode.
+Application verification/reset/guest-recovery requests are now tested through actual Express HTTP, Nodemailer and a disposable local SMTP receiver, then completed using links extracted from the received messages. Full customer/admin and both native MongoDB topology suites are retained. See [verification](docs/VERIFICATION_RESULTS.md) for exact results and [local acceptance](docs/LOCAL_ACCEPTANCE.md) for owner review.
 
-Read [local acceptance](docs/LOCAL_ACCEPTANCE.md), [connector commands](docs/LOCAL_CONNECTOR.md) and [the shopping/admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md). Actual inbox receipt and visible browser/print inspection require observation in the owner's environment; they are not certified by SMTP acceptance or controlled DOM tests. The owner's three [reserved integrations](docs/reserved/README.md) remain deferred, with no new feature phase assigned.
+The earlier browser access restriction and absence of laptop SMTP settings still limit what can be observed here: visible browser/mobile/A4 output and an external inbox receipt are not claimed. The owner plans to manually inspect this release and report any concrete defect. The three [reserved integrations](docs/reserved/README.md) remain deferred; no new feature phase is assigned.
 
 ## Implemented Features
 
@@ -293,7 +293,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.3 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.4 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -486,20 +486,20 @@ npm run verify
 
 Coverage includes business rules, injected write failures, HTTP authentication/catalog/cart/order journeys, payment-state protection, uploads, frontend VM rendering and static asset/reference checks.
 
-Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
+Recorded release evidence, as of **25 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.14.3 | **345 files passed** |
-| Default suite, v2.14.3 | **608 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.14.3 | **274 passed**, compensation path |
-| Native single-member replica set, v2.14.3 | **274 passed**, transaction path |
-| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.14.2 |
-| Frontend | Controlled DOM checks cover prior shopping flows and mobile-menu Escape/focus; actual CLI/HTTP smoke serves 61 pages / 148 local targets; visible layout inspection remains unperformed |
+| JavaScript syntax, v2.14.4 | **349 files passed** |
+| Default suite, v2.14.4 | **620 passed, 0 failed, 16 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.14.4 | **280 passed**, compensation path |
+| Native single-member replica set, v2.14.4 | **280 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.14.3 |
+| Frontend | Controlled DOM checks cover prior shopping flows, mobile Escape/focus and six actual receipt-render/print guards; actual CLI/HTTP smoke serves 61 pages / 148 local targets; visible layout inspection remains unperformed |
 | Browser/mobile/keyboard/print | Static/VM/HTTP and print rules passed; cloud browser access was blocked, so visible device/print inspection is not certified |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
-| Release/monitor tests | YAML/Bash checks, controlled code rollback, outage/recovery, RFC TOTP vectors and session/race guards passed; local SMTP account/operations/uptime delivery and rejection/TLS checks passed |
+| Release/monitor tests | YAML/Bash checks, controlled code rollback, outage/recovery, RFC TOTP vectors and session/race guards passed; local SMTP account/operations/uptime delivery and rejection/TLS checks passed; application recovery links are followed from received SMTP messages |
 | Public providers/deployment | SSLCOMMERZ acceptance, real courier/Cloudinary account access, inbox/alert receipt, off-host recovery and final-domain SEO remain environment-specific |
 
 Tests also cover courier replay/reconciliation/tracking/exceptions, actual provider request protocols, SEO/JSON-LD/sitemaps, cloud migration/reference locks/cleanup, maintenance leases, redacted alerts and encrypted backup recovery. Earlier tests cover reports, scoped staff/customer access, devices, signed email outcomes/preferences, item/exchange/refund/credit-note rollback, and current/previous commerce flows, coupon races/rollback/discounted returns, owner-scoped wishlists, CSV preview/import/replay/interruption/conflict handling, published settings and frontend behavior. No owner database, real inbox, courier or money is used. See [verification results](docs/VERIFICATION_RESULTS.md) for the exact scope.

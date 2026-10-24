@@ -1,4 +1,6 @@
-# NORDA 2.14.3 testing and acceptance
+# NORDA 2.14.4 testing and acceptance
+
+Final additions: actual HTTP/SMTP/received-link verification, reset and guest recovery journeys on the memory adapter and both MongoDB topologies; six invoice/credit/exchange render/print identity tests. Visible browser/print inspection and external inbox placement are not claimed.
 
 Current additions: [local acceptance](LOCAL_ACCEPTANCE.md) and [runnable local connector](LOCAL_CONNECTOR.md). Actual HTTP tests cover booking/query/control, durable replay, statement preview/import blocking, cursor retry and demo/merchant isolation. SMTP tests cover explicit probe acceptance/rejection, observed receipt recording and remote TLS. Visible browser and actual inbox acceptance remain unconfirmed in this environment.
 
@@ -27,7 +29,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The fifteen real database test entry points are intentionally skipped without an explicit test URI:
+The sixteen real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration
