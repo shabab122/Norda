@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.14.1 · Local Final</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.14.2 · Local Final</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,30 +32,30 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.14.1** |
+| Application version | **2.14.2** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Final localhost scope: implemented store workflows retained and targeted return/refund/error bugs fixed; live merchant activation and production hosting are deferred |
+| Development status | Final localhost scope: search/password controls and guest/admin order workflows clarified, existing features retained; live merchant activation and production hosting deferred |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
 ## Local Final Release
 
-**2.14.1** is the final maintenance release for the agreed **localhost scope**, built directly from delivered **2.14.0**. It adds no product feature. It fixes repeated partial-receipt keys, item receipt error recovery, mixed-restock wording, whole-return refund retry/credit synchronization and erroneous success status on unexpected failures.
+**2.14.2** builds directly on delivered **2.14.1** and addresses the requested storefront and shopping-flow issues. Header search uses one complete bordered control and submits only nonempty text, including category names. Password fields have accessible show/hide controls. Guest order tracking/recovery, admin processing and the distinction between guest/account orders are clearer.
 
-The existing customer/admin workflows, optional provider adapters, credentials, catalog/brand assets and dependency selections are retained. Local completion does not require a purchased domain, production hosting or activation of unconfigured merchant services. Future features require a separate explicit request; they are not an expanding checklist for this release.
+Guests reach their own history after COD checkout, can follow every order stage and warehouse parcel, and retain private tracking when a separate account is signed in. Admin order actions lead to the correct courier/parcel workspace. A local operator-only `npm run admin:ensure` command can prepare a missing configured administrator without changing existing credentials or catalog data; public signup remains customer-only.
 
-See [Local final release](docs/LOCAL_FINAL_RELEASE.md) for the fixed scope and measured evidence. The [2.14 operations guide](docs/ADVANCED_OPERATIONS.md) remains the reference for the existing parcel, reverse pickup, settlement, return and warehouse tools. Its real merchant connector requirements apply only when those external services are activated.
+Read [the shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) for the complete guest → store processing → tracking flow, private recovery, account linking and admin access. The [local final guide](docs/LOCAL_FINAL_RELEASE.md) records evidence and the fixed localhost scope. Domain/production and unconfigured real merchant activation remain deferred, with no new future-feature backlog assigned.
 
 ## Implemented Features
 
 ### Storefront and Product Discovery
 
 - Responsive storefront with shared navigation, footer, AI-generated brand mark, Norda wordmark and transparent tab icon.
-- Product browsing with keyword search, category/brand filters, price ranges, pagination and sorting by newest, effective price or rating.
+- Product browsing with product/category/brand/SKU keyword search, category/brand filters, price ranges, pagination and sorting by newest, effective price or rating.
 - Product details with image galleries, descriptions, pricing, stock availability and reviews.
 - Featured Picks and Recently Added selections that exclude repeated product IDs and cover images across the two sections.
 - Regular, discounted, low-stock and sold-out catalog examples.
@@ -63,6 +63,7 @@ See [Local final release](docs/LOCAL_FINAL_RELEASE.md) for the fixed scope and m
 ### Customer Accounts and Dashboard
 
 - Customer registration, sign-in, sign-out and cookie-backed session restoration.
+- Accessible password eye controls on static and dynamically rendered password fields; no password submission from the toggle.
 - Profile/name updates and up to 10 saved delivery addresses with add/edit/delete/default actions and a checkout picker.
 - Forgot/reset password with expiring one-use links, hashed tokens and session revocation; signup email verification and resend from Profile.
 - SMTP account email with a private local preview when developing without SMTP.
@@ -92,6 +93,7 @@ See [Local final release](docs/LOCAL_FINAL_RELEASE.md) for the fixed scope and m
 
 - Persistent registered or private guest cart: add products/exact variants, update quantities, remove items and clear the cart.
 - Guest COD/configured online checkout, billing identity snapshots, one-use emailed access recovery, safe cart merging and verified-email account linking.
+- Always-discoverable guest tracking/recovery, explicit order stages and per-parcel progress; guest invoice/tracking remain separate from a signed-in member cart/account.
 - Selected product/quantity continuity through sign-in or registration, with a short-lived selection added once after authentication.
 - Server-side price, quantity, stock and archived-product validation.
 - Shipping-address validation, saved address details and configurable delivery charges.
@@ -284,7 +286,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.2 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -481,12 +483,12 @@ Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.14.1 | **335 files passed** |
-| Default suite, v2.14.1 | **571 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.14.1 | **266 passed**, compensation path |
-| Native single-member replica set, v2.14.1 | **266 passed**, transaction path |
-| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.13.1 |
-| Frontend | Retained checks plus receipt progress/retry keys, blocked-storage recovery and mixed-restock wording; 61 pages / 146 local page-resource URLs returned 200 |
+| JavaScript syntax, v2.14.2 | **337 files passed** |
+| Default suite, v2.14.2 | **590 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.14.2 | **269 passed**, compensation path |
+| Native single-member replica set, v2.14.2 | **269 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.14.1 |
+| Frontend | 16 new frontend checks for search/password controls, guest/account separation, linking guards and admin dispatch; 61 pages / 146 local page-resource URLs returned 200 |
 | Browser/mobile/keyboard/print | Static/VM/HTTP and print rules passed; cloud browser access was blocked, so visible device/print inspection is not certified |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
@@ -513,7 +515,7 @@ Follow the [acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md) for the complete
 
 ## Roadmap
 
-The **localhost release scope is fixed and closed** at the existing 2.14 feature set. This maintenance release adds bug fixes and verification, not another feature phase. The agreed status and concrete testing limits are recorded in [Local final release](docs/LOCAL_FINAL_RELEASE.md).
+The **localhost release scope is fixed and closed** at the existing 2.14 feature set plus the owner-requested search/password and flow fixes. This maintenance release does not assign another feature phase. The agreed status and concrete testing limits are recorded in [Local final release](docs/LOCAL_FINAL_RELEASE.md).
 
 Production deployment/domain/HTTPS, live merchant reverse/statement activation and real-account service acceptance are deferred until the owner chooses to activate those services. They do not block using this final source locally. Optional comparison, SMS, passkeys, more carriers and accounting vendor integrations are not assigned work for this release.
 
@@ -557,6 +559,7 @@ Historical development is recorded in [Changelog](CHANGELOG.md). Further develop
 
 | Document | Purpose |
 |---|---|
+| [Shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) | Search, password visibility, guest tracking/recovery/linking and staff/admin order processing |
 | [Local final release](docs/LOCAL_FINAL_RELEASE.md) | Fixed localhost scope, final fixes, evidence and deferred external activation |
 | [Advanced operations](docs/ADVANCED_OPERATIONS.md) | Current four-feature guide, configuration, provider contracts, permissions and API |
 | [Final maintenance release](docs/FINAL_RELEASE.md) | Six-area results, bug/security fixes, remaining owner-environment checks and tag preparation |

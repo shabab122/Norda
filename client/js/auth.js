@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         Api.setSession(user, { replaceToken: true });
         if (typeof Guest !== "undefined") await Guest.mergeAfterSignIn();
         const params = new URLSearchParams(window.location.search);
-        const next = params.get("next") ? safeNext(params.get("next")) : accountHome(user);
+        const next = authDestination(user, params.get("next"));
         const cartSelected = await finishCartIntent();
         window.location.href = cartSelected ? "cart.html" : next;
       } catch (err) {
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         Api.setSession(user, { replaceToken: true });
         if (typeof Guest !== "undefined") await Guest.mergeAfterSignIn();
         const requested = new URLSearchParams(window.location.search).get("next");
-        const next = await finishCartIntent() ? "cart.html" : requested ? safeNext(requested) : accountHome(user);
+        const next = await finishCartIntent() ? "cart.html" : authDestination(user, requested);
         showAlert("Account created. You can verify your email from your profile. Taking you to Norda…", "success");
         setTimeout(() => (window.location.href = next), 700);
       } catch (err) {
@@ -79,7 +79,13 @@ function clearAlert() {
 function safeNext(value) {
   if (!value || value === "login.html" || value === "register.html") return "index.html";
   if (value.startsWith("/") || value.startsWith("\\") || value.includes("://")) return "index.html";
-  return /^[a-z0-9-]+\.html(?:\?[a-z0-9%&=_.-]+)?(?:#[a-z0-9_-]+)?$/i.test(value)
+  return /^(?:admin\/)?[a-z0-9-]+\.html(?:\?[a-z0-9%&=_.-]+)?(?:#[a-z0-9_-]+)?$/i.test(value)
     ? value
     : "index.html";
+}
+
+function authDestination(user, requested) {
+  if (user.staffMfaRequired && !user.mfaEnabled) return accountHome(user);
+  const target = requested ? safeNext(requested) : accountHome(user);
+  return target.startsWith("admin/") && !["admin", "staff"].includes(user.role) ? accountHome(user) : target;
 }

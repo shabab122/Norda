@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const ownsView = () => owner === shoppingIdentity() && (!guestView || guestOwner === (typeof Guest !== "undefined" ? Guest.current?.id : null));
   const root = document.getElementById("invoice-root");
   if (!/^[a-f0-9]{24}$/i.test(orderId || "")) {
-    root.innerHTML = `<div class="empty-state"><h1>Invoice not found</h1><a class="btn btn-primary" href="orders.html">View orders</a></div>`;
+    root.innerHTML = `<div class="empty-state"><h1>Invoice not found</h1><a class="btn btn-primary" href="${orderHistoryUrl()}">View orders</a></div>`;
     return;
   }
   try {
@@ -19,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderInvoice(invoice);
   } catch (error) {
     if (!ownsView()) return;
-    root.innerHTML = `<div class="empty-state"><h1>Invoice unavailable</h1><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="orders.html">View orders</a></div>`;
+    root.innerHTML = `<div class="empty-state"><h1>Invoice unavailable</h1><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="${orderHistoryUrl()}">View orders</a></div>`;
   }
 });
 
@@ -28,7 +28,7 @@ function renderInvoice(invoice) {
   const address = invoice.shippingAddress || {};
   document.getElementById("invoice-root").innerHTML = `
     <div class="invoice-actions no-print">
-      <a href="orders.html" class="text-link">← Back to orders</a>
+      <a href="${orderHistoryUrl()}" class="text-link">← Back to orders</a>
       <button type="button" class="btn btn-primary btn-sm" id="print-invoice">Print or save PDF</button>
     </div>
     <article class="invoice-sheet">

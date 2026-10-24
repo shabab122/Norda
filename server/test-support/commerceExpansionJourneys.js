@@ -313,4 +313,53 @@ module.exports = async function journeys(t, { request, models: M, fail }) {
       const body = { action: "approve", paymentId: String(payment._id), note: "Late gateway charge verified and warehouse stock checked" }; for (let n = 0; n < 2; n++) expect(await call("/api/admin/operations/orders/" + orderId + "/review", body, admin.cookie)); assert.equal((await M.Order.findById(orderId)).paymentStatus, "paid"); assert.equal((await M.FulfillmentParcel.findOne({ order: orderId })).status, "pending"); assert.equal((await M.Warehouse.findById(warehouse._id)).reservationUnits, 1); assert.equal((await M.WarehouseStock.findOne({ warehouse: warehouse._id, product: p._id })).quantity, 0);
     } finally { Object.assign(gateway, original); }
   });
+
+  await t.test("Category-name search finds products safely and keeps archived inventory hidden", async () => {
+    const label = "Home & Garden [" + key() + "]", category = await M.Category.create({ name: label, slug: "ux-category-" + key() });
+    const p = await M.Product.create({ name: "Compact desk light", slug: "ux-light-" + key(), category: category._id, brand: "LightBox-" + key(), description: "An adjustable reading lamp", price: 100, stock: 4 });
+    await M.Product.create({ name: "Archived light", slug: "ux-archive-" + key(), category: category._id, price: 100, stock: 4, isArchived: true });
+    const result = expect(await request("/api/products?keyword=" + encodeURIComponent(label.toLowerCase())));
+    assert.equal(result.total, 1); assert.equal(String(result.products[0]._id), String(p._id));
+    assert.equal(expect(await request("/api/products?keyword=" + encodeURIComponent(p.brand))).total, 1);
+  });
+  await t.test("A guest sees every admin delivery stage and private tracking also works with a separate signed-in session", async () => {
+    const saved = expect(await get("/api/admin/fulfillment/policy", admin.cookie)).policy;
+    expect(await call("/api/admin/fulfillment/policy", { ...saved, enabled: false }, admin.cookie, "PUT"));
+    try {
+      const session = await request("/api/guest/session", { method: "POST", body: {} }); expect(session, 201);
+      const cookie = session.cookie, p = await product(4), email = "tracked-" + key() + "@example.test";
+      expect(await call("/api/guest/contact", { name: "Guest delivery customer", email }, cookie));
+      expect(await call("/api/cart", { productId: String(p._id), quantity: 1 }, cookie), 201);
+      const order = expect(await call("/api/orders", { shippingAddress: address, paymentMethod: "cod", checkoutKey: key() }, cookie), 201);
+      const adminOrders = expect(await get("/api/orders?limit=100", admin.cookie));
+      const visible = adminOrders.orders.find(o => String(o._id) === String(order._id));
+      assert.equal(visible.customerSnapshot.isGuest, true); assert.equal(visible.user.email, email);
+      assert.equal(expect(await get("/api/orders/" + order._id + "/tracking", cookie)).order.status, "pending");
+      expect(await call("/api/orders/" + order._id + "/status", { status: "processing" }, admin.cookie, "PUT"));
+      assert.equal(expect(await get("/api/orders/" + order._id + "/tracking", cookie)).order.status, "processing");
+      expect(await call("/api/orders/" + order._id + "/shipment", { requestKey: key(), event: "shipped", courierName: "Acceptance courier", trackingNumber: "TRACK-" + key(), note: "Collected from the store" }, admin.cookie));
+      assert.equal(expect(await get("/api/orders/" + order._id + "/tracking", cookie)).order.status, "shipped");
+      assert.equal((await get("/api/orders/" + order._id + "/tracking", other.cookie + "; " + cookie)).status, 403);
+      const headers = { "X-Norda-Guest": "1", "X-Norda-Guest-ID": session.data.id };
+      assert.equal(expect(await request("/api/orders/" + order._id + "/tracking", { cookie: other.cookie + "; " + cookie, headers })).order.status, "shipped");
+      assert.equal((await request("/api/orders/" + order._id + "/tracking", { cookie, headers: { ...headers, "X-Norda-Guest-ID": "wrong-browser-identity" } })).status, 409);
+      expect(await call("/api/orders/" + order._id + "/shipment", { requestKey: key(), event: "delivered", note: "Delivery and cash collection confirmed" }, admin.cookie));
+      const final = expect(await get("/api/orders/" + order._id + "/tracking", cookie)); assert.equal(final.order.status, "delivered"); assert.equal(final.order.paymentStatus, "paid");
+      const history = expect(await get("/api/guest/orders", cookie)); assert.equal(history.find(o => String(o._id) === String(order._id)).status, "delivered");
+      const invoice = expect(await get("/api/guest/invoices/order/" + order._id, cookie)); assert.equal(invoice.totalAmount, order.totalAmount); assert.equal(invoice.paymentStatus, "paid");
+      assert.equal((await M.Product.findById(p._id)).stock, 3); assert.equal(await M.Invoice.countDocuments({ order: order._id }), 1);
+    } finally { const current = expect(await get("/api/admin/fulfillment/policy", admin.cookie)).policy; expect(await call("/api/admin/fulfillment/policy", { ...saved, revision: current.revision }, admin.cookie, "PUT")); }
+  });
+  await t.test("Admin-only setup creates no catalog data and preserves existing accounts and passwords", async () => {
+    const { ensureAdmin } = require("../scripts/ensure-admin"), beforeProducts = await M.Product.countDocuments({}), original = await M.User.findById(admin.user._id).select("+password");
+    const preserved = await ensureAdmin({ email: admin.user.email, password: "Unused replacement password", name: "Do not overwrite" });
+    assert.equal(preserved.created, false); assert.equal((await M.User.findById(admin.user._id).select("+password")).password, original.password);
+    await assert.rejects(ensureAdmin({ email: buyer.user.email, password: "Customer must not be promoted" }), /non-admin/);
+    assert.equal((await M.User.findById(buyer.user._id)).role, "user");
+    await assert.rejects(ensureAdmin({ email: "not-an-email", password: "Strong enough password" }), /ADMIN_EMAIL/);
+    await assert.rejects(ensureAdmin({ email: "admin-new-" + key() + "@example.test", password: "short" }), /ADMIN_PASSWORD/);
+    const email = "store-admin-" + key() + "@example.test", created = await ensureAdmin({ email, password: "LocalOwnerPassword123", name: "Store operator" });
+    assert.equal(created.created, true); assert.equal((await M.User.findById(created.id)).role, "admin");
+    assert.equal((await ensureAdmin({ email })).id, created.id); assert.equal(await M.User.countDocuments({ email }), 1); assert.equal(await M.Product.countDocuments({}), beforeProducts);
+  });
 };

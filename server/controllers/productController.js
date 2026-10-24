@@ -121,6 +121,8 @@ const listProducts = async (req, res, next, management = false) => {
     if (keyword) {
       const safeKeyword = escapeRegExp(cleanText(keyword, 80));
       filter.$or = ["name", "description", "brand", "variants.sku"].map((key) => ({ [key]: { $regex: safeKeyword, $options: "i" } }));
+      const categories = await Category.find({ name: { $regex: safeKeyword, $options: "i" } }).select("_id");
+      if (categories.length) filter.$or.push({ category: { $in: categories.map(item => item._id) } });
     }
     const priceMatch = {};
     if (minPrice !== undefined && minPrice !== "") {

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.14.2 — 2026-10-24 · Storefront and order-flow fixes
+
+- Unify header search borders/input sizing, keep empty/whitespace search inactive and add literal category-name matching to existing catalog search.
+- Add independent accessible password eye buttons for static/dynamic password fields, with remasking on page exit/hidden state.
+- Make guest tracking/recovery discoverable, send guest COD checkout to its own history, show saved order IDs/stages and track individual warehouse parcels.
+- Keep explicit guest invoice/tracking private and separate from signed-in account/cart state; guard guest linking and admin writes against identity changes.
+- Label guest/account orders and real contacts in the admin queue, hand dispatch to its courier form and direct managed orders to parcel fulfillment. Add safe local staff sign-in destinations.
+- Add an operator-only admin:ensure CLI that preserves existing accounts/passwords, refuses customer promotion and leaves catalog/stock unchanged.
+- Add focused frontend and shared HTTP/native category/guest-delivery/admin-setup journeys; retain credentials, assets, dependency selections and the fixed local scope.
+
 ## 2.14.1 — 2026-10-24 · Local Final
 
 - Freeze the localhost scope at the delivered 2.14 feature set; defer domain/production and live merchant activation instead of expanding the release backlog. Preserve existing credentials, assets and dependency selections.

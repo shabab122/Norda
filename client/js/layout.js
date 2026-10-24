@@ -1,5 +1,54 @@
 let currentPage = "";
-function shoppingIdentity() { return Api.getUser()?._id || (typeof Guest !== "undefined" ? Guest.current?.id : null); }
+let passwordControlSequence = 0, passwordControlsReady = false;
+const passwordControls = new Set();
+function enhancePasswordInputs(root = document) {
+  const inputs = [...(root.querySelectorAll?.('input[type="password"]') || [])];
+  if (root.matches?.('input[type="password"]')) inputs.unshift(root);
+  for (const input of inputs) {
+    if (input.tagName !== "INPUT" || input.type !== "password" || input.dataset.passwordVisibility || !input.parentNode) continue;
+    input.dataset.passwordVisibility = "true";
+    if (!input.id) input.id = "norda-password-" + (++passwordControlSequence);
+    const wrapper = document.createElement("div"), button = document.createElement("button");
+    wrapper.className = "password-field"; button.className = "password-toggle"; button.type = "button";
+    button.setAttribute("aria-controls", input.id);
+    const setVisible = visible => {
+      input.type = visible ? "text" : "password";
+      button.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+      button.setAttribute("aria-pressed", String(visible)); button.title = visible ? "Hide password" : "Show password";
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>' + (visible ? '<path d="m3 3 18 18"/>' : '') + '</svg>';
+    };
+    input.parentNode.insertBefore(wrapper, input); wrapper.appendChild(input); wrapper.appendChild(button);
+    button.addEventListener("click", event => { event.preventDefault(); setVisible(input.type === "password"); });
+    input.closest?.("form")?.addEventListener("reset", () => setVisible(false));
+    passwordControls.add({ input, hide: () => setVisible(false) }); setVisible(false);
+  }
+}
+function enablePasswordVisibility() {
+  if (passwordControlsReady) return;
+  passwordControlsReady = true; enhancePasswordInputs();
+  if (typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(records => {
+      for (const record of records) for (const node of record.addedNodes) if (node.nodeType === 1) enhancePasswordInputs(node);
+      for (const control of passwordControls) if (!control.input.isConnected) passwordControls.delete(control);
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+  const hideAll = () => { for (const control of passwordControls) control.hide(); };
+  window.addEventListener("pagehide", hideAll);
+  document.addEventListener("visibilitychange", () => { if (document.hidden) hideAll(); });
+}
+document.addEventListener("DOMContentLoaded", enablePasswordVisibility);
+function isGuestOrderView() {
+  const page = (window.location?.pathname || "").split("/").pop();
+  return ["invoice.html", "order-tracking.html"].includes(page) && new URLSearchParams(window.location?.search || "").get("guest") === "1";
+}
+function shoppingIdentity() { return isGuestOrderView() ? (typeof Guest !== "undefined" ? Guest.current?.id : null) : Api.getUser()?._id || (typeof Guest !== "undefined" ? Guest.current?.id : null); }
+function orderHistoryUrl() { return isGuestOrderView() || !Api.getUser() ? "guest-orders.html" : "orders.html"; }
+function orderProgressHtml(status) {
+  if (status === "cancelled") return '<p class="order-progress-cancelled">This order was cancelled. Refund updates remain separate.</p>';
+  const steps = [["pending", "Order placed"], ["processing", "Preparing"], ["shipped", "Shipped"], ["delivered", "Delivered"]], current = steps.findIndex(([key]) => key === status);
+  return '<ol class="order-progress" aria-label="Order progress">' + steps.map(([key, label], index) => `<li class="${index < current ? "is-complete" : index === current ? "is-current" : ""}"${index === current ? ' aria-current="step"' : ''}><span aria-hidden="true">${index + 1}</span><strong>${label}</strong>${index < current ? '<small>Completed</small>' : index === current ? '<small>Current stage</small>' : ''}</li>`).join("") + '</ol>';
+}
 function requireShopper() { if (shoppingIdentity()) { if (document.body) document.body.dataset.protected = "shopper"; return true; } window.location.href = "guest-orders.html"; return false; }
 function renderHeader(activePage = "") {
   currentPage = activePage;
@@ -28,14 +77,14 @@ function renderHeader(activePage = "") {
             <a href="coupons.html" class="${activePage === "coupons" ? "active" : ""}">Offers</a>
             <a href="wishlist.html" class="${activePage === "wishlist" ? "active" : ""}">Wishlist</a>
             ${user ? `<a href="orders.html" class="${activePage === "orders" ? "active" : ""}">Orders</a>` : ""}
-            ${user && user.role !== "admin" ? `<a href="dashboard.html" class="${activePage === "dashboard" ? "active" : ""}">My account</a>` : ""}
+            ${user && user.role !== "admin" ? `<a href="${accountHome(user)}" class="${activePage === "dashboard" ? "active" : ""}">My account</a>` : ""}
             ${!user ? `<a href="register.html">Create account</a>` : ""}
-            ${typeof Guest !== "undefined" && Guest.current ? `<a href="guest-orders.html">Guest orders</a>` : ""}
+            ${!user || (typeof Guest !== "undefined" && Guest.current) ? `<a href="guest-orders.html">Track order</a>` : ""}
           </nav>
           <form class="search-form" id="global-search-form" role="search">
-            <label class="sr-only" for="global-search">Search products</label>
-            <input type="search" id="global-search" name="q" placeholder="Search products or brands" autocomplete="off" />
-            <button type="submit">Search</button>
+            <label class="sr-only" for="global-search">Search products, categories or brands</label>
+            <input type="search" id="global-search" name="q" placeholder="Products, categories or brands" autocomplete="off" maxlength="80" />
+            <button type="submit" id="global-search-submit" disabled>Search</button>
           </form>
         </div>
         <div class="header-actions ${user ? "has-account" : ""}">
@@ -57,10 +106,16 @@ function renderHeader(activePage = "") {
   const searchInput = document.getElementById("global-search");
   const keyword = new URLSearchParams(window.location.search).get("keyword");
   if (keyword && searchInput) searchInput.value = keyword;
+  const searchButton = document.getElementById("global-search-submit");
+  const syncSearch = () => { if (searchButton) searchButton.disabled = !searchInput?.value.trim(); };
+  searchInput?.addEventListener("input", syncSearch);
+  searchInput?.addEventListener("search", syncSearch);
+  syncSearch();
   searchForm?.addEventListener("submit", (event) => {
     event.preventDefault();
     const query = searchInput.value.trim();
-    window.location.href = "products.html" + (query ? "?keyword=" + encodeURIComponent(query) : "");
+    if (!query) { syncSearch(); return; }
+    window.location.href = "products.html?keyword=" + encodeURIComponent(query);
   });
 
   const toggle = document.getElementById("mobile-toggle");
@@ -115,6 +170,7 @@ function renderFooter() {
             <li><a href="help.html">Contact & help</a></li>
             <li><a href="help.html#delivery">Delivery & returns</a></li>
             <li><a href="help.html#privacy">Privacy & terms</a></li>
+            <li><a href="login.html?next=admin%2Forders.html">Store staff sign in</a></li>
           </ul>
         </div>
       </div>

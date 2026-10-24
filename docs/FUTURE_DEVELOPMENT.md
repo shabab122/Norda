@@ -1,6 +1,6 @@
 # NORDA — fixed local release scope
 
-The owner has fixed the current project at the implemented **2.14 feature set**, with **2.14.1** as its localhost maintenance/final release. No new feature is assigned by this document.
+The owner has fixed the current project at the implemented **2.14 feature set**, with **2.14.2** as its localhost maintenance/final release, including the owner-requested search/password and guest/admin flow fixes. No new feature is assigned by this document.
 
 Current completion work is limited to existing customer/admin journeys, return/refund/stock/payment safeguards, frontend/form/print checks, local backup/monitor verification, bug fixes and coherent release documentation. See [the fixed scope](LOCAL_FINAL_RELEASE.md) and [measured results](VERIFICATION_RESULTS.md).
 
