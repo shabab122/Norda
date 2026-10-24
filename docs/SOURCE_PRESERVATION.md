@@ -1,19 +1,19 @@
-# Source preservation — NORDA 2.14.0
+# Source preservation — NORDA 2.14.1 · Local Final
 
-Input: delivered `Norda-Main-v2.13.1.zip`, SHA-256 `4f42e2ba3c1f58cc9014e23f4c5f0e4020c7cb016dd3bb65d1b577c0ff3dc215`. Work starts directly from this archive.
+Input: delivered `Norda-Main-v2.14.0.zip`, SHA-256 `b1ac5f155db8ed9aeb847f251b0686d5e0f14c6ee840b2117f30d17f64d88a28`. Work starts from this archive with no replacement baseline.
 
 | Check | Result |
 |---|---|
-| Original files retained | **473 of 473**; no removals |
-| Original files byte-identical | **430** |
-| Modified original files | **43**, scoped feature integration, tests and release documentation |
-| New files | **33**, feature models/services/routes/screens, tests, guide and optional configuration reference |
-| Packaged total | **506 files** |
+| Original files retained | **506 of 506**; no removals |
+| Original files byte-identical | **483** |
+| Modified original files | **23**, targeted bug fixes/tests/release metadata/documentation |
+| Added files | **1**, the fixed-scope local final guide |
+| Total ZIP files | **507** |
 | Catalog/brand assets | **All 42 byte-identical** |
-| Credential/config/seed files | **All 10 byte-identical**, including the supplied working configuration |
-| Dependency selections | **Unchanged**; only root package/lock version metadata changes to 2.14.0 |
-| Owner database / real provider actions | **None** |
+| Environment/config/seed files | **All 11 byte-identical**, including optional reference files |
+| Dependency selections | **Unchanged**; only root package/lock version metadata moves to 2.14.1 |
+| Owner database / real merchant actions | **None** |
 
-Backend edits are limited to these four features and their required inventory/cancellation/payment/return/worker/permission integrations. Existing source files are retained, including the professional README structure and historical release guides. Customer/admin authentication and shopping behavior are regression-tested. No existing credential is replaced or rotated. Keep newer working laptop settings/uploads when installing source; no setup/reseed/manual migration is needed.
+Product feature scope remains 2.14.0. Business/frontend changes are limited to partial receipt identity/error handling, truthful stock wording, existing refund/credit retry synchronization and unsuccessful HTTP responses. All other source files and original pages remain. The professional README structure is retained with a fixed localhost closure policy; earlier guides remain available.
 
-All original 56 HTML pages remain and five new pages are added. Installed dependencies, fixture email/media, logs, backups and temporary test databases are excluded. Every archive member's CRC and exact source bytes are verified after packaging. See [file manifest](UPDATE_FILES.json), [current report](UPDATE_REPORT.md) and [measured verification](VERIFICATION_RESULTS.md).
+Installed dependencies, fixture mail/media, backup artifacts, logs and temporary databases are excluded. Every ZIP member's CRC and exact final source bytes are verified after build. Keep newer working laptop environment files/uploads when updating source; no setup, reseed or manual data migration is required. See [manifest](UPDATE_FILES.json), [fixed scope](LOCAL_FINAL_RELEASE.md) and [verification](VERIFICATION_RESULTS.md).

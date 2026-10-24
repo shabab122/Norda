@@ -2,9 +2,9 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update an existing installation to 2.14.0
+## Update an existing installation to 2.14.1 · Local Final
 
-Install the retained dependency selections with `npm ci`. See [advanced operations](docs/ADVANCED_OPERATIONS.md) for the four new tools, optional connector configuration and provider acceptance. No credentials or seed data need changing.
+Install the retained dependencies with `npm ci`. This maintenance release keeps the existing feature set and fixes return/refund/error handling. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -145,7 +145,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/advanced-operations-2.14.0
+git switch -c fix/local-final-2.14.1
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
@@ -165,7 +165,7 @@ cd /path/to/your/existing/Norda-repository
 git status
 git add .
 git commit -m "fix: harden guest checkout, security and release UI"
-git push -u origin feat/advanced-operations-2.14.0
+git push -u origin fix/local-final-2.14.1
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

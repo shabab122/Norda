@@ -1,16 +1,15 @@
-# NORDA 2.14.0 update report
+# NORDA 2.14.1 · Local Final update
 
-Built directly from the delivered **2.13.1** archive. Adds the four requested advanced operations features:
+Starts directly from the delivered **2.14.0** ZIP. Keeps the existing feature set and fixes only observed receipt/refund/error behavior plus release documentation.
 
-1. Independent warehouse parcel courier booking/labels/tracking and approved-connector reverse pickup automation, with stable-reference uncertainty recovery and opt-in cutoff.
-2. Scheduled merchant settlement feeds, reviewed/automatic imports, duplicate/cursor protection and balanced accounting CSV.
-3. Whole-order partial receipts, multiple receiving warehouses, request-snapshot refund deductions and separate printable credits synchronized with confirmed refunds.
-4. Configured distance/capacity/balanced allocation and previewed, replay-safe bulk warehouse transfers.
+- Different physical partial-return parcels with matching entered details no longer reuse one prior receipt key. Retries of a single failed submission remain stable.
+- Item receipt forms recover from preparation/storage errors; mixed restock quantities are displayed correctly to customers.
+- A confirmed failed whole-return refund retry preserves its saved credit entitlement, re-links the existing credit/request, rolls back link failures and settles on confirmed repayment. Pending/unknown and incorrect-amount attempts are blocked.
+- Unexpected exceptions no longer return a controller's provisional success HTTP status.
+- README, run commands and the local final guide now define a fixed localhost scope. Domain/production and real-account merchant activation are deferred; optional ideas are not added to this release backlog.
 
-Adds four scoped admin screens and customer whole-return progress/credit. Existing shopping/payment/guest/refund flows, legacy manual operations and invoice snapshots are retained. Necessary integration guards connect the new operations to inventory, cancellation, delivery, permissions and refunds; unrelated credentials/assets/dependency selections are unchanged.
+Measured: **335 syntax checks**, **571 default passes / 0 failures / 15 explicit native skips**, **266 native passes per topology**, **0 audit vulnerabilities**, **61 pages / 146 local page-resource URLs**, plus a bounded concurrent browse smoke. See [verification](VERIFICATION_RESULTS.md) for the exact methods and cloud-browser/live-provider limits.
 
-Verified: **335 JS files**, **566 default passes / 0 failures / 15 explicit native skips**, **265 native passes per topology**, **0 audit vulnerabilities**, and **61 pages / 146 HTTP targets** returned 200. No owner database, actual provider account or money was used.
+All existing source files, credentials/config/seed files, catalog/brand assets and dependency selections are retained. No owner database or actual merchant account was used. Keep your newer working laptop environment and uploads; no setup, seed or manual migration is required.
 
-Keep the current working laptop environment and uploads. No setup, seed or manual migration is required. Native forward parcels reuse configured eCourier credentials. Reverse pickup and automatic statement feeds require a merchant-approved HTTPS connector; the contract and activation steps are included in [ADVANCED_OPERATIONS.md](ADVANCED_OPERATIONS.md). Automatic job creation defaults off. Public provider/host and visible device/print acceptance remain explicit limits in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md).
-
-Suggested commit: `feat: automate logistics, settlements, returns and warehouse routing`
+Suggested commit: `fix: finalize localhost release and harden return workflows`
