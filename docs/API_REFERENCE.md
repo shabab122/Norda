@@ -1,4 +1,6 @@
-# Norda 2.14 — API Reference
+# Norda 2.14.1 — API Reference
+
+Local maintenance release: existing endpoints are retained. Confirmed failed whole-return refund retries preserve the saved credit amount/link; unexpected server failures use error HTTP status.
 
 Current additions: [advanced operations API and contracts](ADVANCED_OPERATIONS.md#api-additions). Earlier endpoint contracts remain available.
 

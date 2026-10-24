@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.14.1 — 2026-10-24 · Local Final
+
+- Freeze the localhost scope at the delivered 2.14 feature set; defer domain/production and live merchant activation instead of expanding the release backlog. Preserve existing credentials, assets and dependency selections.
+- Scope whole/item partial receipt retry keys to the loaded receipt progress so a later identical parcel can be received while a failed submission safely replays.
+- Recover item receipt forms from blocked storage/validation errors; retain account guards and correct mixed-restock customer wording.
+- Link confirmed failed whole-return refund retries to their existing credit/request, preserve the saved entitlement and reject pending/incorrect-amount retries. Roll back refund and credit writes together.
+- Return HTTP errors for unexpected failures even when a controller already selected a success status. Add focused frontend and shared HTTP/native regression coverage.
+- Record the final local verification evidence and the concrete browser/real-provider limits without making deferred integrations a local completion blocker.
+
 ## 2.14.0 — 2026-10-24
 
 - Add independent warehouse parcel eCourier booking, labels and authenticated tracking; add merchant-connector reverse pickup booking, cancellation and same-reference uncertain-result reconciliation. Automatic queue creation requires explicit opt-in/cutoff.

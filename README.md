@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.14.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.14.1 · Local Final</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,30 +32,23 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.14.0** |
+| Application version | **2.14.1** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Advanced operations source release: per-parcel courier jobs, reverse pickup connector, statement feeds/accounting export, whole-order partial receipts and warehouse routing/bulk transfers; real merchant/provider and visible-device acceptance remain |
+| Development status | Final localhost scope: implemented store workflows retained and targeted return/refund/error bugs fixed; live merchant activation and production hosting are deferred |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
-## Advanced Operations Release
+## Local Final Release
 
-Version **2.14.0** builds directly on the delivered **2.13.1**. It adds four scoped operations features while retaining existing credentials, catalog/brand assets, dependency versions and prior shopping/payment flows. Existing priority routing and manual courier tracking remain available. New automatic integrations are opt-in.
+**2.14.1** is the final maintenance release for the agreed **localhost scope**, built directly from delivered **2.14.0**. It adds no product feature. It fixes repeated partial-receipt keys, item receipt error recovery, mixed-restock wording, whole-return refund retry/credit synchronization and erroneous success status on unexpected failures.
 
-| Feature | Included behavior | Admin tool |
-|---|---|---|
-| Courier automation | Independent warehouse parcel booking/label/tracking, durable uncertain-result recovery, reverse pickup booking through a merchant-approved connector | Courier automation |
-| Settlement integration | Scheduled gateway/courier statement fetching, reviewed or automatic import, duplicate protection and balanced accounting CSV | Statement feeds |
-| Advanced returns | Whole-order partial receipts, separate receiving warehouses, request-snapshot refund deductions and printable return credits | Whole-order receipts |
-| Warehouse operations | Priority/distance/capacity/balanced routing and previewed, replay-safe CSV transfer batches | Routing & bulk transfers |
+The existing customer/admin workflows, optional provider adapters, credentials, catalog/brand assets and dependency selections are retained. Local completion does not require a purchased domain, production hosting or activation of unconfigured merchant services. Future features require a separate explicit request; they are not an expanding checklist for this release.
 
-Read the [advanced operations guide](docs/ADVANCED_OPERATIONS.md) for setup, permissions, provider contracts and operating limits. Native eCourier forward bookings reuse the existing merchant configuration. Reverse pickup and statement feeds require a **merchant-approved HTTPS connector**; this archive does not invent undocumented SSLCOMMERZ/eCourier APIs or activate a real account. Public merchant, visible-browser and target-host acceptance still require your environment.
-
-The previous [2.13.1 maintenance report](docs/FINAL_RELEASE.md) remains as historical evidence. Current results are in [verification results](docs/VERIFICATION_RESULTS.md).
+See [Local final release](docs/LOCAL_FINAL_RELEASE.md) for the fixed scope and measured evidence. The [2.14 operations guide](docs/ADVANCED_OPERATIONS.md) remains the reference for the existing parcel, reverse pickup, settlement, return and warehouse tools. Its real merchant connector requirements apply only when those external services are activated.
 
 ## Implemented Features
 
@@ -291,7 +284,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -488,13 +481,13 @@ Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.14.0 | **335 files passed** |
-| Default suite, v2.14.0 | **566 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.14.0 | **265 passed**, compensation path |
-| Native single-member replica set, v2.14.0 | **265 passed**, transaction path |
+| JavaScript syntax, v2.14.1 | **335 files passed** |
+| Default suite, v2.14.1 | **571 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.14.1 | **266 passed**, compensation path |
+| Native single-member replica set, v2.14.1 | **266 passed**, transaction path |
 | Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.13.1 |
-| Frontend | Retained frontend regressions plus admin serialization/account guards, escaped carrier evidence, stale-preview checks and all 61 pages/local assets through the isolated app |
-| Browser/mobile/keyboard/print | Static/VM checks passed; the available browser could not access the isolated local server, so visible acceptance remains pending |
+| Frontend | Retained checks plus receipt progress/retry keys, blocked-storage recovery and mixed-restock wording; 61 pages / 146 local page-resource URLs returned 200 |
+| Browser/mobile/keyboard/print | Static/VM/HTTP and print rules passed; cloud browser access was blocked, so visible device/print inspection is not certified |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
 | Release/monitor tests | YAML/Bash checks, controlled code rollback, outage/recovery, RFC TOTP vectors and session/race guards passed; local SMTP account/operations/uptime delivery and rejection/TLS checks passed |
@@ -520,18 +513,11 @@ Follow the [acceptance checklist](docs/ACCEPTANCE_CHECKLIST.md) for the complete
 
 ## Roadmap
 
-These items are planned work, separate from the implemented features above. Development will proceed one feature at a time, followed by testing and review.
+The **localhost release scope is fixed and closed** at the existing 2.14 feature set. This maintenance release adds bug fixes and verification, not another feature phase. The agreed status and concrete testing limits are recorded in [Local final release](docs/LOCAL_FINAL_RELEASE.md).
 
-### Release Acceptance
+Production deployment/domain/HTTPS, live merchant reverse/statement activation and real-account service acceptance are deferred until the owner chooses to activate those services. They do not block using this final source locally. Optional comparison, SMS, passkeys, more carriers and accounting vendor integrations are not assigned work for this release.
 
-- [x] Customer/admin automated journeys on standalone and transaction-enabled native MongoDB.
-- [x] Final guest/session/form fixes, receipt/focus CSS improvements and dependency security fixes.
-- [ ] Complete browser/mobile, keyboard and printed-invoice acceptance.
-- [ ] Repeat customer/admin shopping journeys in the target environment.
-- [ ] Complete public SSLCOMMERZ sandbox success/failure/cancel/repeated callback/IPN acceptance before accepting real online payments.
-- [ ] Replace sample catalog content with actual merchant inventory and store information before sales.
-
-### Completed Development Phases
+### Implemented milestones
 
 - [x] Forgot/reset password, email verification and multiple delivery addresses.
 - [x] Reservation expiry/stock release and eligible same-order real payment retry.
@@ -565,23 +551,13 @@ These items are planned work, separate from the implemented features above. Deve
 - [x] Staff invitations and authenticator MFA with verified device sessions/recovery codes.
 - [x] New product/SKU CSV creation, warehouse balances/transfers and low-stock email subscriptions.
 
-### Next Product and Operations Work
-
-- [ ] Additional vendor-specific statement adapters/accounting posting beyond the implemented merchant connector and balanced journal CSV.
-- [ ] External credit-note/accounting adapters and optional discretionary refund policies.
-- [ ] Optional SMS, provider-specific delivery adapters and complaint-remediation tooling.
-- [ ] Optional passkeys, device trust and further team permission policies.
-- [ ] Guest-retention tooling, optional comparison and recently viewed products.
-- [ ] Actual host/domain/provider acceptance, operator recovery promotion and ongoing operational response.
-- [ ] Additional carriers, provider webhooks and broader address/collection contracts beyond the implemented parcel/reverse APIs.
-- [ ] Ongoing dependency auditing, capacity/load acceptance and future compatible rollback drills.
-
-Manual carrier tracking remains supported; the optional eCourier adapter books and polls authenticated carrier events. Automatic booking and cloud/backup/alert services require the owner's configuration. Whole-order returns and selected-item returns are supported, with equal/different-price product/option exchanges, partial item receipts and separate adjustments/credit notes. Variant products require an exact option for cart actions. See [commerce operations](docs/COMMERCE_EXPANSION.md) for the new workflows and [commerce tools](docs/COMMERCE_TOOLS.md) for coupons, wishlist, stock CSV and settings.
+Historical development is recorded in [Changelog](CHANGELOG.md). Further development begins only after a new explicit scope is agreed.
 
 ## Documentation
 
 | Document | Purpose |
 |---|---|
+| [Local final release](docs/LOCAL_FINAL_RELEASE.md) | Fixed localhost scope, final fixes, evidence and deferred external activation |
 | [Advanced operations](docs/ADVANCED_OPERATIONS.md) | Current four-feature guide, configuration, provider contracts, permissions and API |
 | [Final maintenance release](docs/FINAL_RELEASE.md) | Six-area results, bug/security fixes, remaining owner-environment checks and tag preparation |
 | [Commerce operations](docs/COMMERCE_EXPANSION.md) | Settlement, priced exchanges, pickups/partial receipts, guest checkout, warehouse parcels and availability alerts |
@@ -604,7 +580,7 @@ Manual carrier tracking remains supported; the optional eCourier adapter books a
 | [Architecture](docs/ARCHITECTURE.md) | Components, data and reliability design |
 | [API reference](docs/API_REFERENCE.md) | Baseline endpoint examples; current routes are in `server/routes/` |
 | [Testing guide](docs/TESTING_GUIDE.md) | Test procedures and manual scenarios |
-| [Future development](docs/FUTURE_DEVELOPMENT.md) | Development phases and planned capabilities |
+| [Fixed scope](docs/FUTURE_DEVELOPMENT.md) | Local closure and the policy for separately requested future work |
 | [Changelog](CHANGELOG.md) | Version history |
 
 Historical sections remain labeled by release. This README, the advanced operations guide, retained feature guides and current verification report describe the latest application status.

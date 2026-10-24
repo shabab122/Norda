@@ -1,33 +1,31 @@
 {
-  "version": "2.14.0",
-  "baseline": "Norda-Main-v2.13.1.zip",
-  "baselineSha256": "4f42e2ba3c1f58cc9014e23f4c5f0e4020c7cb016dd3bb65d1b577c0ff3dc215",
-  "originalFiles": 473,
-  "retainedOriginalFiles": 473,
-  "unchangedOriginalFiles": 430,
-  "modifiedOriginalFiles": 43,
-  "addedFiles": 33,
-  "archiveFiles": 506,
+  "version": "2.14.1",
+  "release": "Local Final",
+  "baseline": "Norda-Main-v2.14.0.zip",
+  "baselineSha256": "b1ac5f155db8ed9aeb847f251b0686d5e0f14c6ee840b2117f30d17f64d88a28",
+  "featureScopeChanged": false,
+  "originalFiles": 506,
+  "originalFilesRetained": 506,
+  "unchangedOriginalFiles": 483,
+  "modifiedOriginalFiles": 23,
+  "addedFiles": 1,
+  "totalFiles": 507,
   "assetsByteIdentical": 42,
-  "credentialConfigSeedFilesByteIdentical": 10,
+  "environmentConfigSeedFilesByteIdentical": 11,
   "dependencySelectionsUnchanged": true,
   "ownerDatabaseTouched": false,
   "removed": [],
   "modified": [
-    ".gitignore",
     "CHANGELOG.md",
     "README.md",
     "RUN_COMMANDS.md",
     "VERSION.md",
-    "client/admin/admin-layout.js",
-    "client/admin/fulfillment.js",
     "client/admin/item-returns.js",
-    "client/admin/return-pickups.js",
-    "client/js/layout.js",
+    "client/admin/operations.js",
+    "client/admin/whole-return-receipts.js",
     "client/js/order-support.js",
     "docs/ACCEPTANCE_CHECKLIST.md",
     "docs/API_REFERENCE.md",
-    "docs/ARCHITECTURE.md",
     "docs/FUTURE_DEVELOPMENT.md",
     "docs/README.md",
     "docs/SOURCE_PRESERVATION.md",
@@ -35,63 +33,15 @@
     "docs/UPDATE_FILES.json",
     "docs/UPDATE_REPORT.md",
     "docs/VERIFICATION_RESULTS.md",
-    "server/app.js",
-    "server/controllers/orderOperationsController.js",
-    "server/models/OrderRequest.js",
-    "server/models/Refund.js",
-    "server/models/ReturnReceipt.js",
-    "server/models/Warehouse.js",
+    "server/middleware/errorHandler.js",
     "server/package-lock.json",
     "server/package.json",
-    "server/server.js",
-    "server/services/courierService.js",
-    "server/services/fulfillmentService.js",
-    "server/services/guestService.js",
-    "server/services/itemReturnService.js",
-    "server/services/orderRequestService.js",
-    "server/services/orderService.js",
     "server/services/refundService.js",
-    "server/services/returnLogisticsService.js",
-    "server/services/settlementService.js",
-    "server/test-support/memoryStore.js",
-    "server/test/apiRegression.test.js",
-    "server/test/branding.test.js",
-    "server/test/mongoRuntime.test.js"
+    "server/test-support/advancedOperationsJourneys.js",
+    "server/test/finalReleaseFrontend.test.js"
   ],
   "added": [
-    "client/admin/advanced-common.js",
-    "client/admin/logistics-automation.html",
-    "client/admin/logistics-automation.js",
-    "client/admin/routing-bulk.html",
-    "client/admin/routing-bulk.js",
-    "client/admin/statement-sync.html",
-    "client/admin/statement-sync.js",
-    "client/admin/whole-return-receipts.html",
-    "client/admin/whole-return-receipts.js",
-    "client/js/whole-return.js",
-    "client/whole-return.html",
-    "docs/ADVANCED_OPERATIONS.md",
-    "server/.env.operations.example",
-    "server/models/LogisticsJob.js",
-    "server/models/ReturnRules.js",
-    "server/models/RoutingSettings.js",
-    "server/models/StatementFeed.js",
-    "server/models/StatementRun.js",
-    "server/models/WarehouseBatch.js",
-    "server/models/WholeReturnCredit.js",
-    "server/models/WholeReturnReceipt.js",
-    "server/routes/advancedOperationsRoutes.js",
-    "server/services/advancedReturnService.js",
-    "server/services/logisticsAutomationService.js",
-    "server/services/merchantConnectorService.js",
-    "server/services/routingService.js",
-    "server/services/statementSyncService.js",
-    "server/services/warehouseBulkService.js",
-    "server/test-support/advancedOperationsJourneys.js",
-    "server/test/advancedOperationsFrontend.test.js",
-    "server/test/advancedOperationsHttp.test.js",
-    "server/test/merchantConnector.test.js",
-    "server/test/mongoAdvancedOperations.test.js"
+    "docs/LOCAL_FINAL_RELEASE.md"
   ],
   "files": [
     {
@@ -116,13 +66,13 @@
     },
     {
       "path": ".gitignore",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "ece16a1ae387fbfaa7b79155b0142d2f45e627955d26ee49561214aa2ce78fc0"
     },
     {
       "path": "CHANGELOG.md",
       "status": "modified",
-      "sha256": "e6541c04e61c9b65421909ac4c11f654487e78abfd5312624ddc6d9aff81cbba"
+      "sha256": "1846595718ccb99fca403393d8afbfbfb6256e08bd85aea811d76598320307b3"
     },
     {
       "path": "Dockerfile",
@@ -132,26 +82,26 @@
     {
       "path": "README.md",
       "status": "modified",
-      "sha256": "64f18708fb3a8c580217d6dd6a5bd81a0dfe1e8806142193c73019344959c7a2"
+      "sha256": "b4df246a6c22bfff5d4c454819be038cd736d13f543ce38363d96eb19aa6dc1c"
     },
     {
       "path": "RUN_COMMANDS.md",
       "status": "modified",
-      "sha256": "2f520db46d007cabc101fa9864f21ac81656e19962d09808b861978019fd4d59"
+      "sha256": "ab3eec13ad0710bd4dbd57db62b3a547ed5a225b9c0b8b510a86587f58e0ca86"
     },
     {
       "path": "VERSION.md",
       "status": "modified",
-      "sha256": "c84f9a7a995f9203fbc6f09c9936caf164a1b7568463d44dc0f31bab09cd2098"
+      "sha256": "f0577cc46468b8fb1d4e0236bc262819e38fb572e697200be40a444db3b445a1"
     },
     {
       "path": "client/admin/admin-layout.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "508f4d3a342d8a1544f95654eb817e017e79955cba665b1f93707a95876a4e82"
     },
     {
       "path": "client/admin/advanced-common.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "dadabbf4906bcf1e1e33ba17e11328cbf21ace8f12937e045885d7fce0ff9750"
     },
     {
@@ -241,7 +191,7 @@
     },
     {
       "path": "client/admin/fulfillment.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "db69326994c964b1f92436e073b7e35623d3f2c33b5d50847e6e85ba677f0aa9"
     },
     {
@@ -272,16 +222,16 @@
     {
       "path": "client/admin/item-returns.js",
       "status": "modified",
-      "sha256": "6481dff1a98bc60c1bf396bf30553f38954423242db86d8dad31bab1ceccbb5d"
+      "sha256": "92b4cd84947ce92fbe8f0605845da15f147b63aa8740fda6ea30366a3a20a15f"
     },
     {
       "path": "client/admin/logistics-automation.html",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "0f5da9df9ae88244d8dbea73303449bfe6a1f2acf8ee5336bef4cc79366502c0"
     },
     {
       "path": "client/admin/logistics-automation.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "f71db1203805c84db3a8f791afcedd0f8f463d324d15171498f2b81e86cdd923"
     },
     {
@@ -321,8 +271,8 @@
     },
     {
       "path": "client/admin/operations.js",
-      "status": "unchanged",
-      "sha256": "5b4c31e136e9d61c09755a4669d0e9c3f2d348e6799826d0444da6f435b23547"
+      "status": "modified",
+      "sha256": "9cb0219f2bc220be9be258f77869e1e8708e88496ea0f15fde91327b416d51b0"
     },
     {
       "path": "client/admin/orders.html",
@@ -361,17 +311,17 @@
     },
     {
       "path": "client/admin/return-pickups.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "42c391c135776bdc1a73e77fb2da3d9b29967208091d48f8d88c00547cf76d4f"
     },
     {
       "path": "client/admin/routing-bulk.html",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "5e9c3a0b084a852c1028f617db6914b5cb3df382682072258e93ec35d2b843da"
     },
     {
       "path": "client/admin/routing-bulk.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "827716b7633ad2f0ad2cb239829c36528aba5f7552fd7a62071b872d8b09dc1b"
     },
     {
@@ -416,12 +366,12 @@
     },
     {
       "path": "client/admin/statement-sync.html",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "09da51d910f7d8dc9126b0427f71f4357466540c526f9765773cc611ca86cf3b"
     },
     {
       "path": "client/admin/statement-sync.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "0850bb4a2da1d53e0a6b1df80a311e341d40c347d1422a0bd75d41c03d736faa"
     },
     {
@@ -451,13 +401,13 @@
     },
     {
       "path": "client/admin/whole-return-receipts.html",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "7c4a9adfffa9f1dd13fa494ca400203533f5316d62e720983191db2c9e0b3afe"
     },
     {
       "path": "client/admin/whole-return-receipts.js",
-      "status": "added",
-      "sha256": "ef3af897d402d2b46bbb0aef81d3de2315adfd2f9dfd5d429608afc56b047f1f"
+      "status": "modified",
+      "sha256": "572af04aa54e46e27bde20084c552dd194252bf0eff5d3883f2d27886eda76a5"
     },
     {
       "path": "client/admin/workspace.html",
@@ -896,7 +846,7 @@
     },
     {
       "path": "client/js/layout.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "db638455e97a5d9ce164338572fed0d5c2479ecd29805ab6c5ca4f746d772454"
     },
     {
@@ -907,7 +857,7 @@
     {
       "path": "client/js/order-support.js",
       "status": "modified",
-      "sha256": "e4d56af4868c2f6c66599c0d39e81b5cc813547175cbd487ed65ec583f482102"
+      "sha256": "de8525f9d5178ea67467bfa4cc92fdc1614e5a40483efd60e58c8efffa396629"
     },
     {
       "path": "client/js/order-tracking.js",
@@ -981,7 +931,7 @@
     },
     {
       "path": "client/js/whole-return.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "7d7cc62233d46d0ba074efc7d78e984eae85fcd64d37ec3ed2da9a25503a7a5b"
     },
     {
@@ -1066,7 +1016,7 @@
     },
     {
       "path": "client/whole-return.html",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "3730b6de5d1215c6fa197637f4729835eadcd0b49eac2ebfa5bd90a570487174"
     },
     {
@@ -1102,7 +1052,7 @@
     {
       "path": "docs/ACCEPTANCE_CHECKLIST.md",
       "status": "modified",
-      "sha256": "6ecea81e2405a0ffb000a2c40b4d47b6257f581085654de6b95f51d344abe607"
+      "sha256": "ea764699d0b46e57118e92465724ee1cbc73606042841b9c87ee094414138f08"
     },
     {
       "path": "docs/ACCOUNT_RECOVERY.md",
@@ -1111,17 +1061,17 @@
     },
     {
       "path": "docs/ADVANCED_OPERATIONS.md",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "939f8b19b3a5bf2ab150545f6f98c06fb8d86aaf53829a4eff622b85d354954e"
     },
     {
       "path": "docs/API_REFERENCE.md",
       "status": "modified",
-      "sha256": "6e75145e8c0f957669e3f8711dab80e2f658aa00cd23ab39add1af807e8b3b61"
+      "sha256": "c99071c6b570e5c5610ac9f6757fe16aa5dfae52e381f6924d934e8661f2d550"
     },
     {
       "path": "docs/ARCHITECTURE.md",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b0ae7801bfd68debcd74940ad8470736338516eb933c0b9b8a1acf09c1e1749b"
     },
     {
@@ -1177,7 +1127,12 @@
     {
       "path": "docs/FUTURE_DEVELOPMENT.md",
       "status": "modified",
-      "sha256": "78111dcbef26717318f3fd371332e4a596174af5f8332e73bee19ba8daa2b9b7"
+      "sha256": "037a33e75278fe979a03cc07180dadf850be3e5384f354185f8ce9d5722baa89"
+    },
+    {
+      "path": "docs/LOCAL_FINAL_RELEASE.md",
+      "status": "added",
+      "sha256": "793e1093342e7b2dba8e54c953da406befee5108c47d3baa5db7f51eb4d9d9c4"
     },
     {
       "path": "docs/MANAGEMENT_RETURNS.md",
@@ -1207,7 +1162,7 @@
     {
       "path": "docs/README.md",
       "status": "modified",
-      "sha256": "a5f9dffed5233a7c75c26930aeddd83b49f2cafb446289c81ab04474a1b35916"
+      "sha256": "96014bbf6702482e7c6fcbab775d62f74066935d017a0e6810df313721bfafaa"
     },
     {
       "path": "docs/RELEASE_AUTOMATION.md",
@@ -1217,28 +1172,28 @@
     {
       "path": "docs/SOURCE_PRESERVATION.md",
       "status": "modified",
-      "sha256": "45561b868fc3f1cdb164a702b4b19e3f8b9b09d72f903b2de1f983c5d7088aa6"
+      "sha256": "dafdc992a2ab96dfa23c32d026536cbd051f36754ec3360bb6395c40b60c4f46"
     },
     {
       "path": "docs/TESTING_GUIDE.md",
       "status": "modified",
-      "sha256": "a896d4c747341c8d5c57dcc4824d5735a47accf18e10e53840c6a0bb1feacaed"
+      "sha256": "4ff2293877ea4aeed6e055b062e256dc94a9f06b1cc46c7efc03f15b1f3f5d55"
     },
     {
       "path": "docs/UPDATE_FILES.json",
       "status": "modified",
       "sha256": null,
-      "note": "Self hash omitted; packaging verifies exact source bytes."
+      "note": "Self hash omitted; all ZIP/source bytes are compared after build."
     },
     {
       "path": "docs/UPDATE_REPORT.md",
       "status": "modified",
-      "sha256": "4463786c081f01959cbc058d9383f346be42bc5f80df86222c86a0f8dbac840b"
+      "sha256": "f20b1ca1fa3b46d24d32b52c2eaf605b9d5ae93879e832f2376d44aaab356a4f"
     },
     {
       "path": "docs/VERIFICATION_RESULTS.md",
       "status": "modified",
-      "sha256": "ad261d8d0cab03cbc99f14490565b075ba30ab3a88004f3cb9abd26be247d70f"
+      "sha256": "a024c4a93c25a9bb314f1bcff9bc3313955a679943b55fbaf7cd2551113e725d"
     },
     {
       "path": "docs/reference/api-request-flow.png",
@@ -1292,7 +1247,7 @@
     },
     {
       "path": "server/.env.operations.example",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "64490cf125907c5fd1f1de78572b90782d4bfeca3aefb1d7be4485eefedcc7e3"
     },
     {
@@ -1302,7 +1257,7 @@
     },
     {
       "path": "server/app.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b0d59477c82abb432810fadb9c3008a36181cba4b8eca5953a29af3f957c46d9"
     },
     {
@@ -1387,7 +1342,7 @@
     },
     {
       "path": "server/controllers/orderOperationsController.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "36a3a39ad907a5ba2e85fc37cfe45a9e5f7ef5ba05f780852333da4e8d4c8496"
     },
     {
@@ -1422,8 +1377,8 @@
     },
     {
       "path": "server/middleware/errorHandler.js",
-      "status": "unchanged",
-      "sha256": "7694091b75427cb970e3e2610f1ad67363110a1ddf0513a9ff067542a2975fd1"
+      "status": "modified",
+      "sha256": "b5f9c72ad21c72fd152f3df0fc333fd82f4e572485750de904d608b785e355e2"
     },
     {
       "path": "server/middleware/upload.js",
@@ -1532,7 +1487,7 @@
     },
     {
       "path": "server/models/LogisticsJob.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "385fd738aa079f587e5901834b15b6f3c4bc9d8f119f44c733df3f6cec23f1f4"
     },
     {
@@ -1582,7 +1537,7 @@
     },
     {
       "path": "server/models/OrderRequest.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "16c2ae1f1dfdf4694064e8df5eca792a397c680c2a9509e61733b9f0f23f7bd3"
     },
     {
@@ -1597,7 +1552,7 @@
     },
     {
       "path": "server/models/Refund.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "aa1ad4db5410e5acfbb8caf0952918584144f25e2d9078cf83b495be01d5caf5"
     },
     {
@@ -1612,12 +1567,12 @@
     },
     {
       "path": "server/models/ReturnReceipt.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "49dc36fcba263c0fce3e8169babbd145f42c13603d4e5bb3055b3f43d72768d0"
     },
     {
       "path": "server/models/ReturnRules.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "a3515fa57f1a3839e2d35ac113a73a0e58e50df031f3be756f0f3e1e4116cf86"
     },
     {
@@ -1627,7 +1582,7 @@
     },
     {
       "path": "server/models/RoutingSettings.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "02744e0ba8a0a6bae242c2f8a2127d304ec29ff2a724193c393ebc4a4e000714"
     },
     {
@@ -1657,12 +1612,12 @@
     },
     {
       "path": "server/models/StatementFeed.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "401a8fd863927cae6da159c0eec6eea434264ae061f83cabab4d9df148e2d656"
     },
     {
       "path": "server/models/StatementRun.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "add111cadcb2d3e7f74f69e1e7de790b8e460eb5ff41da7fcc8feb5eb9533e29"
     },
     {
@@ -1702,12 +1657,12 @@
     },
     {
       "path": "server/models/Warehouse.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "2edf4e7f1209b1abc77f18477c17edf1e16ee9578169553cb301ee209f563ee2"
     },
     {
       "path": "server/models/WarehouseBatch.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "d7de40d5a0c7022ba8ab1f902677f403335915be8c33c7a42fd13a7ee95b6196"
     },
     {
@@ -1717,12 +1672,12 @@
     },
     {
       "path": "server/models/WholeReturnCredit.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "9c9f0af5b316c293c982f9bbd7ffbd0cecd35d6629a3e58eba45580abde1d76d"
     },
     {
       "path": "server/models/WholeReturnReceipt.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "bc072f82bc7764e15d844ec74bffc39ebb44a3b30750e04ba0e067138fad36e5"
     },
     {
@@ -1733,12 +1688,12 @@
     {
       "path": "server/package-lock.json",
       "status": "modified",
-      "sha256": "94089e5f11cd4c0c10ff8b8ab9e674dff61751ef80acbce4f83d17eceefa486b"
+      "sha256": "bd0a8a60ce7df71851ce0a4edbe6f5fcac3d4654203b41c625f4b6e506ace783"
     },
     {
       "path": "server/package.json",
       "status": "modified",
-      "sha256": "835d5c9e65eff1191378f5ea18bb0fbab3831a52394e87bb2786d10e12a9bb35"
+      "sha256": "7dd9acb573cad503b071829ef8f03332282c605c8bf6198629b2d1f619e71635"
     },
     {
       "path": "server/routes/adminRoutes.js",
@@ -1747,7 +1702,7 @@
     },
     {
       "path": "server/routes/advancedOperationsRoutes.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "0138308b74077b1c19be0a71ea84097455d85d9d2533d19b2f8ea7be4b2eb826"
     },
     {
@@ -1897,7 +1852,7 @@
     },
     {
       "path": "server/server.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "855620941c356fe4efa1633296a9f695a0984012b235c41b8f4e3885b5d15f94"
     },
     {
@@ -1912,7 +1867,7 @@
     },
     {
       "path": "server/services/advancedReturnService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "a818b0175b983f8da62c8cd3602598c6bf5969b1ca617cc35feac67c9113bdce"
     },
     {
@@ -1937,7 +1892,7 @@
     },
     {
       "path": "server/services/courierService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b1ec818a642984977ab9be365c9ce506e459d97ccd31a2970dbc6eee082b0ee4"
     },
     {
@@ -1962,12 +1917,12 @@
     },
     {
       "path": "server/services/fulfillmentService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "db1efb7fcf87ae663ed715df9b94fe2bbeebf26e2b1a747f9875085945cdc8d1"
     },
     {
       "path": "server/services/guestService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "e08d0cfc5de184f63ee4c77b9536352219c36ad1475aabbfa0bff7623dae931c"
     },
     {
@@ -1992,7 +1947,7 @@
     },
     {
       "path": "server/services/itemReturnService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b079a6e1ef07c081e4b03170271165e952f0c82bbd711cb4f7db682b2ae48080"
     },
     {
@@ -2002,7 +1957,7 @@
     },
     {
       "path": "server/services/logisticsAutomationService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "0f2cada1ffa7c75b7b73791b9b633ea83c0280a93298c0e27f20d67247d01251"
     },
     {
@@ -2022,7 +1977,7 @@
     },
     {
       "path": "server/services/merchantConnectorService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "f52e030c36157da40b1665c77524644f35aa6c6233449fb6211fb01c1fb5ff7f"
     },
     {
@@ -2062,12 +2017,12 @@
     },
     {
       "path": "server/services/orderRequestService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "174c4eb49ff81dba36c26770c17aa9f31649fe854ba9869e29008da0359f13aa"
     },
     {
       "path": "server/services/orderService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "e3158e6413a6ab81760ce1e42737daa91c0bb221efe6f08134bcdd9c6b6a117f"
     },
     {
@@ -2093,7 +2048,7 @@
     {
       "path": "server/services/refundService.js",
       "status": "modified",
-      "sha256": "37f73002e69c477e9e7bd6aa194b3eaf813ed9017afcfe9f794e5dd970a90a45"
+      "sha256": "a0b9bb17a0a35fbb24af08c98d79bcbdd0947bc912bbad1b7ec4fb1a1334a054"
     },
     {
       "path": "server/services/reservationService.js",
@@ -2102,12 +2057,12 @@
     },
     {
       "path": "server/services/returnLogisticsService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b145cf048458eaf13dee4899044f5f239cbac767d175c934dbae4e2992c04989"
     },
     {
       "path": "server/services/routingService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "ad8922e6978f146dfd8dd61abf694b74b56183e8129b1d7f4391a8bfce9cb704"
     },
     {
@@ -2132,7 +2087,7 @@
     },
     {
       "path": "server/services/settlementService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "29613086c9a39647c4e24c3d44598910b99a97081094fb2834ca5e599694a2a4"
     },
     {
@@ -2152,7 +2107,7 @@
     },
     {
       "path": "server/services/statementSyncService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "0b0d836be382bb9e30b2a321504b7746d40bcbd0f5063ffdbb09419f1a58b856"
     },
     {
@@ -2182,7 +2137,7 @@
     },
     {
       "path": "server/services/warehouseBulkService.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "c25855db3c04b0bd126b31f1293018f85c74d709ab7158a2de234ccf0554a71e"
     },
     {
@@ -2197,8 +2152,8 @@
     },
     {
       "path": "server/test-support/advancedOperationsJourneys.js",
-      "status": "added",
-      "sha256": "9f901af0112b2fff9f6c52d0fe991f6f15f1a0d776ffb38133c3eca6161f7e34"
+      "status": "modified",
+      "sha256": "e65f8129a4f39d49779b86ffc04c5bd92c2a995096f4cf24a74fb361feae7ce4"
     },
     {
       "path": "server/test-support/checkoutRecoveryJourneys.js",
@@ -2232,7 +2187,7 @@
     },
     {
       "path": "server/test-support/memoryStore.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "93166aa9d4b9090160797e601f635d6ef19d5f7282b17e607c8d05d608118001"
     },
     {
@@ -2277,22 +2232,22 @@
     },
     {
       "path": "server/test/advancedOperationsFrontend.test.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "dbfe92ac91c2f500def590871f29500a3e3135b22402e3de3b0826d54b115ce6"
     },
     {
       "path": "server/test/advancedOperationsHttp.test.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "1adc438d59b672c9b468225337b091aedf36580298ba1dfd3fa45bf791cbf92a"
     },
     {
       "path": "server/test/apiRegression.test.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "31f81f8367a700026b09659ab135b70e29ddde07b3a9b1926c0ede0fc222ffae"
     },
     {
       "path": "server/test/branding.test.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "ff2c566cd88a1b2571e1af4415c62c1def1809c0960dadbea96fb878c2e83364"
     },
     {
@@ -2367,8 +2322,8 @@
     },
     {
       "path": "server/test/finalReleaseFrontend.test.js",
-      "status": "unchanged",
-      "sha256": "36aff61ed839c582f570d5d5c2054179e3ae253936d3ad9e005d82b9f6520f15"
+      "status": "modified",
+      "sha256": "fa785f33377b40bb7bf49c83cad9b88d7dfc994d6203725887a838afb6abcb2b"
     },
     {
       "path": "server/test/frontendSafety.test.js",
@@ -2407,7 +2362,7 @@
     },
     {
       "path": "server/test/merchantConnector.test.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "6f251f6904accf7cdee6a96aa07e669000f0e066476a7276dd839220bd2128ed"
     },
     {
@@ -2417,7 +2372,7 @@
     },
     {
       "path": "server/test/mongoAdvancedOperations.test.js",
-      "status": "added",
+      "status": "unchanged",
       "sha256": "4869ed8ed5a14cf9499e3e433a7a4bf351d927d35947826dbe915e6c505804e8"
     },
     {
@@ -2482,7 +2437,7 @@
     },
     {
       "path": "server/test/mongoRuntime.test.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "08d693920cf1190c5881b3d7f10952f36a2f4ea6f33fbd1ea89236e98549bf65"
     },
     {

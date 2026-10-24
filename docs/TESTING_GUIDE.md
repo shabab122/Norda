@@ -1,4 +1,6 @@
-# NORDA 2.14 testing and acceptance
+# NORDA 2.14.1 testing and acceptance
+
+The final scope is localhost only. See [Local final release](LOCAL_FINAL_RELEASE.md) for executed checks and concrete browser/provider limits. Earlier deployment/provider acceptance instructions below are reference material for later activation, not completion requirements for this local release.
 
 Current feature guide: [Advanced operations](ADVANCED_OPERATIONS.md). Default verification now covers 61 pages and the new routing/return/courier/statement tools. `test:integration` includes their isolated native journeys.
 

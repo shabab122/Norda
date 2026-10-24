@@ -72,7 +72,21 @@ const requestRefund = async ({ orderId, user, body }) => {
     return withDatabaseUnit(async (unit) => {
       order = await querySession(Order.findById(orderId), unit.session);
       if (source.scope === "order" && order.paymentStatus === "review" && ["pending", "processing"].includes(order.status)) order = await cancelForOperations(order, "Payment review: refund requested", unit);
-      return queueRefundInUnit({ order, source, amount, key, reason, actor: user }, unit);
+      const Credit = require("../models/WholeReturnCredit");
+      const credit = source.scope === "order" ? await querySession(Credit.findOne({ order: orderId, status: "pending" }), unit.session) : null;
+      let selectedAmount = amount, wholeRequest;
+      if (credit) {
+        const previous = credit.refund ? await querySession(Refund.findById(credit.refund), unit.session) : null;
+        wholeRequest = await querySession(OrderRequest.findById(credit.orderRequest), unit.session);
+        if (body.amount === undefined) selectedAmount = moneyCents(credit.totalAmount);
+        if (!previous || previous.status !== "failed" || previous.gateway !== source.gateway || previous.bankTransactionId !== source.bankTransactionId || !wholeRequest || String(wholeRequest.order) !== String(orderId) || selectedAmount !== moneyCents(credit.totalAmount)) throw httpError(409, "Reconcile the existing return refund, or retry its confirmed failure for the exact credit amount");
+      }
+      const refund = await queueRefundInUnit({ order, source, amount: selectedAmount, key, reason, actor: user, wholeReturnRequest: credit?.orderRequest }, unit);
+      if (credit) {
+        await patch(Credit, credit, { refund: refund._id }, unit);
+        await patch(OrderRequest, wholeRequest, { refund: refund._id }, unit);
+      }
+      return refund;
     });
   });
   await processRefund(result._id).catch(() => {});

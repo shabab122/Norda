@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Local final release — 2.14.1](LOCAL_FINAL_RELEASE.md) — fixed localhost scope, final maintenance fixes and verification boundaries.
+- [Fixed future-work policy](FUTURE_DEVELOPMENT.md) — no new feature backlog is part of this release.
+
 - [Advanced operations — 2.14.0](ADVANCED_OPERATIONS.md) — the four new features, setup, permissions, connector contract and limits.
 - [Current verification](VERIFICATION_RESULTS.md) — measured 2.14 results and external acceptance boundaries.
 
