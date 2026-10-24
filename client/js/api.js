@@ -34,7 +34,7 @@ const Api = {
   },
   async request(path, { method = "GET", body, isForm = false, signal } = {}) {
     const headers = { Accept: "application/json" };
-    if (typeof Guest !== "undefined" && Guest.current && !this.isLoggedIn() && !path.startsWith("/auth/") && !path.startsWith("/admin/")) { headers["X-Norda-Guest"] = "1"; headers["X-Norda-Guest-ID"] = Guest.current.id; }
+    if (typeof Guest !== "undefined" && Guest.current && (!this.isLoggedIn() || (typeof isGuestOrderView === "function" && isGuestOrderView() && /^\/(orders|invoices)\//.test(path))) && !path.startsWith("/auth/") && !path.startsWith("/admin/")) { headers["X-Norda-Guest"] = "1"; headers["X-Norda-Guest-ID"] = Guest.current.id; }
     if (typeof Guest !== "undefined" && Guest.current && path.startsWith("/guest/") && !["/guest/session", "/guest/recover", "/guest/recovery"].includes(path)) headers["X-Norda-Guest-ID"] = Guest.current.id;
     const token = this.getToken();
     if (token) headers.Authorization = "Bearer " + token;

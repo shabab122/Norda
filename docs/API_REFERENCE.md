@@ -1,4 +1,6 @@
-# Norda 2.14.1 — API Reference
+# Norda 2.14.2 — API Reference
+
+Keyword catalog search additionally matches category names. Guest order tracking retains the existing private cookie/header ownership checks; member/admin endpoints remain permission-protected. `admin:ensure` is an operator CLI, not a public API.
 
 Local maintenance release: existing endpoints are retained. Confirmed failed whole-return refund retries preserve the saved credit amount/link; unexpected server failures use error HTTP status.
 

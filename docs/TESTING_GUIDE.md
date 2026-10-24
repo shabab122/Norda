@@ -1,4 +1,6 @@
-# NORDA 2.14.1 testing and acceptance
+# NORDA 2.14.2 testing and acceptance
+
+Current UI/flow scenarios are described in [the shopping and admin guide](SHOPPING_AND_ADMIN_GUIDE.md). Coverage includes empty/typed search, password controls, explicit guest/member separation, admin dispatch handoff and safe operator setup.
 
 The final scope is localhost only. See [Local final release](LOCAL_FINAL_RELEASE.md) for executed checks and concrete browser/provider limits. Earlier deployment/provider acceptance instructions below are reference material for later activation, not completion requirements for this local release.
 

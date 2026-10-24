@@ -16,10 +16,12 @@
     <aside class="admin-sidebar" id="admin-sidebar"></aside>
     <main class="admin-main">
       <div class="admin-topbar">
-        <div><span class="eyebrow">Fulfillment</span><h1>Orders</h1><p>Advance valid states, reconcile payment and restore stock on cancellation.</p></div>
+        <div><span class="eyebrow">Fulfillment</span><h1>Orders</h1><p>Guest and account orders arrive here. Prepare the order, add courier details, dispatch it and confirm delivery.</p></div>
         <div class="admin-topbar-actions"><span id="admin-topbar-user"></span><button class="btn btn-primary btn-sm" id="export-orders-btn">Export CSV</button></div>
       </div>
+      <details class="admin-panel" style="padding:16px;margin-bottom:16px"><summary>How do I process an order?</summary><p>Pending → Processing → Add courier & dispatch → Delivered. Delivery confirms COD payment. For warehouse orders, use Manage warehouse parcels; the order follows all parcels. Use Requests & payments for cancellation, returns or refunds. Administrators and staff with Orders permission manage this workspace.</p></details>
       <div class="admin-filters">
+        <button id="orders-refresh" class="btn btn-outline btn-sm" type="button">Refresh orders</button>
         <select id="status-filter" aria-label="Filter by order status"><option value="">All order states</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select>
         <select id="payment-filter" aria-label="Filter by payment status"><option value="">All payment states</option><option value="pending">Pending</option><option value="paid">Paid</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option><option value="review">Needs review</option></select>
         <label>CSV from <input id="date-from" type="date" /></label><label>to <input id="date-to" type="date" /></label>

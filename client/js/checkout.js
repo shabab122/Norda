@@ -227,7 +227,7 @@ function bindCheckoutForm() {
         placed: order._id,
         invoice: order.invoiceNumber || "",
       });
-      window.location.href = "orders.html?" + query.toString();
+      window.location.href = (Api.isLoggedIn() ? "orders.html?" : "guest-orders.html?") + query.toString();
     } catch (error) {
       if (shoppingIdentity() !== checkoutOwner) return;
       if (error.orderId) {

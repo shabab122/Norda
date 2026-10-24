@@ -1,15 +1,13 @@
 {
-  "version": "2.14.1",
-  "release": "Local Final",
-  "baseline": "Norda-Main-v2.14.0.zip",
-  "baselineSha256": "b1ac5f155db8ed9aeb847f251b0686d5e0f14c6ee840b2117f30d17f64d88a28",
-  "featureScopeChanged": false,
-  "originalFiles": 506,
-  "originalFilesRetained": 506,
-  "unchangedOriginalFiles": 483,
-  "modifiedOriginalFiles": 23,
-  "addedFiles": 1,
-  "totalFiles": 507,
+  "version": "2.14.2",
+  "baseline": "Norda-Main-v2.14.1-Local-Final.zip",
+  "baselineSha256": "a469543b16c2b56bbe2ab8d5e9d6db7173f46e1858dbba285aa3df149c97ba16",
+  "originalFiles": 507,
+  "originalFilesRetained": 507,
+  "unchangedOriginalFiles": 476,
+  "modifiedOriginalFiles": 31,
+  "addedFiles": 3,
+  "zipFiles": 510,
   "assetsByteIdentical": 42,
   "environmentConfigSeedFilesByteIdentical": 11,
   "dependencySelectionsUnchanged": true,
@@ -20,28 +18,38 @@
     "README.md",
     "RUN_COMMANDS.md",
     "VERSION.md",
-    "client/admin/item-returns.js",
-    "client/admin/operations.js",
-    "client/admin/whole-return-receipts.js",
-    "client/js/order-support.js",
+    "client/admin/orders.html",
+    "client/admin/orders.js",
+    "client/admin/shipments.js",
+    "client/css/style.css",
+    "client/guest-orders.html",
+    "client/js/api.js",
+    "client/js/auth.js",
+    "client/js/checkout.js",
+    "client/js/guest-orders.js",
+    "client/js/invoice.js",
+    "client/js/layout.js",
+    "client/js/order-tracking.js",
+    "client/login.html",
     "docs/ACCEPTANCE_CHECKLIST.md",
     "docs/API_REFERENCE.md",
     "docs/FUTURE_DEVELOPMENT.md",
+    "docs/LOCAL_FINAL_RELEASE.md",
     "docs/README.md",
     "docs/SOURCE_PRESERVATION.md",
     "docs/TESTING_GUIDE.md",
     "docs/UPDATE_FILES.json",
     "docs/UPDATE_REPORT.md",
     "docs/VERIFICATION_RESULTS.md",
-    "server/middleware/errorHandler.js",
+    "server/controllers/productController.js",
     "server/package-lock.json",
     "server/package.json",
-    "server/services/refundService.js",
-    "server/test-support/advancedOperationsJourneys.js",
-    "server/test/finalReleaseFrontend.test.js"
+    "server/test-support/commerceExpansionJourneys.js"
   ],
   "added": [
-    "docs/LOCAL_FINAL_RELEASE.md"
+    "docs/SHOPPING_AND_ADMIN_GUIDE.md",
+    "server/scripts/ensure-admin.js",
+    "server/test/storefrontFlowFrontend.test.js"
   ],
   "files": [
     {
@@ -72,7 +80,7 @@
     {
       "path": "CHANGELOG.md",
       "status": "modified",
-      "sha256": "1846595718ccb99fca403393d8afbfbfb6256e08bd85aea811d76598320307b3"
+      "sha256": "29e00a4172e42121d85529646486ee3b9558488002dc17604b8ababdfffa1461"
     },
     {
       "path": "Dockerfile",
@@ -82,17 +90,17 @@
     {
       "path": "README.md",
       "status": "modified",
-      "sha256": "b4df246a6c22bfff5d4c454819be038cd736d13f543ce38363d96eb19aa6dc1c"
+      "sha256": "10f1012c9b93658ad2293fb33826a4f924ee65a532275d8a5a3cee5be9a12af6"
     },
     {
       "path": "RUN_COMMANDS.md",
       "status": "modified",
-      "sha256": "ab3eec13ad0710bd4dbd57db62b3a547ed5a225b9c0b8b510a86587f58e0ca86"
+      "sha256": "6f76e71d3fc297f867c31ff871ab90b76765c61b9cdf1c958f4679a5949a2473"
     },
     {
       "path": "VERSION.md",
       "status": "modified",
-      "sha256": "f0577cc46468b8fb1d4e0236bc262819e38fb572e697200be40a444db3b445a1"
+      "sha256": "11aa11131e56cb57e2aef10e1de5b0dbd8e5c6e31d43b87ee9896be37ea37de5"
     },
     {
       "path": "client/admin/admin-layout.js",
@@ -221,7 +229,7 @@
     },
     {
       "path": "client/admin/item-returns.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "92b4cd84947ce92fbe8f0605845da15f147b63aa8740fda6ea30366a3a20a15f"
     },
     {
@@ -271,18 +279,18 @@
     },
     {
       "path": "client/admin/operations.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "9cb0219f2bc220be9be258f77869e1e8708e88496ea0f15fde91327b416d51b0"
     },
     {
       "path": "client/admin/orders.html",
-      "status": "unchanged",
-      "sha256": "3154b5f180608cd9a3ab543db3253d15bafb44590bf4cdd14092703fe7fd441c"
+      "status": "modified",
+      "sha256": "78697fdf67d903cf784299e5cbc682028ad3e936ffdaf595034bcfa9bffe34ba"
     },
     {
       "path": "client/admin/orders.js",
-      "status": "unchanged",
-      "sha256": "ce6c275b1b9d8efcd4383276a7e2335bf6e36cdda5fa5eba07e5dc1308ee0a80"
+      "status": "modified",
+      "sha256": "db9c4e0b55518c7e6ff50841776c88df79a10d187c3d453b47b4a684a6b45198"
     },
     {
       "path": "client/admin/products.html",
@@ -341,8 +349,8 @@
     },
     {
       "path": "client/admin/shipments.js",
-      "status": "unchanged",
-      "sha256": "510aa5459f44e22103d0b89ab16a6135ab22a8d5c8e183763f594367f3366d7b"
+      "status": "modified",
+      "sha256": "b6b1981ea8535641c8bf04f03472a8c3b9be4115c2b55cf1406c9080bc135b5b"
     },
     {
       "path": "client/admin/staff-invitations.html",
@@ -406,7 +414,7 @@
     },
     {
       "path": "client/admin/whole-return-receipts.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "572af04aa54e46e27bde20084c552dd194252bf0eff5d3883f2d27886eda76a5"
     },
     {
@@ -706,8 +714,8 @@
     },
     {
       "path": "client/css/style.css",
-      "status": "unchanged",
-      "sha256": "6e15cd873ba10517bcf33cfd2f303f1b8000fdf82dd66af37add04b9c7e32860"
+      "status": "modified",
+      "sha256": "77a2522ef3199d0cec67d417dee1ebda292ccc9dba5773aa54765341754de108"
     },
     {
       "path": "client/css/variants.css",
@@ -736,8 +744,8 @@
     },
     {
       "path": "client/guest-orders.html",
-      "status": "unchanged",
-      "sha256": "dd159b5d0479e2f3714731ebae0b9b6e7683db0821b1967f6676e798f8a72649"
+      "status": "modified",
+      "sha256": "b407807ebd1805e483691c3fe9e38c166d13cc287e69241beba245a010609d27"
     },
     {
       "path": "client/help.html",
@@ -766,13 +774,13 @@
     },
     {
       "path": "client/js/api.js",
-      "status": "unchanged",
-      "sha256": "36db13db8b81182b974bd3b7ee00bf2c9d628df6c3b7e04f30ab9db621d6f0fe"
+      "status": "modified",
+      "sha256": "8e31c69d3a24b04360de1045abf7cb66f55076678ce6b7cdc64ab1d31caa28cc"
     },
     {
       "path": "client/js/auth.js",
-      "status": "unchanged",
-      "sha256": "ef5583fa3dde507aedc5879dbd0f80fa71cec497ddeabd3a1bec80bdef7b16f5"
+      "status": "modified",
+      "sha256": "c0e16d3eeab35a1346691a99106edbc8a417062599a580265369fb5a6e876c0e"
     },
     {
       "path": "client/js/authenticator.js",
@@ -786,8 +794,8 @@
     },
     {
       "path": "client/js/checkout.js",
-      "status": "unchanged",
-      "sha256": "6d36f7be32ac0b958cb8fc7ec723cf872357970c34b261b20bfe748207f932f7"
+      "status": "modified",
+      "sha256": "f8e13757df2a15a12abb7027791f2fe5b014b84dcf358850e6dd2acddc5cfc29"
     },
     {
       "path": "client/js/config.js",
@@ -821,8 +829,8 @@
     },
     {
       "path": "client/js/guest-orders.js",
-      "status": "unchanged",
-      "sha256": "5a9c4fe67d10cb36877a791ac4298bafd1ac88f75ee233bf8067940816159f6a"
+      "status": "modified",
+      "sha256": "155372c051208af05e664b143a514c7eef1bc44a941bd081bfe0083ba5f4481c"
     },
     {
       "path": "client/js/guest.js",
@@ -836,8 +844,8 @@
     },
     {
       "path": "client/js/invoice.js",
-      "status": "unchanged",
-      "sha256": "31be0d89b5529c4ea9b071b2affaa1b1fe84d10ba31601fe0bd6403ebc25d3ca"
+      "status": "modified",
+      "sha256": "207ac7d8378517f65b15aa978a62905bbc941864578d3c4a4260208b394fc18b"
     },
     {
       "path": "client/js/item-returns.js",
@@ -846,8 +854,8 @@
     },
     {
       "path": "client/js/layout.js",
-      "status": "unchanged",
-      "sha256": "db638455e97a5d9ce164338572fed0d5c2479ecd29805ab6c5ca4f746d772454"
+      "status": "modified",
+      "sha256": "cff87a9d133ac88f3bab7956fae993c86d984518401359306375196670c03676"
     },
     {
       "path": "client/js/management-common.js",
@@ -856,13 +864,13 @@
     },
     {
       "path": "client/js/order-support.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "de8525f9d5178ea67467bfa4cc92fdc1614e5a40483efd60e58c8efffa396629"
     },
     {
       "path": "client/js/order-tracking.js",
-      "status": "unchanged",
-      "sha256": "28494a5afe27713c52ff40547a124c62511fd9a42a9d3dd0ada9b8c956ccd154"
+      "status": "modified",
+      "sha256": "681ab945900f28fb135aff2606f9af9944d616ba9e6148ac714c81a91d62870b"
     },
     {
       "path": "client/js/orders.js",
@@ -941,8 +949,8 @@
     },
     {
       "path": "client/login.html",
-      "status": "unchanged",
-      "sha256": "bd29f4b7fe880c1f0c7bb41b18320777ada6c40c51708a85de38ac31a7ac0ca4"
+      "status": "modified",
+      "sha256": "7e680638a797eafc6495b3c8dd1beccdaf968c54c10d4751ce13879956c01d9f"
     },
     {
       "path": "client/order-support.html",
@@ -1052,7 +1060,7 @@
     {
       "path": "docs/ACCEPTANCE_CHECKLIST.md",
       "status": "modified",
-      "sha256": "ea764699d0b46e57118e92465724ee1cbc73606042841b9c87ee094414138f08"
+      "sha256": "da85493fb51181c9aa31a1cb49144755404e88a4ef6b9f83255ac2e738078269"
     },
     {
       "path": "docs/ACCOUNT_RECOVERY.md",
@@ -1067,7 +1075,7 @@
     {
       "path": "docs/API_REFERENCE.md",
       "status": "modified",
-      "sha256": "c99071c6b570e5c5610ac9f6757fe16aa5dfae52e381f6924d934e8661f2d550"
+      "sha256": "1d408d4600d9cd54a99eef41d40d267e8b85b4c3bb6b1c524c0a724c90d8bdd1"
     },
     {
       "path": "docs/ARCHITECTURE.md",
@@ -1127,12 +1135,12 @@
     {
       "path": "docs/FUTURE_DEVELOPMENT.md",
       "status": "modified",
-      "sha256": "037a33e75278fe979a03cc07180dadf850be3e5384f354185f8ce9d5722baa89"
+      "sha256": "64b46b305cb8af1ba05916c6ca5fd8c8382f4b3146406415d86f13aee55d08f3"
     },
     {
       "path": "docs/LOCAL_FINAL_RELEASE.md",
-      "status": "added",
-      "sha256": "793e1093342e7b2dba8e54c953da406befee5108c47d3baa5db7f51eb4d9d9c4"
+      "status": "modified",
+      "sha256": "a01576227b32a6362be611fedae858e9a734b9c652ce79459c06941df6432f15"
     },
     {
       "path": "docs/MANAGEMENT_RETURNS.md",
@@ -1162,7 +1170,7 @@
     {
       "path": "docs/README.md",
       "status": "modified",
-      "sha256": "96014bbf6702482e7c6fcbab775d62f74066935d017a0e6810df313721bfafaa"
+      "sha256": "0bf7299be9d54c95c0ff7efd676423720d2d8e744e06cd54ab371d369fcf250f"
     },
     {
       "path": "docs/RELEASE_AUTOMATION.md",
@@ -1170,30 +1178,35 @@
       "sha256": "332f6a1612260887c52508aa2b39b23a49318f53bc72e5c96c0dcf713600dd16"
     },
     {
+      "path": "docs/SHOPPING_AND_ADMIN_GUIDE.md",
+      "status": "added",
+      "sha256": "b766486cb0392405779150831fc514c913c4cc0403eb9cf59f6c5110adfd954f"
+    },
+    {
       "path": "docs/SOURCE_PRESERVATION.md",
       "status": "modified",
-      "sha256": "dafdc992a2ab96dfa23c32d026536cbd051f36754ec3360bb6395c40b60c4f46"
+      "sha256": "a3536b41db628864bd1b92e56f27cfe873258c05d33fd5dfa7e49ff9fe3c0ad7"
     },
     {
       "path": "docs/TESTING_GUIDE.md",
       "status": "modified",
-      "sha256": "4ff2293877ea4aeed6e055b062e256dc94a9f06b1cc46c7efc03f15b1f3f5d55"
+      "sha256": "87803dc878c2212a5cbcecc6a7c9cdd7b09c544bf6a595e30c962673121bb892"
     },
     {
       "path": "docs/UPDATE_FILES.json",
       "status": "modified",
       "sha256": null,
-      "note": "Self hash omitted; all ZIP/source bytes are compared after build."
+      "note": "Self hash omitted; ZIP/source bytes are compared after build."
     },
     {
       "path": "docs/UPDATE_REPORT.md",
       "status": "modified",
-      "sha256": "f20b1ca1fa3b46d24d32b52c2eaf605b9d5ae93879e832f2376d44aaab356a4f"
+      "sha256": "aeaea0cd430811b03cb3022ef1f8bf615d42f837a84b2f3ae2f0057f832a4cc8"
     },
     {
       "path": "docs/VERIFICATION_RESULTS.md",
       "status": "modified",
-      "sha256": "a024c4a93c25a9bb314f1bcff9bc3313955a679943b55fbaf7cd2551113e725d"
+      "sha256": "0f67f9def1e6446be42a8d4f4f1796b6b99bfb3ae4895d68ffd43029ef8b0933"
     },
     {
       "path": "docs/reference/api-request-flow.png",
@@ -1352,8 +1365,8 @@
     },
     {
       "path": "server/controllers/productController.js",
-      "status": "unchanged",
-      "sha256": "d99b8c2ff0c7f6d7ca8a6ae21f3c89955afb8ef08d3c6c2a7e458b99d11d1009"
+      "status": "modified",
+      "sha256": "2e314a46a54030a18c5b1fe37e6b38116f255f08f4b545d765dda50b422fdf6f"
     },
     {
       "path": "server/controllers/reportController.js",
@@ -1377,7 +1390,7 @@
     },
     {
       "path": "server/middleware/errorHandler.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "b5f9c72ad21c72fd152f3df0fc333fd82f4e572485750de904d608b785e355e2"
     },
     {
@@ -1688,12 +1701,12 @@
     {
       "path": "server/package-lock.json",
       "status": "modified",
-      "sha256": "bd0a8a60ce7df71851ce0a4edbe6f5fcac3d4654203b41c625f4b6e506ace783"
+      "sha256": "a4dafcad3591815ac187a8a7f6620d53825b1b6c6a80f3485827e478ca559f0b"
     },
     {
       "path": "server/package.json",
       "status": "modified",
-      "sha256": "7dd9acb573cad503b071829ef8f03332282c605c8bf6198629b2d1f619e71635"
+      "sha256": "16acd97e198854f71c4cff99629ba44a592a1b6f7702648c482170e79f068055"
     },
     {
       "path": "server/routes/adminRoutes.js",
@@ -1819,6 +1832,11 @@
       "path": "server/scripts/check.js",
       "status": "unchanged",
       "sha256": "db243e8d03eee84eeceffd4b95f71edf7c873851df5a80a93b6ade51b9dbadc2"
+    },
+    {
+      "path": "server/scripts/ensure-admin.js",
+      "status": "added",
+      "sha256": "f2d00b01d355c643aa87ec68a6c52583f1357e32a6e560dc3e72cad4743123da"
     },
     {
       "path": "server/scripts/expireReservations.js",
@@ -2047,7 +2065,7 @@
     },
     {
       "path": "server/services/refundService.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "a0b9bb17a0a35fbb24af08c98d79bcbdd0947bc912bbad1b7ec4fb1a1334a054"
     },
     {
@@ -2152,7 +2170,7 @@
     },
     {
       "path": "server/test-support/advancedOperationsJourneys.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "e65f8129a4f39d49779b86ffc04c5bd92c2a995096f4cf24a74fb361feae7ce4"
     },
     {
@@ -2162,8 +2180,8 @@
     },
     {
       "path": "server/test-support/commerceExpansionJourneys.js",
-      "status": "unchanged",
-      "sha256": "ec551f494acbc44abe8b9179b98ccc8a415cfbf764bc2efbf3d6700b5016492c"
+      "status": "modified",
+      "sha256": "dfb12572dd978520fd3af9cd963ddd9aef91e2774dff6be50f9349c67f6f95cd"
     },
     {
       "path": "server/test-support/commerceToolsJourneys.js",
@@ -2322,7 +2340,7 @@
     },
     {
       "path": "server/test/finalReleaseFrontend.test.js",
-      "status": "modified",
+      "status": "unchanged",
       "sha256": "fa785f33377b40bb7bf49c83cad9b88d7dfc994d6203725887a838afb6abcb2b"
     },
     {
@@ -2524,6 +2542,11 @@
       "path": "server/test/sslcommerzSession.test.js",
       "status": "unchanged",
       "sha256": "8ee712c60518f83c94f21d64d2455c74c24671de1a6939acaf2ed27f09bbf692"
+    },
+    {
+      "path": "server/test/storefrontFlowFrontend.test.js",
+      "status": "added",
+      "sha256": "35444481d3f1114943a9690c976df15bb71e6fde39c63d49a87f4150d6c37ccb"
     },
     {
       "path": "server/test/validation.test.js",

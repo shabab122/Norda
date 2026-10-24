@@ -1,6 +1,6 @@
-# NORDA 2.14.1 — fixed local acceptance
+# NORDA 2.14.2 — fixed local acceptance
 
-The current release is finalized for localhost use. The fixed eight-area scope, exact completed checks and unperformed visual/live-service checks are in [LOCAL_FINAL_RELEASE.md](LOCAL_FINAL_RELEASE.md). No new feature or production deployment is added to this checklist.
+The current release is finalized for localhost use, including the requested storefront and guest/admin flow fixes. See [the shopping and admin guide](SHOPPING_AND_ADMIN_GUIDE.md). The fixed eight-area scope, exact completed checks and unperformed visual/live-service checks are in [LOCAL_FINAL_RELEASE.md](LOCAL_FINAL_RELEASE.md). No new feature or production deployment is added to this checklist.
 
 ## Executed local checks
 

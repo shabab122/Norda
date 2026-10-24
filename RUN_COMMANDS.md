@@ -2,9 +2,9 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update an existing installation to 2.14.1 · Local Final
+## Update an existing installation to 2.14.2 · Local Final
 
-Install the retained dependencies with `npm ci`. This maintenance release keeps the existing feature set and fixes return/refund/error handling. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
+Install the retained dependencies with `npm ci`. This maintenance release retains existing commerce behavior and fixes search/password controls plus guest/admin order workflows. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -27,6 +27,20 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Administrator access and shopping flow
+
+Use the existing administrator account with the normal Sign in form or footer **Store staff sign in**. Public signup creates a customer. Guest and account purchases appear in **Admin → Orders**, labeled by checkout type. Use Processing → Add courier & dispatch → Delivered; warehouse orders use Manage warehouse parcels.
+
+If the initial administrator is missing, the owner can run this optional command from `server`:
+
+```bash
+npm run admin:ensure
+```
+
+It reads the existing private `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` and `MONGO_URI`. It creates only a missing configured admin, preserves an existing administrator/password, refuses to promote a customer and never seeds/changes catalog or stock. Keep your working environment values intact. This command is not needed when the admin already exists.
+
+See [the shopping and admin guide](docs/SHOPPING_AND_ADMIN_GUIDE.md) for guest order IDs/browser access, one-use email recovery, account linking and the exact staff/customer workflow.
 
 ## Advanced operations — 2.14
 
@@ -145,7 +159,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c fix/local-final-2.14.1
+git switch -c fix/storefront-flow-2.14.2
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
@@ -165,7 +179,7 @@ cd /path/to/your/existing/Norda-repository
 git status
 git add .
 git commit -m "fix: harden guest checkout, security and release UI"
-git push -u origin fix/local-final-2.14.1
+git push -u origin fix/storefront-flow-2.14.2
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.
