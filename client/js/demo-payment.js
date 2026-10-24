@@ -7,13 +7,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadDemoPayment() {
   const root = document.getElementById("demo-payment-root");
+  const account = shoppingIdentity();
   const id = new URLSearchParams(window.location.search).get("orderId") || "";
   if (!/^[a-f0-9]{24}$/i.test(id)) {
     root.innerHTML = `<div class="empty-state"><h1>Payment session not found</h1><a class="btn btn-primary" href="orders.html">My orders</a></div>`;
     return;
   }
   try {
-    const account = shoppingIdentity();
     const session = await Api.get("/payments/demo/" + id);
     if (account !== shoppingIdentity()) return;
     root.innerHTML = demoPaymentHtml(session);
@@ -21,6 +21,7 @@ async function loadDemoPayment() {
       button.addEventListener("click", () => submitDemoOutcome(id, button.dataset.demoOutcome));
     });
   } catch (error) {
+    if (account !== shoppingIdentity()) return;
     root.innerHTML = `<div class="empty-state"><h1>Payment session unavailable</h1><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="orders.html">My orders</a></div>`;
   }
 }

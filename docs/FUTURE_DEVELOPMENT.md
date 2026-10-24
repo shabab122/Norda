@@ -1,5 +1,9 @@
 # Future NORDA development
 
+## Final maintenance release 2.13.1
+
+Guest payment/session/form defects, private-response guards, parser/upload security issues and receipt/focus styling are addressed. Automated default/native checks pass; see [the final report](FINAL_RELEASE.md). Additional optional product features do not block this source release. Public provider/target-host and visible browser/device acceptance still require the actual environment.
+
 ## Completed in 2.13.0
 
 - Reviewed gateway/COD/exchange/refund settlement statements, fees, partial remittances and exception resolution.

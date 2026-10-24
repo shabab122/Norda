@@ -1,4 +1,6 @@
-# NORDA 2.13.0 acceptance checklist
+# NORDA 2.13.1 acceptance checklist
+
+> Final maintenance patch: see [the six-area report](FINAL_RELEASE.md). Automated journeys passed on both native topologies; guest/session/form fixes, dependency security patches and receipt/focus CSS are included. Actual public provider, target-host and visible device/print acceptance remain unverified.
 
 > Current extension: the six commerce operations workflows are implemented. See [the operational guide](COMMERCE_EXPANSION.md) and [measured results](VERIFICATION_RESULTS.md). Existing credentials are preserved; no owner database or real provider was used for release testing. Browser/provider acceptance is still a target-environment step.
 
@@ -70,7 +72,7 @@ Open http://localhost:5000. Use your existing admin login; no shared demo passwo
 ## Customer browser journey
 
 1. Signed out, verify Home/Shop and Sign in/Create account are visible. Browse products/categories, search, sort and open a product.
-2. Select quantity 2 and Add to cart. Sign in or follow Create account. Confirm the selection arrives once in the cart.
+2. Select quantity 2 and Add to cart. Continue as a guest, or sign in/create an account and confirm the guest selection merges once. Guest checkout does not require sign-in.
 3. For a normal login without a shopping return URL, confirm the customer dashboard opens. It must show the correct name/email and Customer account label.
 4. Add products from several categories, increase/decrease/type quantity, remove, clear, re-add and reload. Confirm totals, badge and stock errors.
 5. Complete an order with cash on delivery. Check the order, invoice, shipping address and cleared cart. Try the same checkout key only in the isolated automated test; never create duplicate real orders to test a retry.

@@ -4,17 +4,19 @@ let cartNotice = null;
 document.addEventListener("DOMContentLoaded", async () => {
   await Api.ready;
   renderHeader(); renderFooter();
-  if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure();
+  try { if (!Api.isLoggedIn() && typeof Guest !== "undefined") await Guest.ensure(); }
+  catch (error) { document.getElementById("cart-root").innerHTML = `<div class="empty-state"><h2>Cart unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="cart.html">Try again</a></div>`; return; }
   if (!requireShopper()) return;
   try { cartNotice = JSON.parse(sessionStorage.getItem("norda_cart_notice") || "null"); sessionStorage.removeItem("norda_cart_notice"); } catch { /* Optional feedback. */ }
   await loadCart();
 });
 async function loadCart() {
   const sequence = ++cartLoadSequence;
+  const owner = shoppingIdentity();
   const root = document.getElementById("cart-root");
   try {
     const [cart, store] = await Promise.all([Api.get("/cart"), getStoreConfig()]);
-    if (sequence !== cartLoadSequence) return;
+    if (sequence !== cartLoadSequence || owner !== shoppingIdentity()) return;
     const notice = cartNotice ? `<div class="alert alert-${cartNotice.type === "success" ? "success" : "warning"}">${escapeHtml(cartNotice.message)}</div>` : "";
     const items = cart.items || [];
     if (!items.length) {
@@ -33,8 +35,8 @@ async function loadCart() {
       <div class="summary-row summary-total"><span>Total</span><span>${money(subtotal + shipping)}</span></div>
       ${blocked ? `<p class="alert alert-warning">Remove unavailable items or update quantities before checkout.</p><button class="btn btn-primary btn-block" disabled>Review your cart</button>` : `<a href="checkout.html" class="btn btn-primary btn-block">Continue to checkout ${icon("arrow")}</a>`}
       <a href="products.html" class="summary-link">Keep exploring</a><p class="summary-note">Prices and availability are checked again when you place your order.</p></aside></div>`;
-    bindCart();
-  } catch (error) { if (sequence !== cartLoadSequence) return; root.innerHTML = `<div class="empty-state"><h2>Cart unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="cart.html">Try again</a></div>`; }
+    bindCart(owner);
+  } catch (error) { if (sequence !== cartLoadSequence || owner !== shoppingIdentity()) return; root.innerHTML = `<div class="empty-state"><h2>Cart unavailable</h2><p>${escapeHtml(error.message)}</p><a class="btn btn-outline" href="cart.html">Try again</a></div>`; }
 }
 function cartRow(item) {
   if (item.unavailable || !item.product) return `<article class="cart-unavailable" data-item-id="${escapeHtml(item._id)}"><h3>${escapeHtml(item.product?.name || "Unavailable product")}</h3><p>${escapeHtml(item.unavailableReason || "This item is no longer available. Remove it to continue checkout.")}</p><button class="remove-link" type="button">Remove item</button></article>`;
@@ -45,19 +47,19 @@ function cartRow(item) {
     <div class="cart-product"><a href="product-detail.html?id=${encodeURIComponent(product._id)}">${escapeHtml(product.name)}</a>${item.variantId ? `<span>${escapeHtml(variantLabel(item))}</span>` : ""}<span>${money(item.price)} each</span>${item.quantity > product.stock ? `<span class="danger-text">Only ${product.stock} available now</span>` : ""}<button class="remove-link" type="button">Remove</button></div>
     <div class="cart-qty"><button class="btn-icon qty-decrease" type="button" aria-label="Decrease quantity" ${item.quantity <= 1 || product.stock === 0 ? "disabled" : ""}>−</button><label class="sr-only" for="qty-${item._id}">Quantity</label><input id="qty-${item._id}" class="qty-value" type="number" min="1" max="${Math.max(product.stock, 1)}" step="1" value="${item.quantity}" ${product.stock === 0 ? "disabled" : ""} /><button class="btn-icon qty-increase" type="button" aria-label="Increase quantity" ${item.quantity >= product.stock ? "disabled" : ""}>+</button></div><strong class="cart-line-total">${money(item.price * item.quantity)}</strong></article>`;
 }
-function bindCart() {
+function bindCart(owner = shoppingIdentity()) {
   document.querySelectorAll("[data-item-id]").forEach((row) => {
     const input = row.querySelector(".qty-value");
     if (input) {
       const maximum = Number(row.dataset.stock);
       const previous = Number(input.value);
       const update = async (value) => {
-        if (cartMutationPending) return;
+        if (cartMutationPending || owner !== shoppingIdentity()) return;
         const quantity = Number(value);
         if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > maximum) { input.value = previous; toast("Choose a whole-number quantity within the available stock.", "error"); return; }
         cartMutationPending = true; row.classList.add("is-updating");
-        try { await enqueueCartWrite(() => Api.put("/cart/" + row.dataset.itemId, { quantity })); await loadCart(); refreshCartBadge(); }
-        catch (error) { input.value = previous; toast(error.message, "error"); row.classList.remove("is-updating"); }
+        try { await enqueueCartWrite(() => Api.put("/cart/" + row.dataset.itemId, { quantity })); if (owner !== shoppingIdentity()) return; await loadCart(); refreshCartBadge(); }
+        catch (error) { if (owner !== shoppingIdentity()) return; input.value = previous; toast(error.message, "error"); row.classList.remove("is-updating"); }
         finally { cartMutationPending = false; }
       };
       row.querySelector(".qty-decrease").addEventListener("click", () => update(Number(input.value) - 1));
@@ -65,20 +67,20 @@ function bindCart() {
       input.addEventListener("change", () => update(input.value));
     }
     row.querySelector(".remove-link").addEventListener("click", async () => {
-      if (cartMutationPending) return;
+      if (cartMutationPending || owner !== shoppingIdentity()) return;
       cartMutationPending = true;
       row.classList.add("is-updating");
-      try { await enqueueCartWrite(() => Api.del("/cart/" + row.dataset.itemId)); await loadCart(); refreshCartBadge(); }
-      catch (error) { toast(error.message, "error"); row.classList.remove("is-updating"); }
+      try { await enqueueCartWrite(() => Api.del("/cart/" + row.dataset.itemId)); if (owner !== shoppingIdentity()) return; await loadCart(); refreshCartBadge(); }
+      catch (error) { if (owner !== shoppingIdentity()) return; toast(error.message, "error"); row.classList.remove("is-updating"); }
       finally { cartMutationPending = false; }
     });
   });
   document.getElementById("clear-cart").addEventListener("click", async (event) => {
-    if (cartMutationPending || !confirm("Remove every item from your cart?")) return;
+    if (cartMutationPending || owner !== shoppingIdentity() || !confirm("Remove every item from your cart?")) return;
     cartMutationPending = true;
     const button = event.currentTarget; button.disabled = true;
-    try { await enqueueCartWrite(() => Api.del("/cart")); await loadCart(); refreshCartBadge(); }
-    catch (error) { toast(error.message, "error"); button.disabled = false; }
+    try { await enqueueCartWrite(() => Api.del("/cart")); if (owner !== shoppingIdentity()) return; await loadCart(); refreshCartBadge(); }
+    catch (error) { if (owner !== shoppingIdentity()) return; toast(error.message, "error"); button.disabled = false; }
     finally { cartMutationPending = false; }
   });
 }

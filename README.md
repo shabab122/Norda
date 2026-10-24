@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.13.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.13.1</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,15 +32,21 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.13.0** |
+| Application version | **2.13.1** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Commerce operations, guest checkout, multi-warehouse allocation, team MFA and release/recovery tooling implemented; target-environment acceptance remains |
+| Development status | Final maintenance source release: commerce features retained, guest/session/form defects corrected, two dependency security fixes and regression checks completed; public provider/host and visible device acceptance remain |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
+
+## Final Maintenance Release
+
+Version **2.13.1** starts from the delivered 2.13.0 source. It fixes guest payment-result verification and expired-session recovery, guards private responses when shopping identities change, restores failed form retries, and refines new-screen typography, focus and receipt print rules. Security fixes update only Multer **2.4.0 → 2.5.0** and the transitive body-parser **1.20.8 → 1.20.9**; other dependency selections and backend business source remain intact. Existing credentials and assets are retained. No reseed or manual migration is required.
+
+See [the six-area final report](docs/FINAL_RELEASE.md) for measured checks and the target-environment steps that could not be verified here.
 
 ## Implemented Features
 
@@ -276,7 +282,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.13.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.13.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -337,7 +343,7 @@ The currency is BDT. Without a saved store override, delivery defaults to **৳1
 
 | Mode | Current behavior | Requirements |
 |---|---|---|
-| Cash on delivery | Creates an unpaid order/invoice; administrator confirms payment or delivery through the COD workflow | MongoDB and an authenticated customer |
+| Cash on delivery | Creates an unpaid order/invoice; administrator confirms payment or delivery through the COD workflow | MongoDB and a registered account or private guest session |
 | Mobile Banking/bKash simulation | Local successful/failed/cancelled payment outcomes | Development environment; no merchant credentials |
 | Card/Bank simulation | Separate local card/bank payment flow with the same outcome safeguards | Development environment; no merchant credentials |
 | SSLCOMMERZ hosted checkout | Session initiation, notifications and server validation are implemented; public merchant acceptance remains pending | Merchant credentials and reachable callback/client configuration |
@@ -473,12 +479,12 @@ Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.13.0 | **307 files passed** |
-| Default suite, v2.13.0 | **500 passed, 0 failed, 14 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.13.0 | **234 passed**, compensation path |
-| Native single-member replica set, v2.13.0 | **234 passed**, transaction path |
-| Dependencies | Release audit: **0 vulnerabilities**; dependency versions retained |
-| Frontend | VM behavior, safe rendering, state guards and all 56 pages/local resources checked |
+| JavaScript syntax, v2.13.1 | **309 files passed** |
+| Default suite, v2.13.1 | **527 passed, 0 failed, 14 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.13.1 | **234 passed**, compensation path |
+| Native single-member replica set, v2.13.1 | **234 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities** after two scoped parser/upload dependency security updates |
+| Frontend | 26 new targeted frontend regressions; retained state/render checks; all 56 pages and 135 page/resource targets served by the actual isolated app |
 | Browser/mobile/keyboard/print | Static/VM checks passed; the available browser could not access the isolated local server, so visible acceptance remains pending |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
@@ -509,6 +515,8 @@ These items are planned work, separate from the implemented features above. Deve
 
 ### Release Acceptance
 
+- [x] Customer/admin automated journeys on standalone and transaction-enabled native MongoDB.
+- [x] Final guest/session/form fixes, receipt/focus CSS improvements and dependency security fixes.
 - [ ] Complete browser/mobile, keyboard and printed-invoice acceptance.
 - [ ] Repeat customer/admin shopping journeys in the target environment.
 - [ ] Complete public SSLCOMMERZ sandbox success/failure/cancel/repeated callback/IPN acceptance before accepting real online payments.
@@ -562,6 +570,7 @@ Manual carrier tracking remains supported; the optional eCourier adapter books a
 
 | Document | Purpose |
 |---|---|
+| [Final maintenance release](docs/FINAL_RELEASE.md) | Six-area results, bug/security fixes, remaining owner-environment checks and tag preparation |
 | [Commerce operations](docs/COMMERCE_EXPANSION.md) | Settlement, priced exchanges, pickups/partial receipts, guest checkout, warehouse parcels and availability alerts |
 | [Release automation and team inventory](docs/RELEASE_AUTOMATION.md) | Deployment, independent monitoring, private off-host recovery, invitations/MFA and advanced inventory |
 | [Production tools](docs/PRODUCTION_TOOLS.md) | Courier API, SEO, cloud media, encrypted backup/restore, monitoring and optional setup |

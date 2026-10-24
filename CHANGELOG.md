@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.13.1 — 2026-10-24
+
+- Verify guest payment results against the saved order, preserve callback-hint distrust and offer recovery for expired guest access.
+- Guard invoice/credit-note/cart/checkout/payment responses across shopping identity changes; report failed guest initialization and preserve registered sessions on guest expiry.
+- Restore settlement/pickup/parcel/exchange form retries after storage or date errors; discard stale previews and old-staff actions.
+- Refine shared fonts, responsive forms/actions, visible focus, pickup navigation and branded multi-page receipt print CSS; enable credit-note printing after data loads.
+- Patch newly reported parser/upload DoS advisories with body-parser 1.20.9 and Multer 2.5.0. Other dependency selections, credentials, assets and backend business source remain unchanged.
+- Add 26 focused frontend regressions and an isolated compressed-body crash regression. Verify 309 JS files, 527 default passes and 234 native passes per topology; record external-provider/host/visual acceptance limits explicitly.
+
 ## 2.13.0 — 2026-10-24
 
 - Add reviewed gateway/COD/exchange/refund settlement CSV reconciliation, exact fees/net amounts, partial remittances, duplicate guards and audited exceptions. Imports never authenticate payment or alter orders.

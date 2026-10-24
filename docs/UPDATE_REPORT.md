@@ -1,21 +1,11 @@
-# NORDA 2.12.0 update report
+# NORDA 2.13.1 update report
 
-Built from the latest `Norda-Main-v2.11.0.zip`. The professional README structure and previous features remain. This release implements the five selected areas with existing credentials and dependencies retained.
+Built directly from the delivered v2.13.0. Fixes guest payment/session recovery, private-response identity guards, failed form retry and appointment errors. Refines new-screen typography, responsive actions/forms, visible focus, pickup navigation and branded receipt print rules.
 
-**Deployment/release:** a non-root Docker image, persistent private storage, Caddy HTTPS/restart configuration, isolated staging/production checks and pinned SSH/GitHub Environment workflow. Source is transferred without credentials/runtime data and checked by SHA-256. Local/public readiness gates success; a failed candidate restores the previous recorded compatible application code. Rollback retains the live database/media and remains runnable when candidate verification fails. Activation requires the owner's actual VM/domain/SSH settings.
+Updates only Multer 2.4.0 → 2.5.0 and transitive body-parser 1.20.8 → 1.20.9 for newly reviewed DoS advisories. Other dependencies, backend business source, credential/config/seed bytes and all 42 assets remain intact. All 470 baseline files are retained; no owner database/provider was used. Keep newer laptop settings and uploads; no setup/reseed/manual migration is needed.
 
-**Off-host recovery:** private signed S3-compatible replication of the existing authenticated encrypted archives, one retained key/hash per archive, conditional PUT and complete readback verification. Lost responses reconcile before any retry. A private recovery pointer supports fetch independently of application backup records. Explicit retention preserves the minimum verified recovery points and namespace boundaries. Optional scheduled drills restore and remove only fresh isolated targets; no production URI is changed.
+Verification: 309 JS files, 527 default passes/0 failures/14 intentional native skips, 234 native passes per topology, zero current audit vulnerabilities, and all 56 pages/135 actual HTTP page-resource targets served. Twenty-seven new frontend/security checks are included in the default count.
 
-**Independent monitoring:** a database-independent Node monitor and external GitHub-hosted workflow or separate-host container. Durable states, bounded probes, finite backup-maintenance grace, one outage/recovery transition and optional SMTP/HTTPS alert retry detect a stopped application/host when the runner is elsewhere. The runner/channel must be activated by the owner.
+Visible device/print, real merchant/provider and target-host acceptance remain unverified for the concrete access/configuration reasons in [FINAL_RELEASE.md](FINAL_RELEASE.md). See [measured verification](VERIFICATION_RESULTS.md) and [source preservation](SOURCE_PRESERVATION.md).
 
-**Staff/MFA:** private expiring one-use invitations, registered-account ownership, preserved passwords/history, revoke/resend and staff audit. Optional TOTP uses encrypted secrets, hashed recovery codes, bounded opaque challenges and replay/version checks. Sessions store verified MFA revision. Required enrollment gates new staff tools; demotion removes the required policy while preserving personal account security. All shared database servers must upgrade and share the new MFA key before enrollment; old binaries cannot be made to enforce new rules remotely.
-
-**Advanced inventory:** previewed new product/SKU CSV creation with exact validation/hash/replay/rollback and retained results. Satellite warehouse balances have permanent identities, audited transfers/counts, stale-write checks and edit/archive safeguards. Only existing online stock is saleable; a transfer moves inventory rather than double counting it. Original checkout/cancellation/return/exchange stock behavior remains. Opted-in staff receive queued low-stock episode emails with replenishment rearm, permission/preference checks and bounded retry.
-
-Related routes, model startup, authentication/session proof, catalog validation, navigation and operation helpers are extended as necessary. A premature-success HTTP status on async tool errors was corrected. Unrelated behavior is covered by full prior regressions. The input `.env`, config/seed data, catalog/brand assets and dependency selections are retained; no baseline file is removed and no owner database is seeded/contacted.
-
-Verification: 268 JS syntax checks; default suite 441 passed/0 failed/12 intentional native skips; standalone 197 passed and replica-set 197 passed; actual server/all-worker/preflight smoke passed on both; audit 0 vulnerabilities. Current results and real deployment/provider/browser limits are in [VERIFICATION_RESULTS.md](VERIFICATION_RESULTS.md).
-
-Keep the working laptop `.env`, optional integrations file, uploads and Git history. Use `npm ci`, `npm run verify`, `npm run dev` from `server/`; no setup/reseed/manual migration is required. New infrastructure and keys remain optional/configured separately. See [RELEASE_AUTOMATION.md](RELEASE_AUTOMATION.md).
-
-Suggested commit: `feat: add deployment, offsite backups, uptime monitoring, MFA and inventory tools`.
+Suggested commit: `fix: harden guest checkout, security and release UI`.

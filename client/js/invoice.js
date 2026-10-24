@@ -4,15 +4,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   renderFooter();
   if (!requireShopper()) return;
   const orderId = new URLSearchParams(window.location.search).get("orderId");
+  const owner = shoppingIdentity();
+  const guestView = new URLSearchParams(window.location.search).get("guest") === "1";
+  const guestOwner = guestView && typeof Guest !== "undefined" ? Guest.current?.id : null;
+  const ownsView = () => owner === shoppingIdentity() && (!guestView || guestOwner === (typeof Guest !== "undefined" ? Guest.current?.id : null));
   const root = document.getElementById("invoice-root");
-  if (!orderId) {
+  if (!/^[a-f0-9]{24}$/i.test(orderId || "")) {
     root.innerHTML = `<div class="empty-state"><h1>Invoice not found</h1><a class="btn btn-primary" href="orders.html">View orders</a></div>`;
     return;
   }
   try {
-    const invoice = await Api.get((new URLSearchParams(window.location.search).get("guest") === "1" ? "/guest/invoices/order/" : "/invoices/order/") + encodeURIComponent(orderId));
+    const invoice = await Api.get((guestView ? "/guest/invoices/order/" : "/invoices/order/") + encodeURIComponent(orderId));
+    if (!ownsView()) return;
     renderInvoice(invoice);
   } catch (error) {
+    if (!ownsView()) return;
     root.innerHTML = `<div class="empty-state"><h1>Invoice unavailable</h1><p>${escapeHtml(error.message)}</p><a class="btn btn-primary" href="orders.html">View orders</a></div>`;
   }
 });

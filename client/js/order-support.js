@@ -41,7 +41,7 @@ function orderSupportHtml(data) {
       <div><dt>Order status</dt><dd>${escapeHtml(order.status)}</dd></div><div><dt>Payment</dt><dd>${escapeHtml(paymentLabel(order.paymentStatus))}</dd></div>
       <div><dt>Original total</dt><dd>${money(order.totalAmount)}</dd></div><div><dt>Order refund completed</dt><dd>${money(order.refundedAmount || 0)}</dd></div><div><dt>Order refund pending</dt><dd>${money(order.refundPendingAmount || 0)}</dd></div>
       ${order.extraRefundedAmount ? `<div><dt>Additional payment refunded</dt><dd>${money(order.extraRefundedAmount)}</dd></div>` : ""}</dl>
-      <p>The invoice retains your original items and total, with refunds shown separately.</p><div class="operations-actions"><a class="btn btn-outline btn-sm" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a><button class="btn btn-outline btn-sm" type="button" id="support-refresh">Refresh status</button></div>
+      <p>The invoice retains your original items and total, with refunds shown separately.</p><div class="operations-actions"><a class="btn btn-outline btn-sm" href="invoice.html?orderId=${encodeURIComponent(order._id)}">Open invoice</a><a class="btn btn-outline btn-sm" href="return-pickups.html?orderId=${encodeURIComponent(order._id)}">Return pickup & collection history</a><button class="btn btn-outline btn-sm" type="button" id="support-refresh">Refresh status</button></div>
     </aside></div>`;
 }
 async function submitSupportRequest(event) {
@@ -67,4 +67,3 @@ async function submitSupportRequest(event) {
   } finally { supportBusy = false; }
 }
 
-document.addEventListener("DOMContentLoaded",async()=>{await Api.ready;const id=new URLSearchParams(window.location.search).get("orderId");if(!shoppingIdentity()||!/^[a-f0-9]{24}$/i.test(id||""))return;const a=document.createElement("a");a.className="btn btn-outline";a.href="return-pickups.html?orderId="+encodeURIComponent(id);a.textContent="Return pickup & collection history";document.querySelector("main")?.appendChild(a);});
