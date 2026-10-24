@@ -1,15 +1,15 @@
-# NORDA 2.14.3 — local acceptance update
+# NORDA 2.14.4 — final local review
 
-Baseline: delivered **Norda-Main-v2.14.2-Local-Final.zip**. Scope: the owner's selected customer/admin/mobile/printing, email delivery and reverse-pickup/settlement service areas, while reserving the three deferred integrations.
+Baseline: delivered **Norda-Main-v2.14.3-Local-Acceptance.zip**. The owner requested one final whole-project verification and fixes within the existing scope, then will manually inspect the ZIP. No additional feature is assigned.
 
-Added a runnable private localhost connector with durable idempotent booking, explicit demo tracking/cancellation, immutable balanced statement pages and cursor-safe acknowledgement. Demo/merchant job/feed identities are separated; background work avoids the other mode, actual parcel booking is disabled in explicit demo mode and demo statement financial imports are rejected. The existing real merchant HTTPS path and manual tools are retained.
+Fixed guest recovery link creation: use the same trusted URL validation as account recovery before persisting a recovery intent. Invalid origins no longer create a stuck retry/cooldown record; SMTP failures remain private, remove their failed intent and emit a redacted diagnostic.
 
-Added one-recipient SMTP probes with private receipts, clear file-preview diagnostics and separate operator-observed Inbox/Spam confirmation. Remote authenticated SMTP now requires TLS. Existing account/reset/guest-recovery and notification implementations/credentials are retained. The archived ZIP has no SMTP settings: no actual inbox delivery was performed or claimed.
+Fixed stale receipt printing: invoice, credit-note and exchange-adjustment buttons/browser-menu printing verify the current shopping identity. Changed/expired access clears old private document data/title and disables its Print control. Normal current-owner printing and existing business totals/layout remain intact.
 
-Added mobile-menu Escape/focus, semantic progress-list CSS isolation and narrow invoice/print refinements. Full frontend/Express/native journeys pass, but the prior browser access restriction prevented visible desktop/mobile/keyboard/PDF inspection. A manual acceptance guide states exact expected behavior without marking those observations passed.
+Added actual HTTP/SMTP/received-link tests for verification, password reset and guest recovery, including session revocation, reuse rejection, invoice ownership, invalid origin and rejected-mail retry. The same scenarios pass on native standalone/replica MongoDB. Added six controlled-DOM receipt rendering/Print/isolation scenarios. Full existing regression suites and actual CLI/resource smoke pass.
 
-Measured: **345 syntax files**, **608 default passes / 0 failures / 15 deliberate native skips**, **274 native passes per topology**, **0 audit vulnerabilities** and actual CLI/HTTP smoke of **61 pages / 148 targets**, all 200. The connector is a functioning local demonstration; no actual reverse/statement provider was selected or connected.
+Measured: **349 syntax files**, **620 default passes / 0 failures / 16 deliberate native skips**, **280 native passes per topology**, **0 audit vulnerabilities**, **61 pages / 148 HTTP targets**, all 200. Source preservation retains every original file, all 42 assets and all environment/config/seed bytes, with unchanged dependency selections. The owner database was not connected and no external email, booking or money movement occurred.
 
-All original source files, 42 assets and environment/config/seed bytes are retained; dependency selections remain unchanged. No owner database was connected, no external recipient was contacted and no real booking/payment/refund was performed. Preserve newer laptop settings/uploads; no setup/reseed/manual data migration or credential rotation is needed.
+Visible desktop/mobile/keyboard/A4 output and an external inbox receipt could not be observed under the existing browser restriction/absent laptop SMTP settings. Local application SMTP protocol/link behavior was verified; the retained commands support the owner's manual receipt check. Existing SSLCOMMERZ/deployment/courier-cloud-backup activation stays deferred; reverse/statement operations retain the local demonstration. This is a final maintenance package for the fixed local scope, not a claim of zero possible defects or real-provider acceptance.
 
-Suggested commit: `feat: add local operations connector and email delivery checks`
+Suggested commit: `fix: harden guest recovery emails and receipt printing`

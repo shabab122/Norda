@@ -17,9 +17,9 @@ function accountActionUrl(kind, token) {
   try { base = new URL(process.env.CLIENT_APP_URL || process.env.SERVER_URL || "http://localhost:5000"); }
   catch { throw httpError(503, "Set a valid CLIENT_APP_URL for account email"); }
   if (!["http:", "https:"].includes(base.protocol) || base.username || base.password || base.search || base.hash || (process.env.NODE_ENV === "production" && base.protocol !== "https:")) throw httpError(503, "Account email requires a trusted CLIENT_APP_URL (HTTPS in production)");
-  const url = new URL(kind === "reset" ? "reset-password.html" : "verify-email.html", base.href.replace(/\/?$/, "/"));
+  const url = new URL(kind === "reset" ? "reset-password.html" : kind === "guest" ? "guest-orders.html" : "verify-email.html", base.href.replace(/\/?$/, "/"));
   // A fragment is not sent in HTTP request logs or the Referer header.
-  url.hash = new URLSearchParams({ token }).toString();
+  url.hash = kind === "guest" ? token : new URLSearchParams({ token }).toString();
   return url.href;
 }
 

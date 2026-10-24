@@ -48,3 +48,22 @@ test('Blocked storage cannot strand an item receipt form or prevent a corrected 
 test('Whole-return customer history reports partially restocked units accurately',()=>{
  const x=page('js/order-support.js'),html=x.scope.orderSupportHtml({order:{...order(),status:'delivered',isPaid:true,returnStatus:'completed'},refunds:[],requests:[{_id:id,type:'return',status:'completed',reason:'Received return',createdAt:new Date().toISOString(),receivedAt:new Date().toISOString(),restocked:false,receiptProgress:[{lineIndex:0,quantity:2,receivedQuantity:2,restockedQuantity:1}]}]});assert.match(html,/1 of 2 units returned to sellable stock/);assert.doesNotMatch(html,/Not returned to sellable stock/);
 });
+
+const printCases = [
+ {file:'js/invoice.js',button:'print-invoice',root:'invoice-root',data:{invoiceNumber:'INV-PRINT-001',issuedAt:'2026-10-25T00:00:00Z',paymentStatus:'paid',order:{status:'delivered',paymentMethod:'cod'},customerSnapshot:{name:'Private receipt customer',email:'private@example.test'},shippingAddress:{line1:'Private fixture address'},items:[{name:'<Fixture item>',quantity:2,unitPrice:150,lineTotal:300}],subtotal:300,shippingFee:120,totalAmount:420}},
+ {file:'js/credit-note.js',button:'print-credit',root:'credit-root',data:{number:'CN-PRINT-001',invoiceNumber:'INV-PRINT-001',issuedAt:'2026-10-25T00:00:00Z',status:'settled',order:id,currency:'BDT',items:[{name:'<Fixture item>',sku:'SKU-1',quantity:1,grossAmount:150,discountAmount:0,creditAmount:150}],totalAmount:150,shippingCredit:0,settledAt:'2026-10-25T00:00:00Z'}},
+ {file:'js/exchange-payment.js',button:'exchange-print',root:'exchange-payment-root',data:{item:{order:id,exchangeInvoiceNumber:'EX-PRINT-001',status:'ready',exchangeBalance:100,exchangePaymentStatus:'paid',items:[{name:'<Fixture item>',quantity:1,creditAmount:150,replacement:{name:'Replacement',sku:'SKU-2',price:250}}]},payments:[{gateway:'manual',amount:100,status:'paid',createdAt:'2026-10-25T00:00:00Z'}]}}
+];
+for(const c of printCases){
+ test(`${c.file} renders escaped receipt data and its loaded print button works`,async()=>{
+  const x=page(c.file,{search:(c.file.includes('invoice')?'?orderId=':'?id=')+id});let printed=0;x.scope.window.print=()=>printed++;x.scope.Api.get=async()=>c.data;
+  await x.events.DOMContentLoaded();assert.match(x.el(c.root).innerHTML,/&lt;Fixture item&gt;/);assert.match(x.el(c.root).innerHTML,/brand-name/);assert.equal(x.el(c.button).disabled,false);
+  x.el(c.button).click();assert.equal(printed,1);
+  x.setUser({_id:'account-b',role:'user'});x.el(c.button).click();assert.equal(printed,1);assert.equal(x.el(c.button).disabled,true);assert.doesNotMatch(x.el(c.root).innerHTML,/Fixture item|private@example/);assert.match(x.el(c.root).innerHTML,/Access changed/);
+ });
+ test(`${c.file} protects browser-menu printing when a guest identity expires`,async()=>{
+  const x=page(c.file,{guest:true,search:(c.file.includes('invoice')?'?orderId=':'?id=')+id});x.scope.Api.get=async()=>c.data;
+  await x.events.DOMContentLoaded();assert.match(x.el(c.root).innerHTML,/Fixture item/);
+  x.scope.Guest.current=null;x.windows.beforeprint();assert.equal(x.el(c.button).disabled,true);assert.doesNotMatch(x.el(c.root).innerHTML,/Fixture item|private@example/);assert.equal(x.scope.document.title,'Document unavailable — Norda');
+ });
+}

@@ -1,6 +1,8 @@
-# Local acceptance — NORDA 2.14.3
+# Local acceptance — NORDA 2.14.4
 
-This update uses delivered **2.14.2 Local Final**. It keeps the store database, credentials, media and existing commerce rules. Production deployment, actual SSLCOMMERZ merchant acceptance and real courier/cloud/off-host activation are reserved in [deferred integrations](reserved/README.md).
+This update uses delivered **2.14.3 Local Acceptance**. It keeps the store database, credentials, media and existing commerce rules. Production deployment, actual SSLCOMMERZ merchant acceptance and real courier/cloud/off-host activation are reserved in [deferred integrations](reserved/README.md).
+
+The final maintenance pass additionally validates guest email origins before writing a recovery intent and protects all receipt Print actions/browser-menu printing after identity changes. Application verification/reset/guest links are exercised through actual local SMTP messages and HTTP consumption. No new feature is assigned.
 
 ## What this update can prove
 

@@ -1,6 +1,6 @@
 # NORDA — fixed localhost scope
 
-**2.14.3** builds on 2.14.2 with local acceptance tools, a runnable local operations demonstration and focused UI refinements. No new product feature is assigned.
+**2.14.4** builds on 2.14.3 with final guest-email/receipt-print fixes and full regression verification. The existing local operations demonstration and acceptance commands are retained. No new product feature is assigned.
 
 Actual SSLCOMMERZ, domain/production deployment and courier/cloud/remote-backup activation are reserved in [three deferred-integration folders](reserved/README.md), as requested. Existing optional code and credentials remain intact.
 

@@ -17,9 +17,9 @@ File preview is not inbox delivery; `mail:diagnose` exits 2 when SMTP is absent.
 
 For the optional reverse-pickup/statement demonstration, run `npm run connector:demo` in one terminal and `npm run dev:operations-demo` in another **instead of** the ordinary app command. Existing environment files are preserved; demo statements are preview-only. See [connector instructions](docs/LOCAL_CONNECTOR.md). Return to normal mode by stopping both and using `npm run dev`.
 
-## Update an existing installation to 2.14.3 · Local Acceptance
+## Update an existing installation to 2.14.4 · Local Final
 
-Install the retained dependencies with `npm ci`. This update retains existing commerce behavior and adds explicit email acceptance tools, a runnable local operations connector demonstration and focused keyboard/print refinements. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
+Install the retained dependencies with `npm ci`. This final maintenance update retains existing commerce behavior and the earlier local acceptance tools, with guest-email URL/retry and private receipt-print fixes. See [Local final release](docs/LOCAL_FINAL_RELEASE.md). No domain, production deployment, setup, credential rotation or reseeding is required.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -174,7 +174,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c feat/local-acceptance-2.14.3
+git switch -c fix/final-qa-2.14.4
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
@@ -194,7 +194,7 @@ cd /path/to/your/existing/Norda-repository
 git status
 git add .
 git commit -m "fix: harden guest checkout, security and release UI"
-git push -u origin feat/local-acceptance-2.14.3
+git push -u origin fix/final-qa-2.14.4
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

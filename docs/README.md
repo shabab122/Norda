@@ -1,5 +1,7 @@
 # Documentation index
 
+Current maintenance release: **2.14.4 Local Final**. See [verification](VERIFICATION_RESULTS.md) and [update report](UPDATE_REPORT.md) for the final recovery/print fixes and measured results.
+
 - [Local acceptance — 2.14.3](LOCAL_ACCEPTANCE.md) — customer/admin manual criteria, real SMTP probes and exact evidence limits.
 - [Runnable local connector](LOCAL_CONNECTOR.md) — durable demo reverse pickup/statements, commands and mode isolation.
 - [Reserved integrations](reserved/README.md) — the three owner-deferred areas.
