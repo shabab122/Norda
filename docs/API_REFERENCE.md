@@ -1,4 +1,6 @@
-# Norda 2.12 — API Reference
+# Norda 2.14 — API Reference
+
+Current additions: [advanced operations API and contracts](ADVANCED_OPERATIONS.md#api-additions). Earlier endpoint contracts remain available.
 
 > Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
 

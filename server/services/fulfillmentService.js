@@ -43,12 +43,13 @@ async function locations(config, session) {
 async function enrich(products, session = null) {
   const config = await policy(session);
   if (!config.enabled || !products.length) return products;
-  const sites = (await locations(config, session)).map(w => w.id), satellite = sites.filter(id => id !== "online");
+  const decorated = await require("./routingService").decorate(await locations(config, session), session);
+  const sites = decorated.sites.map(w => w.id), capacity = new Map(decorated.sites.map(w => [w.id, w.remainingCapacity])), satellite = sites.filter(id => id !== "online");
   const stocks = satellite.length ? await qs(Stock.find({ warehouse: { $in: satellite }, product: { $in: products.map(p => p._id) } }), session) : [];
   return products.map(p => {
     const item = plain(p), rows = stocks.filter(s => String(s.product) === String(p._id));
     const available = (key, online) => {
-      const quantities = rows.filter(s => s.variantKey === key).map(s => s.quantity);
+      const quantities = rows.filter(s => s.variantKey === key).map(s => Math.min(s.quantity, capacity.get(String(s.warehouse)) ?? Infinity));
       if (sites.includes("online")) quantities.push(online);
       return config.allowSplit ? quantities.reduce((n, q) => n + q, 0) : Math.max(0, ...quantities);
     };
@@ -58,7 +59,7 @@ async function enrich(products, session = null) {
     return item;
   });
 }
-async function reserve(item, unit) {
+async function reserve(item, unit, context = {}) {
   const config = await policy(unit.session);
   if (!config.enabled) return require("./inventoryService").reserveItem(item, unit);
   const product = await qs(Product.findById(item.product), unit.session);
@@ -67,6 +68,8 @@ async function reserve(item, unit) {
     const row = site.id === "online" ? null : await qs(Stock.findOne({ warehouse: site.id, product: item.product, variantKey: String(item.variantId || "base") }), unit.session);
     options.push({ ...site, row, quantity: site.id === "online" ? selected.stock : row?.quantity || 0 });
   }
+  const ranked = await require("./routingService").rank(options, context.address, unit.session);
+  options.splice(0, options.length, ...ranked);
   let wanted = item.quantity;
   if (!config.allowSplit) { const site = options.find(w => w.quantity >= wanted); if (!site) throw error(409, "No single fulfillment location has the requested quantity"); options.splice(0, options.length, site); }
   const allocations = [];
@@ -74,7 +77,7 @@ async function reserve(item, unit) {
     const amount = Math.min(wanted, site.quantity); if (!amount) continue;
     if (site.id === "online") await require("./inventoryService").reserveItem({ ...item, quantity: amount }, unit);
     else {
-      const held = await Warehouse.findOneAndUpdate({ _id: site.id, active: true }, { $inc: { reservationUnits: amount } }, writeOptions(unit.session, { new: true }));
+      const held = await Warehouse.findOneAndUpdate({ _id: site.id, active: true, ...await require("./routingService").capacityCondition(site.id, amount, unit.session) }, { $inc: { reservationUnits: amount } }, writeOptions(unit.session, { new: true }));
       if (!held) throw error(409, "Warehouse availability changed; refresh checkout");
       unit.compensate(() => Warehouse.updateOne({ _id: site.id }, { $inc: { reservationUnits: -amount } }));
       const changed = await Stock.findOneAndUpdate({ _id: site.row._id, quantity: { $gte: amount } }, { $inc: { quantity: -amount } }, writeOptions(unit.session, { new: true }));
@@ -109,7 +112,7 @@ async function reservePlanned(item, unit) {
     else {
       const product = await qs(Product.findById(item.product), unit.session);
       require("./inventoryService").selection(product, item.variantId);
-      const held = await Warehouse.findOneAndUpdate({ _id: allocation.warehouse, active: true }, { $inc: { reservationUnits: allocation.quantity } }, writeOptions(unit.session, { new: true }));
+      const held = await Warehouse.findOneAndUpdate({ _id: allocation.warehouse, active: true, ...await require("./routingService").capacityCondition(allocation.warehouse, allocation.quantity, unit.session) }, { $inc: { reservationUnits: allocation.quantity } }, writeOptions(unit.session, { new: true }));
       if (!held) throw error(409, "The original fulfillment warehouse is unavailable; contact the store");
       unit.compensate(() => Warehouse.updateOne({ _id: allocation.warehouse }, { $inc: { reservationUnits: -allocation.quantity } }));
       const stock = await Stock.findOneAndUpdate({ warehouse: allocation.warehouse, product: item.product, variantKey: String(item.variantId || "base"), quantity: { $gte: allocation.quantity } }, { $inc: { quantity: -allocation.quantity } }, writeOptions(unit.session, { new: true }));
@@ -164,19 +167,21 @@ async function syncSingle(order, unit) {
   const rows = await qs(Parcel.find({ order: order._id }), unit.session);
   if (rows.length === 1 && rows[0].status !== order.status) { if (order.status === "delivered") await releaseReservation(rows[0], unit); await patch(Parcel, rows[0], { status: order.status, ...(order.shipment?.courierName ? { courierName: order.shipment.courierName, trackingNumber: order.shipment.trackingNumber, trackingUrl: order.shipment.trackingUrl } : {}) }, unit); }
 }
-async function updateParcel(id, user, body) {
+async function updateParcel(id, user, body, internal = false) {
   objectId(id); const key = requestKey(body.requestKey), note = noteText(body.note), reference = await Parcel.findById(id);
   if (!reference) throw error(404, "Parcel not found");
+  if (!internal && await require("../models/LogisticsJob").exists({ targetType: "parcel", targetId: id, status: { $nin: ["cancelled", "rejected"] } })) throw error(409, "Use courier synchronization while an API booking is active");
   if (!["processing", "shipped", "delivered"].includes(body.status)) throw error(400, "Choose processing, shipped or delivered");
   if (body.status === "delivered" && body.confirmed !== true) throw error(400, "Confirm physical delivery and any cash collection for this parcel");
   const fingerprint = hash([body.status, body.courierName || "", body.trackingNumber || "", body.trackingUrl || "", note]);
   return withOperationLock("order:" + reference.order, () => withDatabaseUnit(async unit => {
-    let order = await ownedOrder(reference.order, user, unit.session, "orders");
+    let order = internal ? await qs(Order.findById(reference.order), unit.session) : await ownedOrder(reference.order, user, unit.session, "orders");
+    if (!order) throw error(404, "Order not found");
     if (require("./orderOperationStore").hasBlockingOperation(order) || order.status === "cancelled" || (order.paymentMethod !== "cod" && order.paymentStatus !== "paid")) throw error(409, "Resolve the order/payment before dispatching parcels");
     const parcel = await qs(Parcel.findById(id), unit.session), replay = parcel.history.find(h => h.key === key);
     if (replay) { if (replay.hash !== fingerprint) throw error(409, "This parcel key belongs to different details"); return parcel; }
     if ({ pending: "processing", processing: "shipped", shipped: "delivered" }[parcel.status] !== body.status) throw error(409, "Parcel status must move forward one step");
-    const fields = { status: body.status, history: [...parcel.history.map(plain), { key, hash: fingerprint, status: body.status, note, actor: user._id, at: new Date() }] };
+    const fields = { status: body.status, history: [...parcel.history.map(plain), { key, hash: fingerprint, status: body.status, note, actor: user?._id, at: new Date() }] };
     if (body.status === "shipped") {
       const { text } = require("../utils/expansion"); fields.courierName = text(body.courierName, 80); fields.trackingNumber = text(body.trackingNumber, 100);
       fields.trackingUrl = require("./shipmentService").normalizeShipment({ requestKey: key, trackingUrl: body.trackingUrl || "" }).trackingUrl; fields.shippedAt = new Date();

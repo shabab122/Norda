@@ -1,0 +1,1 @@
+const m=require('mongoose');module.exports=m.model('WarehouseBatch',new m.Schema({requestKey:{type:String,required:true,unique:true},intentHash:String,rows:[m.Schema.Types.Mixed],actor:m.Schema.Types.ObjectId},{timestamps:true}));

@@ -1,4 +1,14 @@
-# NORDA 2.13.1 acceptance checklist
+# NORDA 2.14.0 acceptance checklist
+
+Current automated evidence: [verification results](VERIFICATION_RESULTS.md). The earlier final-maintenance report below is historical. Before activating real automated operations, follow [the 2.14 guide](ADVANCED_OPERATIONS.md) and confirm:
+
+- Independent parcel pickup/collection/label and all-parcel delivery with the contracted courier.
+- Reverse booking/query/cancel with the approved merchant connector, including timeout reconciliation.
+- Statement pages/cursors, duplicate imports and account-code mapping against actual provider reports.
+- Multiple physical return receipts/warehouses and actual refund evidence with the configured deduction policy.
+- District/location coordinates, shared capacity and a reviewed small CSV transfer batch.
+- Desktop/mobile, keyboard and whole-return credit printing using the real store.
+
 
 > Final maintenance patch: see [the six-area report](FINAL_RELEASE.md). Automated journeys passed on both native topologies; guest/session/form fixes, dependency security patches and receipt/focus CSS are included. Actual public provider, target-host and visible device/print acceptance remain unverified.
 

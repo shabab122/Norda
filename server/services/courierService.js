@@ -25,6 +25,7 @@ async function eventInUnit(b, key, status, note, kind, unit, occurredAt = new Da
 const safeBooking = (b, internal = false) => ({ _id: b._id, order: b.order, provider: b.provider, status: b.status, trackingNumber: b.trackingNumber || "", providerStatus: b.providerStatus || "", exceptionStatus: b.exceptionStatus || "none", exceptionReason: b.exceptionReason || "", resolutionNote: b.resolutionNote || "", lastPolledAt: b.lastPolledAt, bookedAt: b.bookedAt, ...(internal ? { reference: b.reference, package: b.package, providerCharge: b.providerCharge, codCharge: b.codCharge, labelUrl: b.labelUrl || "", lastError: b.lastError || "", payload: b.payload } : {}) });
 async function createBooking({ orderId, user, body, automatic = false }) {
   if (await require("../models/FulfillmentParcel").countDocuments({ order: orderId }) > 1) throw httpError(409, "Use individual parcel fulfillment for a split warehouse order");
+  await require("./logisticsAutomationService").assertNoActive(orderId);
   objectId(orderId); const key = requestKey(body.requestKey);
   const intentHash = hash(Object.fromEntries(["packageCode", "expectedShippingCharge", "recipientName", "city", "thana", "area", "address"].filter((k) => body[k] !== undefined).map((k) => [k, body[k]])));
   return withOperationLock("order:" + orderId, async () => {
@@ -42,7 +43,7 @@ async function createBooking({ orderId, user, body, automatic = false }) {
     });
   });
 }
-async function assertNoActiveBooking(orderId, session) { const b = await querySession(Booking.findOne({ order: orderId, status: { $nin: ["cancelled", "rejected"] } }), session); if (b) throw httpError(409, "Cancel or reconcile the carrier parcel before cancelling this order or restoring stock"); }
+async function assertNoActiveBooking(orderId, session) { await require("./logisticsAutomationService").assertNoActive(orderId, session); const b = await querySession(Booking.findOne({ order: orderId, status: { $nin: ["cancelled", "rejected"] } }), session); if (b) throw httpError(409, "Cancel or reconcile the carrier parcel before cancelling this order or restoring stock"); }
 async function activateBooking(b, id, unit) {
   const order = await querySession(Order.findById(b.order), unit.session); if (!order) throw httpError(409, "Booking order is missing");
   const shipment = { ...(order.shipment?.toObject?.() || order.shipment || {}), courierName: "eCourier", trackingNumber: id, trackingUrl: "https://ecourier.com.bd/tracking/", lastUpdatedAt: new Date() };

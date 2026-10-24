@@ -11,7 +11,7 @@ const refunds = require("../services/refundService");
 const { reviewOrder } = require("../services/paymentReviewService");
 const { orderView } = require("../services/orderView");
 const handle = (fn, status = 200) => async (req, res, next) => { try { res.status(status).json(await fn(req)); } catch (error) { next(error); } };
-const customerCase = (item) => ({ _id: item._id, type: item.type, status: item.status, reason: item.reason, decisionMessage: item.decisionMessage || "", refundAmount: item.refundAmount || 0, restocked: Boolean(item.restocked), createdAt: item.createdAt, decidedAt: item.decidedAt, receivedAt: item.receivedAt });
+const customerCase = (item) => ({ _id: item._id, type: item.type, status: item.status, reason: item.reason, decisionMessage: item.decisionMessage || "", refundAmount: item.refundAmount || 0, returnTerms: item.returnTerms ? { fixedDeduction: item.returnTerms.fixedDeduction, percentDeduction: item.returnTerms.percentDeduction, refundShipping: item.returnTerms.refundShipping } : undefined, advancedReceiptCount: item.advancedReceiptCount || 0, receiptProgress: item.receiptProgress || [], creditNote: item.creditNote, restocked: Boolean(item.restocked), createdAt: item.createdAt, decidedAt: item.decidedAt, receivedAt: item.receivedAt });
 const customerRefund = (item) => ({ _id: item._id, gateway: item.gateway, scope: item.scope, status: item.status, amount: item.amount, currency: item.currency, createdAt: item.createdAt, completedAt: item.completedAt });
 const getCustomerOperations = handle(async (req) => {
   const order = await ownedOrder(req.params.id, req.user);

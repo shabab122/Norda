@@ -163,3 +163,14 @@ The `Upload` record retains local identities while tracking optional Cloudinary 
 `Warehouse` and `WarehouseStock` hold satellite inventory. `InventoryMovement` records request-key replay and reasons; transfers atomically move existing online SKU stock versus satellite balances using transaction/compensation units. The storefront still reads online stock. `CatalogImport` retains one previewed creation result; managed-media locks protect its references. `StockSubscription`/`StockNotice` implement permission-aware shortage episodes and out-of-transaction SMTP claims/retry.
 
 `OffsiteBackup` tracks one encrypted local archive/destination/key/hash and readback confirmation. `RestoreDrill` records isolated target creation/cleanup. These telemetry records and transient MFA challenges are omitted from backup restore; warehouse, catalog and account records are retained. Independent monitoring persists only its safe transition state outside application MongoDB. Deployment code/data/secrets are separated on the target VM; rollback retains live database/media state.
+
+
+## Advanced operations — 2.14
+
+`LogisticsJob` persists each parcel/pickup booking attempt before outbound work. Order/job locks coordinate submission, carrier cancellation and authenticated tracking. A timeout retains the reference as unknown; the worker queries it rather than resending. Forward parcels use the existing eCourier adapter; reverse bookings use the explicitly configured merchant connector. Physical warehouse receipts remain independent of carrier tracking.
+
+`StatementFeed` retains an opaque cursor and pending `StatementRun`. A fetched page is durably staged before review/automatic ledger import. A deterministic settlement batch key survives a lost local response, and only identical immutable provider references are skipped. Feed cursors advance after recorded imports/empty pages. Accounting CSV derives balanced journals from matched/accepted ledger records; it never confirms payment.
+
+`WholeReturnReceipt` holds physical line/quantity/location decisions. `ReturnRules` are snapshotted on the request. Complete receipt creates `WholeReturnCredit` and queues the calculated existing refund; confirmed success settles the credit and request even when the invoice is only partly refunded due to deductions. Original invoice totals do not change. Existing item receipts additionally support explicit receiving warehouses.
+
+`RoutingSettings` adds district-centre coordinates and distance/capacity/balanced ranking to existing fulfillment priorities. Each satellite warehouse stores an atomic capacity guard against open reservation units. `WarehouseBatch` makes previewed sequential transfer rows replay-safe under the shared movement lock and database unit. Existing paid-order allocations and parcel IDs are never rerouted. These collections are included by the existing collection-discovery backup mechanism.

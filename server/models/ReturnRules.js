@@ -1,0 +1,1 @@
+const m=require('mongoose');module.exports=m.model('ReturnRules',new m.Schema({_id:{type:String,default:'store'},revision:{type:Number,default:0},fixedDeduction:{type:Number,default:0},percentDeduction:{type:Number,default:0},refundShipping:{type:Boolean,default:true},updatedBy:m.Schema.Types.ObjectId},{timestamps:true}));

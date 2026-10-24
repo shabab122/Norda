@@ -1,21 +1,19 @@
-# Source preservation — NORDA 2.13.1
+# Source preservation — NORDA 2.14.0
 
-Input: delivered `Norda-Main-v2.13.0.zip`, SHA-256 `7e06934574bd7f28ba9614800d5e2a76c24d432e6343700bb5976ce46eecba89`. The update starts directly from that archive.
+Input: delivered `Norda-Main-v2.13.1.zip`, SHA-256 `4f42e2ba3c1f58cc9014e23f4c5f0e4020c7cb016dd3bb65d1b577c0ff3dc215`. Work starts directly from this archive.
 
 | Check | Result |
 |---|---|
-| Baseline files retained | 470 of 470 |
-| Baseline files byte-identical | 430 |
-| Modified baseline files | 40; scoped frontend fixes/styles and release documentation/metadata |
-| Added tests/documentation | 3 files |
-| Original catalog/brand assets | All 42 byte-identical |
-| Credential/config/seed files | All 10 byte-identical, including the supplied `.env` |
-| Backend routes/models/controllers/services/middleware/utils and app/startup | All 155 source files byte-identical |
-| Dependency changes | Only body-parser 1.20.8 → 1.20.9 and Multer 2.4.0 → 2.5.0 for reviewed DoS advisories |
-| Owner database/provider actions | None |
+| Original files retained | **473 of 473**; no removals |
+| Original files byte-identical | **430** |
+| Modified original files | **43**, scoped feature integration, tests and release documentation |
+| New files | **33**, feature models/services/routes/screens, tests, guide and optional configuration reference |
+| Packaged total | **506 files** |
+| Catalog/brand assets | **All 42 byte-identical** |
+| Credential/config/seed files | **All 10 byte-identical**, including the supplied working configuration |
+| Dependency selections | **Unchanged**; only root package/lock version metadata changes to 2.14.0 |
+| Owner database / real provider actions | **None** |
 
-All 56 HTML pages remain. Frontend edits address guest access/payment verification, changed-identity private responses, failed form retry, pickup navigation and receipt/focus styling. Backend stock/payment/refund/business source and provider settings are unchanged. No setup, reseed or manual migration is required.
+Backend edits are limited to these four features and their required inventory/cancellation/payment/return/worker/permission integrations. Existing source files are retained, including the professional README structure and historical release guides. Customer/admin authentication and shopping behavior are regression-tested. No existing credential is replaced or rotated. Keep newer working laptop settings/uploads when installing source; no setup/reseed/manual migration is needed.
 
-The private ZIP preserves existing credential bytes; keep environment files out of public Git history. Retain your newer working laptop environment and uploads when applying source. Installed dependencies, test mail/media, backups, logs and temporary databases are excluded.
-
-Every archive member's CRC and exact source bytes, the full file set, private/config/asset preservation and two-package dependency delta are verified during build. See [manifest](UPDATE_FILES.json) and [six-area release report](FINAL_RELEASE.md).
+All original 56 HTML pages remain and five new pages are added. Installed dependencies, fixture email/media, logs, backups and temporary test databases are excluded. Every archive member's CRC and exact source bytes are verified after packaging. See [file manifest](UPDATE_FILES.json), [current report](UPDATE_REPORT.md) and [measured verification](VERIFICATION_RESULTS.md).

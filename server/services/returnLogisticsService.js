@@ -19,7 +19,8 @@ async function requestPickup(orderId, user, body) {
   }));
 }
 async function updatePickup(id, user, body) {
-  objectId(id); const key = requestKey(body.requestKey), note = noteText(body.note), reference = await Pickup.findById(id); if (!reference) throw error(404, "Pickup not found");
+  objectId(id); if (await require("../models/LogisticsJob").exists({ targetType: "pickup", targetId: id, status: { $nin: ["cancelled", "rejected"] } })) throw error(409, "Use API synchronization for this reverse booking");
+  const key = requestKey(body.requestKey), note = noteText(body.note), reference = await Pickup.findById(id); if (!reference) throw error(404, "Pickup not found");
   const fields = { status: body.status };
   if (body.status === "booked") {
     if (body.confirmed !== true) throw error(400, "Confirm that the courier accepted this booking");
@@ -45,7 +46,8 @@ async function receivePartial({ id, user, body }) {
   if (body.received !== true || !Array.isArray(body.items) || !body.items.length) throw error(400, "Confirm physical receipt and enter at least one received quantity");
   const items = body.items.map(i => {
     if (!Number.isInteger(i.lineIndex) || i.lineIndex < 0 || !Number.isSafeInteger(i.quantity) || i.quantity < 1 || !Number.isSafeInteger(i.restockQuantity) || i.restockQuantity < 0 || i.restockQuantity > i.quantity) throw error(400, "Received/restocked quantities must be whole numbers within the actual receipt");
-    return { lineIndex: i.lineIndex, quantity: i.quantity, restockQuantity: i.restockQuantity };
+    const warehouse = String(i.warehouse || "online"); if (warehouse !== "online") objectId(warehouse);
+    return { lineIndex: i.lineIndex, quantity: i.quantity, restockQuantity: i.restockQuantity, warehouse };
   }).sort((a, b) => a.lineIndex - b.lineIndex);
   if (new Set(items.map(i => i.lineIndex)).size !== items.length) throw error(400, "Use each received line once");
   const fingerprint = hash([items, note]), reference = await Case.findById(id); if (!reference) throw error(404, "Return request not found");
@@ -59,7 +61,7 @@ async function receivePartial({ id, user, body }) {
       const line = updatedItems.find(i => i.lineIndex === receipt.lineIndex);
       if (!line || (line.receivedQuantity || 0) + receipt.quantity > line.quantity) throw error(409, "Received quantity exceeds the unreceived approved quantity");
       line.receivedQuantity = (line.receivedQuantity || 0) + receipt.quantity; line.restockedQuantity = (line.restockedQuantity || 0) + receipt.restockQuantity; line.restocked = line.restockedQuantity === line.quantity;
-      if (receipt.restockQuantity) await require("./inventoryService").restoreItem({ ...line, quantity: receipt.restockQuantity }, unit);
+      if (receipt.restockQuantity) await require("./warehouseBulkService").restock({ ...line, quantity: receipt.restockQuantity }, receipt.warehouse, unit);
     }
     const receipt = await insert(Receipt, { itemCase: id, order: order._id, requestKey: key, intentHash: fingerprint, items, note, actor: user._id }, unit.session); unit.compensate(() => Receipt.deleteOne({ _id: receipt._id }));
     const complete = updatedItems.every(i => i.receivedQuantity === i.quantity);

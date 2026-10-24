@@ -104,7 +104,7 @@ const createOrderFromCart = async (input, guestLocked = false) => {
     }
     // Register each successful write immediately; exceptions on the next item
     // therefore compensate all prior decrements on standalone MongoDB too.
-    for (const item of items) await require("./fulfillmentService").reserve(item, unit);
+    for (const item of items) await require("./fulfillmentService").reserve(item, unit, { address });
     const order = await insertDocument(Order, {
       user: user._id, items, shippingAddress: address, ...(user.isGuest ? { customerSnapshot: { name: user.name, email: user.guestEmail, isGuest: true } } : {}), ...(items.some(i => i.fulfillmentAllocations?.length) ? { fulfillmentManaged: true } : {}), ...totals, ...(quote.coupon ? { coupon: quote.coupon } : {}), currency: store.currency,
       paymentMethod, paymentChannel, paymentStatus: "pending", returnPolicy: { returnWindowDays: config.returnWindowDays, exchangeEnabled: config.exchangeEnabled },
@@ -176,6 +176,7 @@ const updateOrderInUnit = async (id, body, actor = null, unit, internal = {}) =>
   const eventStatus = input && { shipped: "shipped", in_transit: "shipped", out_for_delivery: "shipped", delivery_attempted: "shipped", delivered: "delivered" }[input.event];
   const requestedStatus = eventStatus || body.status || order.status;
   if (actor && (input || requestedStatus !== order.status || body.isPaid !== undefined)) { const carrier = await querySession(require("../models/CourierBooking").findOne({ order: id, status: { $nin: ["cancelled", "rejected"] } }), session); if (carrier && requestedStatus !== "cancelled") throw httpError(409, "Use carrier synchronization or cancel/reconcile the active parcel before manual fulfillment or payment changes"); }
+  if (actor && !internal.parcel && requestedStatus !== order.status && await querySession(require("../models/LogisticsJob").exists({ order: id, status: { $nin: ["cancelled", "rejected"] } }), session)) throw httpError(409, "Synchronize individual courier parcels before manual fulfillment changes");
   if (hasBlockingOperation(order)) throw httpError(409, "Resolve the cancellation, return or refund before changing fulfillment or cash payment");
   await require("./fulfillmentService").legacyStatus(order, requestedStatus, unit, internal.parcel === true);
   if (!canTransitionOrder(order.status, requestedStatus)) throw httpError(409, "Order cannot move from " + order.status + " to " + requestedStatus);

@@ -1,4 +1,6 @@
-# NORDA 2.12 testing and acceptance
+# NORDA 2.14 testing and acceptance
+
+Current feature guide: [Advanced operations](ADVANCED_OPERATIONS.md). Default verification now covers 61 pages and the new routing/return/courier/statement tools. `test:integration` includes their isolated native journeys.
 
 > Current extension: [Release automation, recovery and team inventory — 2.12](RELEASE_AUTOMATION.md). Adds the five selected infrastructure/security/inventory areas while retaining prior workflows.
 
@@ -19,7 +21,7 @@ npm run verify
 
 Syntax checks cover all JavaScript. Default tests cover deterministic rules, injected persistence failures, HTTP journeys through the actual Express routes with a test-only model adapter, frontend safety and static resource integrity.
 
-The twelve real database test entry points are intentionally skipped without an explicit test URI:
+The fifteen real database test entry points are intentionally skipped without an explicit test URI:
 
 ```bash
 NORDA_TEST_MONGO_URI='mongodb://127.0.0.1:27018' NORDA_EXPECT_TRANSACTIONS=0 npm run test:integration

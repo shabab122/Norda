@@ -1,9 +1,14 @@
-# Norda 2.13.1
+# Norda 2.14.0
 
-Final maintenance source release built directly from `Norda-Main-v2.13.0.zip`. Corrects guest payment/session recovery, private-response identity guards and retryable operation forms; refines typography, accessibility and receipt print CSS. Patches Multer to 2.5.0 and body-parser to 1.20.9 for newly reported DoS advisories; other dependency selections are retained.
+Advanced operations source release built directly from `Norda-Main-v2.13.1.zip`.
 
-Verification: 309 JavaScript syntax checks, 527 default passes/0 failures/14 deliberate native-entry skips, and 234 native passes separately on standalone and transaction-enabled MongoDB 7.0.45. Zero current audit vulnerabilities. All 56 pages and 135 distinct page/resource targets served successfully by the actual isolated app.
+- Independent parcel courier booking, labels/tracking and an authenticated merchant reverse-pickup connector, with explicit automatic-booking opt-in/cutoff.
+- Scheduled reviewed/automatic settlement feeds, cursor/replay protection and balanced accounting journal CSV.
+- Partial whole-order receipts, multiple receiving warehouses, snapshotted deductions and separate printable return credits tied to confirmed refunds.
+- Distance/capacity/balanced routing, shared atomic reservation limits and previewed warehouse transfer batches.
 
-The original database, credentials, config/seed files, all 42 assets and backend business source remain intact. No owner database/provider was contacted. Retain your working environment and uploads; no setup, reseed or manual migration is required.
+Verified: **335** JavaScript syntax checks; **566 default passes**, no failures, 15 deliberate native skips without a test URI; **265 native passes on each** of standalone and replica-set MongoDB 7.0.45. Current audit: **0 vulnerabilities**. All 61 pages and 146 local page/resource URLs return 200 from the isolated application.
 
-This is a tested source release; public deployment, actual merchant/provider transactions and visible desktop/mobile/print acceptance are not claimed. See [the six-area final report](docs/FINAL_RELEASE.md).
+Existing credential/config/seed bytes, all 42 catalog/brand assets and dependency selections are retained. No owner database or real provider account was used. Keep your working local environment/uploads; no setup, reseed or manual data migration is needed. New workflows require all shared app instances to be upgraded.
+
+Reverse pickup and automatic statement ingestion require an approved merchant connector/account contract. Live merchant, visible desktop/mobile/print and target-host acceptance are not certified by controlled-response tests. See [advanced operations](docs/ADVANCED_OPERATIONS.md) and [measured results](docs/VERIFICATION_RESULTS.md).

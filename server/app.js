@@ -78,6 +78,7 @@ app.get("/uploads/:filename", require("./services/mediaService").legacyRedirect)
 app.use("/uploads", express.static(path.join(__dirname, "uploads"), { fallthrough: false }));
 app.post("/api/mail/delivery-events", async (req, res, next) => { try { const s = require("./services/notificationDeliveryService"); s.verifyWebhook(req); res.json(await s.recordDelivery(req.body)); } catch (e) { next(e); } });
 app.use("/api", require("./routes/commerceExpansionRoutes"));
+app.use("/api", require("./routes/advancedOperationsRoutes"));
 app.use("/api", require("./routes/releaseToolsRoutes"));
 app.use("/api", require("./routes/productionToolsRoutes"));
 app.use("/api/auth", authRoutes);

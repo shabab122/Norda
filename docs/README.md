@@ -1,5 +1,8 @@
 # Documentation index
 
+- [Advanced operations — 2.14.0](ADVANCED_OPERATIONS.md) — the four new features, setup, permissions, connector contract and limits.
+- [Current verification](VERIFICATION_RESULTS.md) — measured 2.14 results and external acceptance boundaries.
+
 - [Final maintenance release — 2.13.1](FINAL_RELEASE.md) — six-area results, security/bug fixes and owner-environment acceptance.
 
 > Current extension: [Commerce operations — 2.13](COMMERCE_EXPANSION.md). Settlement, price-difference exchanges, reverse pickups/partial receipts, guest checkout, warehouse allocation and availability alerts.
