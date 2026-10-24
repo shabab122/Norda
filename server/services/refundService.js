@@ -29,7 +29,7 @@ const syncRefundSummary = async (order, unit) => {
   }
   return patchOrder(order, fields, unit);
 };
-const queueRefundInUnit = async ({ order, source, amount, key, reason, actor, itemCase = null, holdForReturn = false, exchangePayment = null }, unit) => {
+const queueRefundInUnit = async ({ order, source, amount, key, reason, actor, itemCase = null, holdForReturn = false, exchangePayment = null, wholeReturnRequest = null }, unit) => {
   const existing = await querySession(Refund.findOne({ order: order._id, requestKey: key }), unit.session);
   if (existing) {
     if (moneyCents(existing.amount) !== amount || existing.bankTransactionId !== source.bankTransactionId) throw httpError(409, "This refund request key belongs to a different refund");
@@ -47,7 +47,7 @@ const queueRefundInUnit = async ({ order, source, amount, key, reason, actor, it
     order: order._id, user: order.user, payment: source.payment?._id, gateway: source.gateway, scope: source.scope,
     requestKey: key, transactionId: refundId(), originalTransactionId: source.payment?.transactionId || source.transactionId || "", ...(exchangePayment ? { exchangePayment } : {}),
     validationId: source.validationId, bankTransactionId: source.bankTransactionId,
-    amount: amount / 100, currency: order.currency, ...(itemCase ? { itemCase } : {}), status: holdForReturn ? "awaiting_return" : source.gateway === "manual" ? "pending" : "queued",
+    amount: amount / 100, currency: order.currency, ...(itemCase ? { itemCase } : {}), ...(wholeReturnRequest ? { wholeReturnRequest } : {}), status: holdForReturn ? "awaiting_return" : source.gateway === "manual" ? "pending" : "queued",
     reason, requestedBy: actor._id,
   }, unit.session);
   unit.compensate(() => Refund.deleteOne({ _id: refund._id }));
@@ -86,6 +86,7 @@ const refundState = async (refund, fields, note, unit, actor = null) => {
   if (fields.status && fields.status !== refund.status) await audit(order._id, actor, "refund_" + fields.status, note, unit, { refund: refund._id, payment: refund.payment });
   if (fields.status && fields.status !== refund.status) {
     await require("./itemReturnStore").syncCaseRefund(updated, unit);
+    if (updated.wholeReturnRequest) await require("./advancedReturnService").syncRefund(updated, unit);
     await require("./exchangePaymentService").syncRefund(updated, unit);
     await require("./notificationService").queueOperationMessage(order, updated, "refund", unit);
   }

@@ -2,9 +2,9 @@
 
 Requires Node.js 22+ (24 recommended). Keep your existing MongoDB URI and uploads.
 
-## Update an existing installation to 2.13.1
+## Update an existing installation to 2.14.0
 
-Install from the updated lockfile with `npm ci` to receive the two security-fixed dependencies. See [the final report](docs/FINAL_RELEASE.md) for scoped fixes, measured tests and remaining provider/browser acceptance.
+Install the retained dependency selections with `npm ci`. See [advanced operations](docs/ADVANCED_OPERATIONS.md) for the four new tools, optional connector configuration and provider acceptance. No credentials or seed data need changing.
 
 Stop the old NORDA process and copy the new source into your existing checkout while preserving `.git`, `server/.env`, any other environment files and `server/uploads`. Keep your working database URI and JWT/admin/gateway/SMTP credentials exactly as they are. In particular, retain the email settings you recently configured on your laptop instead of overwriting them with the archive's older `.env`. This update requires no database migration or reseeding.
 
@@ -27,6 +27,15 @@ The preflight is read only. It shows the selected database host/port and record 
 For the requested simulator, keep `NODE_ENV=development` (or unset) in your existing environment. No merchant credentials need changing. Checkout now has separate Mobile Banking/bKash and Card/Bank demo choices. Choose an outcome, then inspect My Orders and the invoice with its simulation note. If your environment already sets `PAYMENT_DEMO_ENABLED=false`, the simulator is disabled; `NODE_ENV=production` always disables it. These settings do not change the real provider credentials.
 
 Real public gateway and browser acceptance still need the steps in `docs/ACCEPTANCE_CHECKLIST.md`. Do not treat successful automated tests as completion of those external checks.
+
+## Advanced operations — 2.14
+
+- **Admin → Courier automation:** queue a processing warehouse parcel or an approved requested return pickup. The worker submits a reference once, then reconciles tracking/labels. `unknown` means query that reference; do not book it again.
+- **Admin → Statement feeds:** enable gateway/courier fetching only after configuring the private merchant connector. Review is the default. Preview and import a fetched page; accounting CSV includes only matched/accepted records.
+- **Admin → Whole-order receipts:** set deduction rules for new requests, approve a return in Operations, then record received/sellable quantities and a receiving warehouse for each receipt. Confirm a manual refund only after actually returning money.
+- **Admin → Routing & bulk transfers:** configure district centres/location coordinates and capacity. Fulfillment must be enabled separately. Preview a CSV batch before applying transfers.
+
+`server/.env.operations.example` is a reference file; it is not automatically loaded. Merge only required new settings into your existing private `server/.env.integrations` or deployment environment. Preserve every working database/JWT/SMTP/gateway/courier/MFA value. All optional new automatic job creation is off until explicitly enabled with an ISO cutoff. Upgrade all app instances before using the new workflows.
 
 ## Management, devices and item returns — 2.10
 
@@ -136,7 +145,7 @@ Stop the old NORDA API. Keep a copy of your current `.env` and uploaded images. 
 ```bash
 cd /path/to/your/existing/Norda-repository
 git status
-git switch -c fix/final-release-2.13.1
+git switch -c feat/advanced-operations-2.14.0
 rsync -av --exclude='.git/' --exclude='.env' --exclude='.env.*' --exclude='.envy' --exclude='node_modules/' --exclude='uploads/' /path/to/extracted/Norda-Main/ ./
 cd server
 npm ci
@@ -156,7 +165,7 @@ cd /path/to/your/existing/Norda-repository
 git status
 git add .
 git commit -m "fix: harden guest checkout, security and release UI"
-git push -u origin fix/final-release-2.13.1
+git push -u origin feat/advanced-operations-2.14.0
 ```
 
 Open a pull request into `main`. Confirm `.env`, runtime uploads and `node_modules` are excluded from the staged changes.

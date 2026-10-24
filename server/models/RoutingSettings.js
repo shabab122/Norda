@@ -1,0 +1,1 @@
+const m=require('mongoose');module.exports=m.model('RoutingSettings',new m.Schema({_id:{type:String,default:'store'},revision:{type:Number,default:0},mode:{type:String,enum:['priority','distance','capacity','balanced'],default:'priority'},locations:[m.Schema.Types.Mixed],destinations:[m.Schema.Types.Mixed],updatedBy:m.Schema.Types.ObjectId},{timestamps:true}));

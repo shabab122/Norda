@@ -90,6 +90,10 @@ async function decideCase({ id, user, body }) {
     if (!(["requested", "approved"].includes(item.status)) || (body.decision === "approve" && item.status !== "requested")) throw httpError(409, "This request cannot receive that decision");
     await assertNoWholeReturn(order);
     if (body.decision === "approve" && (order.status !== "delivered" || !order.isPaid || order.paymentStatus !== "paid")) throw httpError(409, "Resolve the order payment review before approving this item request");
+    if (body.decision === "reject") {
+      const pickups = await require("../models/ReturnPickup").find({ itemCase: id });
+      if (pickups.length && await require("../models/LogisticsJob").exists({ targetType: "pickup", targetId: { $in: pickups.map(p => p._id) }, status: { $nin: ["cancelled", "rejected"] } })) throw httpError(409, "Reconcile or cancel the reverse API booking before withdrawing return approval");
+    }
     if (body.decision === "reject" && item.exchangeBalance > 0 && ["paid", "review", "refund_pending"].includes(item.exchangePaymentStatus)) throw httpError(409, "Resolve/refund the captured exchange adjustment before rejecting its reserved replacement");
     const source = body.decision === "approve" && (item.type === "return" || item.exchangeBalance < 0) && item.creditAmount > 0 ? await refundSource(order) : null;
     if (source && source.scope !== "order") throw httpError(409, "The original order payment needs review");

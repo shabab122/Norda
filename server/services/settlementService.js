@@ -49,15 +49,19 @@ async function classify(row, prior, session) {
   if (used + minor(row.gross) > allowed) return { status: "mismatch", reason: "Statement exceeds the remaining confirmed amount; check duplicates or adjustments" };
   return { status: "matched", reason: used + minor(row.gross) === allowed ? "Confirmed amount fully reconciled" : "Partial settlement recorded; a balance remains" };
 }
-async function preview(csv) {
+function identicalLine(a, b) {
+  return columns.every(key => key === "orderId" ? String(a.order) === String(b.order) : key === "settledAt" ? +new Date(a.settledAt) === +new Date(b.settledAt) : String(a[key] ?? "") === String(b[key] ?? ""));
+}
+async function preview(csv, options = {}) {
   const parsed = parse(csv), prior = await Entry.find({ order: { $in: parsed.map(r => r.order) } }), entries = [];
   for (const row of parsed) {
-    if (await Entry.exists({ provider: row.provider, reference: row.reference })) throw error(409, "A provider reference is already imported");
+    const existing = await Entry.findOne({ provider: row.provider, reference: row.reference });
+    if (existing) { if (options.ignoreIdentical && identicalLine(existing, row)) continue; throw error(409, "A provider reference is already imported or conflicts with this statement"); }
     const entry = { ...row, ...await classify(row, [...prior, ...entries]) }; entries.push(entry);
   }
   return { sourceHash: hash(csv), entries, matched: entries.filter(e => e.status === "matched").length, exceptions: entries.filter(e => e.status !== "matched").length };
 }
-async function apply(user, body) {
+async function apply(user, body, options = {}) {
   const key = requestKey(body.requestKey), sourceName = text(body.sourceName, 120);
   if (typeof body.csv !== "string" || body.sourceHash !== hash(body.csv)) throw error(409, "Preview the unchanged CSV before importing");
   return withOperationLock("settlement-ledger", () => withDatabaseUnit(async unit => {
@@ -65,7 +69,8 @@ async function apply(user, body) {
     if (replay) { if (replay.sourceHash !== body.sourceHash || replay.sourceName !== sourceName) throw error(409, "This import key belongs to another statement"); return replay; }
     const rows = parse(body.csv), prior = await qs(Entry.find({ order: { $in: rows.map(r => r.order) } }), unit.session), entries = [];
     for (const row of rows) {
-      if (await qs(Entry.exists({ provider: row.provider, reference: row.reference }), unit.session)) throw error(409, "A provider reference was imported already");
+      const existing = await qs(Entry.findOne({ provider: row.provider, reference: row.reference }), unit.session);
+      if (existing) { if (options.ignoreIdentical && identicalLine(existing, row)) continue; throw error(409, "A provider reference was imported already or has conflicting amounts"); }
       entries.push({ ...row, ...await classify(row, [...prior, ...entries], unit.session) });
     }
     const batch = await insert(Batch, { requestKey: key, sourceHash: body.sourceHash, sourceName, actor: user._id, rows: entries.length, matched: entries.filter(e => e.status === "matched").length, exceptions: entries.filter(e => e.status !== "matched").length }, unit.session);

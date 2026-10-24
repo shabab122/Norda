@@ -1,5 +1,14 @@
 # Future NORDA development
 
+## Completed in 2.14.0
+
+- Independent per-warehouse parcel courier booking/labels/tracking and a merchant-approved reverse pickup API connector, with opt-in automatic job creation.
+- Scheduled merchant gateway/courier statement feeds, reviewed/automatic imports and balanced accounting CSV.
+- Legacy whole-order partial receipt, multiple receiving warehouses, snapshot refund deductions and separate return credits.
+- Configured district-centre distance/capacity/balanced routing and previewed bulk warehouse transfers.
+- See [the feature guide](ADVANCED_OPERATIONS.md). Real merchant connector deployment/account permissions and public carrier/statement acceptance remain owner-environment work. These are not public SSLCOMMERZ statement or standalone eCourier reverse APIs.
+
+
 ## Final maintenance release 2.13.1
 
 Guest payment/session/form defects, private-response guards, parser/upload security issues and receipt/focus styling are addressed. Automated default/native checks pass; see [the final report](FINAL_RELEASE.md). Additional optional product features do not block this source release. Public provider/target-host and visible browser/device acceptance still require the actual environment.
@@ -122,16 +131,16 @@ Run the public SSLCOMMERZ sandbox success/failure/cancel/IPN matrix and browser/
 
 ## Phase 2 — order operations
 
-- Additional carrier adapters, automatic reverse-booking APIs, authenticated provider webhooks and broader address/fractional-collection contracts
+- Additional carrier adapters, authenticated provider webhooks and broader address/fractional-collection contracts; merchant reverse booking is implemented in 2.14
 - Optional SMS provider, provider-specific mail adapters and delivery/complaint remediation tooling
-- Discretionary refund deductions, partial receipts on the legacy whole-order flow, multiple receiving warehouses and external credit-note/accounting integration
+- Provider-specific credit-note/accounting synchronization beyond the implemented return credits and balanced journal CSV
 - Optional passkeys/device trust and further organization-specific permission expansion (TOTP/invitations are implemented)
 
 ## Phase 3 — catalog and experience
 
-- Per-parcel carrier API booking/labels, warehouse bulk operations and capacity-aware routing beyond configured priorities
+- Travel-time/geocoding optimization and richer warehouse operations beyond implemented per-parcel APIs, transfer batches and district-centre/capacity routing
 - Guest data-retention tooling and optional additional purchase identity verification
-- Provider-specific automatic statement ingestion, accounting exports and optional comparison/recently viewed products
+- Native vendor-specific accounting posting and optional comparison/recently viewed products; automatic merchant statement ingestion and generic journal exports are implemented in 2.14
 - Dedicated category landing pages, final-domain SEO validation and Search Console follow-up
 
 ## Phase 4 — public operations

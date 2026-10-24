@@ -88,7 +88,7 @@ async function claimOrders(req, res) {
     for (const order of orders) {
       if (order.customerSnapshot?.email?.toLowerCase() !== req.user.email.toLowerCase()) throw error(409, "A guest order email requires store review before linking");
       await patch(Order, order, { user: req.user._id }, unit);
-      for (const name of ["Invoice", "Payment", "Refund", "OrderRequest", "ItemReturnCase", "CreditNote", "OrderNotification", "CouponRedemption", "ExchangePayment", "ReturnPickup"]) {
+      for (const name of ["Invoice", "Payment", "Refund", "OrderRequest", "ItemReturnCase", "CreditNote", "OrderNotification", "CouponRedemption", "ExchangePayment", "ReturnPickup", "WholeReturnCredit"]) {
         const Model = require("../models/" + name);
         for (const record of await qs(Model.find({ order: order._id, user: guest.user._id }), unit.session)) await patch(Model, record, { user: req.user._id }, unit);
       }

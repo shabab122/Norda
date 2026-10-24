@@ -1,27 +1,46 @@
-# Verification results — NORDA 2.13.1
+# Verification results — NORDA 2.14.0
 
-Verified **24 October 2026, Asia/Dhaka** with Node.js **24.22.1**, npm **11.9.0** and native MongoDB **7.0.45**. Source starts from the delivered v2.13.0. No owner database or real provider account was used.
+Verified **24 October 2026, Asia/Dhaka**, using Node.js **24.22.1**, npm **11.9.0** and native MongoDB **7.0.45**. Source baseline: delivered **2.13.1**. No owner database, real carrier booking or real payment account was used.
 
 | Executed check | Result |
 |---|---|
-| `npm run verify` | **309** JS syntax checks; **541 reported tests: 527 passed, 0 failed, 14 skipped** |
-| `npm run test:integration`, standalone | **234 passed, 0 failed, 0 skipped**, compensation path |
-| `npm run test:integration`, replica set | **234 passed, 0 failed, 0 skipped**, transaction path |
-| New frontend/security checks | **27 passed**, included in default count |
-| Actual isolated HTTP server | All **56 HTML pages**, **135** distinct pages/resources returned 200; readiness 200 |
-| `npm audit --json` | **0 vulnerabilities**, after body-parser 1.20.9/Multer 2.5.0 updates |
-| Source preservation | All **470** baseline files retained; config/seed/credentials, all assets and backend business source byte-identical |
+| `npm run verify` | **335** JS syntax checks; **581 reported tests: 566 passed, 0 failed, 15 intentionally skipped native entry points** |
+| `npm run test:integration`, standalone | **265 passed, 0 failed, 0 skipped**; handled-error compensation |
+| `npm run test:integration`, single-member replica set | **265 passed, 0 failed, 0 skipped**; native transactions |
+| New checks in the default count | **39 passes**: 31 advanced HTTP journey/parent results, 4 frontend checks, 4 merchant protocol/parent results |
+| New native journeys | **31 passes per topology**, included in each 265 total |
+| Actual isolated HTTP smoke | **61 pages**, **146 distinct page/resource targets**, all status 200; `/api/health` 200 |
+| Actual server startup/restart | All workers initialize/shut down, existing cookie/cart persist across graceful restart; production transaction preflight verified on both topologies |
+| `npm audit --json` | **0 vulnerabilities**; no dependency selections changed |
+| Static/frontend | All page resource references/unique IDs, retained branding/receipt checks, admin account-change guards, retry serialization, stale previews and escaping pass |
+| Source preservation | All **473** original files retained; **42 assets** and **10 credential/config/seed files** byte-identical |
 
-The 14 default skips are native database entry points. Each ran in the separate complete native checks using explicit isolated loopback URIs, including after the dependency fixes. Coverage counts overlap. Archive CRC/content and source preservation are checked during packaging; see [manifest](UPDATE_FILES.json).
+## New persistence, money and provider coverage
 
-Coverage retains guest/registered cart/checkout/SKU/coupon/invoice/recovery/linking; scoped staff and owner isolation; inventory/warehouses/split COD; cancellation, payment review, returns, partial receipt/restock, priced exchanges, refunds/credit notes and settlement fees/net/replay; reservation/retry, fault/race guards, notifications/subscriptions; actual disposable SMTP protocol tests and controlled payment/courier/cloud adapters; native MFA/device/invitation routes; encrypted BSON/index/media isolated restore, controlled offsite retention/recovery, independent alerts, shell rollback and actual server/worker graceful restart/topology checks.
+- Scoped authentication/authorization; versioned settings and customer order isolation.
+- Nearest source splitting, exact parcel money, capacity below active holds, missing-district no-write failure and concurrent cross-SKU warehouse capacity.
+- Sequential/quoted CSV transfer previews, stale balances, replay, injected movement-write failure and restoration of both sides.
+- Fixed/percentage/delivery-credit snapshot deductions; approved amounts, multi-location partial receipt/replay, over-receipt rejection and injected receipt failure.
+- No premature refund; separate credit after full receipt; deducted confirmed refunds settle request/credit while original invoice remains partly refunded; zero-credit returns create no money movement.
+- Legacy receive-all after partial receipt never restocks the already received quantity again.
+- Independent native eCourier parcel references/pickup addresses/collection amounts, trusted PDF, manual bypass/cancellation guards and all-parcels-delivered COD synchronization.
+- Timed-out booking is queried using its original reference and not resent; reverse booking/appointment/tracking; explicit cutoff opt-in, queue replay and cancelled-attempt history/rebooking.
+- Active reverse jobs block approval withdrawal; submission rechecks current approval before outbound work.
+- Feed staging/review/automatic import, stable cursor on error, immutable batch IDs, identical manual-import deduplication, empty idle pages and balanced journal CSV.
+- Merchant HTTPS/token/redirect/response-size/error classification and streamed multibyte JSON; provider evidence is controlled, with no external merchant side effects.
 
-The new 26 frontend regressions exercise guest payment truth, expired access, changed-identity private responses, checkout contact, initialization errors, ordered refresh/previews and retryable storage/date failures. The new disposable HTTP-process test checks compressed JSON/trailing decoder bytes and subsequent healthy requests. Upload/signature/cleanup tests remain active under the updated Multer.
+The complete retained customer/admin, account recovery/email/device/MFA, guest cart/link/recovery, coupon/variant/warehouse, payment/review/refund/exchange, courier, media, backup/restore, monitoring and release suites also pass. Native fixtures use randomized isolated test databases and drop only their own targets. MongoDB standalone compensation does not certify atomic process-crash recovery; production requires a replica set.
 
-## Explicit limits
+## Findings corrected during this release
 
-Cloud Browser could not open the **running** isolated local server (`ERR_CONNECTION_REFUSED`). Actual desktop/mobile layout, keyboard/zoom and printed/PDF appearance are **not marked passed**. HTTP, VM and responsive/print CSS checks do not replace visual acceptance.
+Fixed system-actor parcel history handling, the new worker's startup import, approval resetting a deducted refund amount, stale/duplicate feed import behavior, stream decoding and shared capacity compare-and-set guards. These are scoped integration fixes for the four features. Final evidence above is from the corrected source.
 
-No active merchant/public callback, owner SMTP inbox, carrier/Cloudinary/offsite/MFA setup, target VM/domain or Docker/Podman daemon was available. Real payments/refunds, public IPN, inbox/alert receipt, carrier booking, external upload, owner off-host recovery and actual container/HTTPS deployment were **not executed**. Controlled responses, local SMTP and deployment-shell harnesses are labelled accordingly.
+## Remaining actual-environment acceptance
 
-See [the six-area final report](FINAL_RELEASE.md), [source preservation](SOURCE_PRESERVATION.md) and [acceptance checklist](ACCEPTANCE_CHECKLIST.md). These results support a tested maintenance source release; universal bug freedom or public production acceptance is not guaranteed.
+| Area | Boundary |
+|---|---|
+| Merchant services | No approved reverse/statement connector or active merchant credentials were supplied. Real reverse bookings, parcel labels, statements, original/exchange SSLCOMMERZ callbacks/IPN/refunds and settlement receipts are **not executed**. |
+| Visible UI/device/print | Static/VM/HTTP checks pass. The previously available browser could not access this isolated local app; no new visible browser, physical phone, keyboard or printed-PDF inspection is claimed. |
+| External operations | Real inbox/spam placement, courier/cloud accounts, public Docker/TLS/host deployment and remote-storage restore remain deployment-specific. Retained controlled SMTP/backup/rollback tests pass. |
+
+See [advanced operations](ADVANCED_OPERATIONS.md), [run commands](../RUN_COMMANDS.md) and [acceptance checklist](ACCEPTANCE_CHECKLIST.md). The [2.13.1 final report](FINAL_RELEASE.md) is historical evidence, not this release's test count.

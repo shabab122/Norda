@@ -27,3 +27,4 @@ norda_restore_*/
 **/monitor.env
 **/deploy.env
 **/private-state/
+!.env.operations.example

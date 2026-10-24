@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.14.0 — 2026-10-24
+
+- Add independent warehouse parcel eCourier booking, labels and authenticated tracking; add merchant-connector reverse pickup booking, cancellation and same-reference uncertain-result reconciliation. Automatic queue creation requires explicit opt-in/cutoff.
+- Add scheduled gateway/courier statement feeds, cursor-safe review/automatic imports, identical-reference deduplication and balanced accounting journal CSV without changing payment truth.
+- Add partial receipts to whole-order returns, multiple receiving warehouses, request-snapshot fixed/percentage/shipping deductions and separate printable credits synchronized with confirmed refunds. Preserve legacy receive-all behavior.
+- Add configurable priority/distance/capacity/balanced warehouse allocation, shared atomic reservation-capacity guards and previewed CSV transfer batches with rollback/replay protection.
+- Add scoped admin tools, owner-protected return progress, HTTP/fault/concurrency/frontend/connector and native MongoDB coverage. Preserve credentials, dependency selections, assets and original source files. See ADVANCED_OPERATIONS and VERIFICATION_RESULTS.
+
 ## 2.13.1 — 2026-10-24
 
 - Verify guest payment results against the saved order, preserve callback-hint distrust and offer recovery for expired guest access.

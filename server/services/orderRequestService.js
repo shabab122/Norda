@@ -28,7 +28,8 @@ const createRequest = async ({ orderId, user, body }) => {
     const history = await querySession(OrderRequest.find({ order: orderId, type: body.type }), unit.session);
     if (history.some((item) => item.status !== "rejected")) throw httpError(409, "This order already has an active or completed request of this type");
     if (history.length >= 3) throw httpError(409, "Please contact the store after three requests of this type");
-    const request = await insertDocument(OrderRequest, { order: orderId, user: order.user, type: body.type, requestKey: key, reason, status: "requested", refundAmount: order.isPaid ? order.totalAmount : 0, restocked: false }, unit.session);
+    const terms = body.type === "return" ? await require("./advancedReturnService").rules(unit.session) : null;
+    const request = await insertDocument(OrderRequest, { ...(terms ? { returnTerms: terms, advancedReceiptCount: 0 } : {}), order: orderId, user: order.user, type: body.type, requestKey: key, reason, status: "requested", refundAmount: order.isPaid ? (terms ? require("./advancedReturnService").amounts(order, terms).totalAmount : order.totalAmount) : 0, restocked: false }, unit.session);
     unit.compensate(() => OrderRequest.deleteOne({ _id: request._id }));
     await patchOrder(order, { [stateField(body.type)]: "requested" }, unit);
     await audit(orderId, user, body.type + "_requested", reason, unit, { request: request._id });
@@ -59,7 +60,7 @@ const decideRequest = async ({ requestId, user, body }) => {
         order = await cancelForOperations(order, "Customer cancellation approved: " + request.reason, unit);
         if (!source || (remaining <= 0 && order.refundStatus === "refunded")) status = "completed";
       }
-      const updated = await patch(OrderRequest, request, { status, decisionMessage: note, decidedBy: user._id, decidedAt: new Date(), refundAmount: source ? source.amount : request.type === "return" ? order.totalAmount : 0 }, unit);
+      const updated = await patch(OrderRequest, request, { status, decisionMessage: note, decidedBy: user._id, decidedAt: new Date(), refundAmount: source ? source.amount : request.type === "return" ? (request.returnTerms ? require("./advancedReturnService").amounts(order, request.returnTerms).totalAmount : order.totalAmount) : 0 }, unit);
       order = await patchOrder(order, { [stateField(request.type)]: status }, unit);
       await audit(order._id, user, request.type + "_" + body.decision, note, unit, { request: request._id });
       if (source && remaining > 0) await queueRefundInUnit({ order, source, amount: remaining, key: "cancel-" + request._id, reason: note, actor: user }, unit);
@@ -75,6 +76,12 @@ const receiveReturn = async ({ requestId, user, body }) => {
   objectId(requestId); const note = noteText(body.note);
   if (typeof body.restock !== "boolean" || body.received !== true) throw httpError(400, "Confirm all returned items were received and choose whether they can be restocked");
   const reference = await OrderRequest.findById(requestId); if (!reference) throw httpError(404, "Request not found");
+  if (reference.advancedReceiptCount || reference.returnTerms && (reference.returnTerms.fixedDeduction || reference.returnTerms.percentDeduction || !reference.returnTerms.refundShipping)) {
+    if (["received", "completed"].includes(reference.status)) { if (reference.restocked !== body.restock) throw httpError(409, "This return already has different receipt decisions"); return reference; }
+    const order = await Order.findById(reference.order);
+    const items = order.items.map((line, lineIndex) => { const received = reference.receiptProgress?.find(p => p.lineIndex === lineIndex)?.receivedQuantity || 0; return { lineIndex, quantity: line.quantity - received, restockQuantity: body.restock ? line.quantity - received : 0, warehouse: "online" }; }).filter(i => i.quantity);
+    return require("./advancedReturnService").receive(requestId, user, { ...body, items, requestKey: body.requestKey || "legacy-whole-" + requestId });
+  }
   const result = await withOperationLock("order:" + reference.order, async () => {
     const request = await OrderRequest.findById(requestId);
     if (request.type !== "return") throw httpError(409, "This request is not a return");

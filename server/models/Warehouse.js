@@ -1,2 +1,2 @@
 const m = require("mongoose");
-module.exports = m.model("Warehouse", new m.Schema({ name: { type: String, required: true, maxlength: 80 }, code: { type: String, required: true, unique: true }, address: { type: String, maxlength: 300 }, reservationUnits: { type: Number, default: 0, min: 0 }, active: { type: Boolean, default: true } }, { timestamps: true }));
+module.exports = m.model("Warehouse", new m.Schema({ name: { type: String, required: true, maxlength: 80 }, code: { type: String, required: true, unique: true }, address: { type: String, maxlength: 300 }, routingCapacityUnits: { type: Number, default: 0, min: 0 }, reservationUnits: { type: Number, default: 0, min: 0 }, active: { type: Boolean, default: true } }, { timestamps: true }));

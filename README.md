@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Version 2.13.1</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
+  <strong>Version 2.14.0</strong> &nbsp;·&nbsp; HTML · CSS · JavaScript · Node.js · Express · MongoDB
 </p>
 
 <p align="center">
@@ -32,21 +32,30 @@ The application uses a single Express server to serve the HTML/CSS/JavaScript fr
 
 | Project detail | Current baseline |
 |---|---|
-| Application version | **2.13.1** |
+| Application version | **2.14.0** |
 | Market and currency | Bangladesh · BDT / ৳ |
 | Experiences | Public storefront, personal customer dashboard and scoped administrator/staff workspaces |
 | Included catalog | 24 sample products across 12 categories, with 24 distinct AI-generated product photos |
 | Payment modes | Cash on delivery, local mobile/card simulations and a separately configured SSLCOMMERZ integration |
 | Default local URL | `http://localhost:5000` |
-| Development status | Final maintenance source release: commerce features retained, guest/session/form defects corrected, two dependency security fixes and regression checks completed; public provider/host and visible device acceptance remain |
+| Development status | Advanced operations source release: per-parcel courier jobs, reverse pickup connector, statement feeds/accounting export, whole-order partial receipts and warehouse routing/bulk transfers; real merchant/provider and visible-device acceptance remain |
 
 > **Payment status:** the local Mobile Banking/bKash and Card/Bank flows simulate transactions and do not transfer money. The real SSLCOMMERZ integration is implemented, but public merchant sandbox acceptance has not been completed. See [Payments](#payments) and [Roadmap](#roadmap).
 
-## Final Maintenance Release
+## Advanced Operations Release
 
-Version **2.13.1** starts from the delivered 2.13.0 source. It fixes guest payment-result verification and expired-session recovery, guards private responses when shopping identities change, restores failed form retries, and refines new-screen typography, focus and receipt print rules. Security fixes update only Multer **2.4.0 → 2.5.0** and the transitive body-parser **1.20.8 → 1.20.9**; other dependency selections and backend business source remain intact. Existing credentials and assets are retained. No reseed or manual migration is required.
+Version **2.14.0** builds directly on the delivered **2.13.1**. It adds four scoped operations features while retaining existing credentials, catalog/brand assets, dependency versions and prior shopping/payment flows. Existing priority routing and manual courier tracking remain available. New automatic integrations are opt-in.
 
-See [the six-area final report](docs/FINAL_RELEASE.md) for measured checks and the target-environment steps that could not be verified here.
+| Feature | Included behavior | Admin tool |
+|---|---|---|
+| Courier automation | Independent warehouse parcel booking/label/tracking, durable uncertain-result recovery, reverse pickup booking through a merchant-approved connector | Courier automation |
+| Settlement integration | Scheduled gateway/courier statement fetching, reviewed or automatic import, duplicate protection and balanced accounting CSV | Statement feeds |
+| Advanced returns | Whole-order partial receipts, separate receiving warehouses, request-snapshot refund deductions and printable return credits | Whole-order receipts |
+| Warehouse operations | Priority/distance/capacity/balanced routing and previewed, replay-safe CSV transfer batches | Routing & bulk transfers |
+
+Read the [advanced operations guide](docs/ADVANCED_OPERATIONS.md) for setup, permissions, provider contracts and operating limits. Native eCourier forward bookings reuse the existing merchant configuration. Reverse pickup and statement feeds require a **merchant-approved HTTPS connector**; this archive does not invent undocumented SSLCOMMERZ/eCourier APIs or activate a real account. Public merchant, visible-browser and target-host acceptance still require your environment.
+
+The previous [2.13.1 maintenance report](docs/FINAL_RELEASE.md) remains as historical evidence. Current results are in [verification results](docs/VERIFICATION_RESULTS.md).
 
 ## Implemented Features
 
@@ -172,7 +181,7 @@ See [the six-area final report](docs/FINAL_RELEASE.md) for measured checks and t
 - Full guest cart/checkout, recovery through an expiring private email link, one-time cart merge and order linking to the matching verified account.
 - Priority warehouse allocation, per-SKU splitting, parcel history/tracking and all-parcels-delivered COD confirmation. Expired checkout recovery keeps the original source plan.
 - Verified-customer, exact-option back-in-stock subscriptions with durable SMTP/file queues, retry/backoff and unsubscribe.
-- See [workflows, permissions, upgrade and provider boundaries](docs/COMMERCE_EXPANSION.md). Statement import and reverse booking confirmation are reviewed operations; this release does not automatically transfer money or submit reverse carrier bookings.
+- See [workflows, permissions, upgrade and provider boundaries](docs/COMMERCE_EXPANSION.md). The 2.13 manual workflows remain available. In 2.14, configured merchant feeds and reverse booking can run automatically with explicit opt-in; statement imports never authenticate payment or transfer money.
 
 ## Technology Stack
 
@@ -282,7 +291,7 @@ Register normally to create a customer. For administrator access, use the privat
 
 ### Updating an Existing Installation
 
-Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.13.1 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
+Preserve your working environment, uploaded images, database and Git history when copying updated source. The v2.14.0 update requires **no setup, reseed or manual database migration**. Retain your working local/Atlas connection and later laptop-only SMTP settings:
 
 ```bash
 cd server
@@ -479,12 +488,12 @@ Recorded release evidence, as of **24 October 2026 (Asia/Dhaka)**:
 
 | Check | Recorded result |
 |---|---|
-| JavaScript syntax, v2.13.1 | **309 files passed** |
-| Default suite, v2.13.1 | **527 passed, 0 failed, 14 native entry points skipped** without an explicit MongoDB test URI |
-| Native standalone, v2.13.1 | **234 passed**, compensation path |
-| Native single-member replica set, v2.13.1 | **234 passed**, transaction path |
-| Dependencies | Release audit: **0 vulnerabilities** after two scoped parser/upload dependency security updates |
-| Frontend | 26 new targeted frontend regressions; retained state/render checks; all 56 pages and 135 page/resource targets served by the actual isolated app |
+| JavaScript syntax, v2.14.0 | **335 files passed** |
+| Default suite, v2.14.0 | **566 passed, 0 failed, 15 native entry points skipped** without an explicit MongoDB test URI |
+| Native standalone, v2.14.0 | **265 passed**, compensation path |
+| Native single-member replica set, v2.14.0 | **265 passed**, transaction path |
+| Dependencies | Release audit: **0 vulnerabilities**; dependency selections unchanged from 2.13.1 |
+| Frontend | Retained frontend regressions plus admin serialization/account guards, escaped carrier evidence, stale-preview checks and all 61 pages/local assets through the isolated app |
 | Browser/mobile/keyboard/print | Static/VM checks passed; the available browser could not access the isolated local server, so visible acceptance remains pending |
 | Backup/restore | Encrypted BSON/index/local/cloud-byte verification and isolated restore passed on both topologies |
 | Actual server/worker startup | All workers, graceful restart, cookie/cart persistence and production replica-set preflight checked on both topologies |
@@ -538,6 +547,9 @@ These items are planned work, separate from the implemented features above. Deve
 - [x] Return/refund email preferences and verified delivery/bounce/complaint history.
 - [x] Selected-item returns, configurable windows, equal/different-price product exchanges and credit notes.
 - [x] Settlement/cash reconciliation, fees and audited statement exceptions.
+- [x] Per-parcel courier automation, merchant reverse/statement connector contract and balanced accounting export.
+- [x] Whole-order partial receipts, multiple receiving warehouses and snapshot refund deductions.
+- [x] Distance/capacity/balanced routing and previewed bulk warehouse transfers.
 - [x] Reverse pickup confirmation and partial item receipt/restocking.
 - [x] Private guest carts/checkout, email access recovery and verified account linking.
 - [x] Opt-in warehouse routing/split parcels, stock recovery and exact-option availability mail.
@@ -555,13 +567,13 @@ These items are planned work, separate from the implemented features above. Deve
 
 ### Next Product and Operations Work
 
-- [ ] Provider-specific automated statement adapters beyond reviewed settlement reconciliation and external accounting integration.
+- [ ] Additional vendor-specific statement adapters/accounting posting beyond the implemented merchant connector and balanced journal CSV.
 - [ ] External credit-note/accounting adapters and optional discretionary refund policies.
 - [ ] Optional SMS, provider-specific delivery adapters and complaint-remediation tooling.
 - [ ] Optional passkeys, device trust and further team permission policies.
 - [ ] Guest-retention tooling, optional comparison and recently viewed products.
 - [ ] Actual host/domain/provider acceptance, operator recovery promotion and ongoing operational response.
-- [ ] Additional carriers, automatic reverse-booking/per-parcel APIs and broader address/collection contracts.
+- [ ] Additional carriers, provider webhooks and broader address/collection contracts beyond the implemented parcel/reverse APIs.
 - [ ] Ongoing dependency auditing, capacity/load acceptance and future compatible rollback drills.
 
 Manual carrier tracking remains supported; the optional eCourier adapter books and polls authenticated carrier events. Automatic booking and cloud/backup/alert services require the owner's configuration. Whole-order returns and selected-item returns are supported, with equal/different-price product/option exchanges, partial item receipts and separate adjustments/credit notes. Variant products require an exact option for cart actions. See [commerce operations](docs/COMMERCE_EXPANSION.md) for the new workflows and [commerce tools](docs/COMMERCE_TOOLS.md) for coupons, wishlist, stock CSV and settings.
@@ -570,6 +582,7 @@ Manual carrier tracking remains supported; the optional eCourier adapter books a
 
 | Document | Purpose |
 |---|---|
+| [Advanced operations](docs/ADVANCED_OPERATIONS.md) | Current four-feature guide, configuration, provider contracts, permissions and API |
 | [Final maintenance release](docs/FINAL_RELEASE.md) | Six-area results, bug/security fixes, remaining owner-environment checks and tag preparation |
 | [Commerce operations](docs/COMMERCE_EXPANSION.md) | Settlement, priced exchanges, pickups/partial receipts, guest checkout, warehouse parcels and availability alerts |
 | [Release automation and team inventory](docs/RELEASE_AUTOMATION.md) | Deployment, independent monitoring, private off-host recovery, invitations/MFA and advanced inventory |
@@ -594,7 +607,7 @@ Manual carrier tracking remains supported; the optional eCourier adapter books a
 | [Future development](docs/FUTURE_DEVELOPMENT.md) | Development phases and planned capabilities |
 | [Changelog](CHANGELOG.md) | Version history |
 
-Historical sections remain labeled by release. This README, the v2.12 release guide, the retained feature guides and the current verification report describe the latest application status.
+Historical sections remain labeled by release. This README, the advanced operations guide, retained feature guides and current verification report describe the latest application status.
 
 ## Contributing
 

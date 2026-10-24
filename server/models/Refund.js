@@ -16,6 +16,7 @@ const schema = new mongoose.Schema({
   status: { type: String, enum: ["awaiting_return", "queued", "submitting", "pending", "unknown", "succeeded", "failed"], required: true },
   reason: { type: String, required: true, maxlength: 1000 },
   failureReason: { type: String, default: "", maxlength: 500 },
+  wholeReturnRequest: { type: mongoose.Schema.Types.ObjectId, ref: "OrderRequest" },
   itemCase: { type: mongoose.Schema.Types.ObjectId, ref: "ItemReturnCase" },
   requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   submittedAt: Date, completedAt: Date, lastCheckedAt: Date,
