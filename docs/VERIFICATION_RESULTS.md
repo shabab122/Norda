@@ -1,37 +1,33 @@
-# Verification results — NORDA 2.14.2 · Local Final
+# Verification results — NORDA 2.14.3 · Local Acceptance
 
-Verified **24 October 2026, Asia/Dhaka** on Node.js **24.22.1**, npm **11.9.0**, native MongoDB **7.0.45**. Baseline: delivered **2.14.1 Local Final**. No owner database or real merchant account was used.
+Verified **24 October 2026, Asia/Dhaka**, using Node.js **24.22.1**, npm **11.9.0** and native MongoDB **7.0.45**. Baseline: delivered **2.14.2 Local Final**. No owner database or actual merchant/SMTP account was used.
 
 | Executed check | Result |
 |---|---|
-| `npm run verify` | **337 JS syntax checks; 605 results: 590 passed, 0 failed, 15 deliberate native skips** |
-| `npm run test:integration`, standalone | **269 passed, 0 failed, 0 skipped** |
-| `npm run test:integration`, single-member replica set | **269 passed, 0 failed, 0 skipped** |
-| New frontend scenarios | **16 passed**, included in the default count |
-| New shared HTTP scenarios | **3 passed**, included in default and each native topology |
-| Actual isolated Express HTTP smoke | **61 pages / 146 distinct local page-resource targets**, all 200; health 200 |
-| Bounded browse smoke | 24 fixture products; 40 GETs at concurrency 5, all 200; test-model adapter, not production capacity certification |
-| `npm audit --json` | **0 vulnerabilities**; dependency selections unchanged |
-| Source preservation | All **507** original files retained; **42 assets** and **11 environment/config/seed files** byte-identical |
+| `npm run verify` | **345 JavaScript syntax files; 623 results: 608 passed, 0 failed, 15 deliberate native skips** without an explicit URI |
+| Full native standalone suite | **274 passed, 0 failed, 0 skipped** |
+| Full native single-member replica-set suite | **274 passed, 0 failed, 0 skipped** |
+| Focused connector/SMTP/frontend/operations suite | **73 passed, 0 failed**, included in the full default coverage |
+| Actual CLI startup + isolated Express HTTP | Connector and demo-app entry points start; health 200; **61 pages / 148 distinct local targets**, all 200 |
+| Dependency audit | **0 vulnerabilities**, dependency graph retained |
+| Archived mail diagnosis | **File preview, SMTP absent, inbox unconfirmed**; expected exit 2; no external message sent |
 
-## Requested behavior covered
+## Current coverage
 
-- Empty/space-only header search does not navigate; typed/trimmed or prefilled search works and clearing the field disables submission. A visitor can find guest recovery before starting a guest session.
-- Password controls are independent, keep input values, use non-submit buttons/accessible labels and work on dynamically inserted fields. Leaving the page remasks them.
-- Category-name search uses literal matching with regex metacharacters and excludes archived inventory; brand search remains supported.
-- A real HTTP/native guest order appears in the admin queue with its billing email, then progresses pending → processing → dispatched → delivered. Guest refresh sees every stage, COD/invoice becomes paid, stock is deducted once and one invoice remains.
-- A separate signed-in customer cannot read that guest order through ordinary member access. Explicit guest tracking requires the valid guest cookie/identity; a mismatched identity is rejected. Frontend explicit guest context does not replace member cart, wishlist, auth or admin requests.
-- Guest history shows full Order IDs/stages and private tracking/invoice links while signed in. Guest linking stops between requests when the signed-in identity changes; stale guest history cannot overwrite a new guest.
-- Admin rows label guest/account origin, escape real customer contacts, direct warehouse orders to parcel fulfillment and hand dispatch to the courier form without a premature status write. Old filter results and delayed COD confirmations cannot write/render for a new account.
-- Staff sign-in accepts only safe local destinations and keeps customer signup in its own dashboard; required MFA still takes priority.
-- The optional ensure-admin operator function preserves existing admin credentials, refuses customer promotion and invalid/new weak configurations, creates one configured admin and leaves catalog counts unchanged. It was tested only against isolated fixture databases; the owner database was not connected.
+The new private service is exercised through actual loopback HTTP and the unmocked merchant client. Tests cover private authentication/origin rejection, production/URL gates, concurrent same-reference booking, changed-intent/duplicate-pickup rejection, restart/replay, exact tracking identity, explicit monotonic stage control, cancellation, immutable balanced statement pages, stable/idle/unknown cursors and fail-closed disk-write recovery. The real app routes and both native topologies cover booking → tracking, no automatic stock/refund on arrival, demo/merchant job/feed isolation, preview-only statement data, permissions, ledger import rejection, acknowledgement replay and recovery from a failed cursor write.
 
-The retained full suites also cover account recovery/email verification, guest recovery/claim rollback, member carts/coupons/SKUs, warehouse reservations/parcels, payment callbacks/retry/review, cancellations/returns/exchanges/refunds/credit notes, statement reconciliation, notifications/MFA/devices, courier/cloud protocols, encrypted backups/restores, independent monitoring and real app worker/start/restart behavior. Native tests create/drop only their own randomized databases. No fixture email/media is packaged.
+A disposable SMTP receiver exercises Nodemailer itself. Tests retain account/operations/monitor mail and add one-recipient probes, SMTP acceptance versus operator-observed Inbox/Spam receipt, recipient failure/uncertainty, file-preview refusal and remote-authenticated TLS requirements. The test mailbox never relays to an external recipient.
 
-## Method and limits
+Frontend controlled-DOM tests retain prior search/password/guest/admin behavior and add mobile-menu Escape/focus. Narrow invoice/print CSS and semantic order-progress collision fixes are present. All earlier customer/admin, stock/warehouse, payment, cancellation/return/exchange/refund/credit/settlement, security/MFA/session, notification, backup/monitor and server restart suites pass.
 
-Frontend checks execute the actual page scripts against controlled DOM models and HTTP tests use the real Express routes. Search/eye/progress CSS and resource references are included; a browser CSS renderer was not available through the permitted local browser path. The prior cloud-browser access/policy restriction was respected; **visible desktop/mobile, keyboard and printed-PDF inspection is not certified**. No alternate browser/network workaround was used.
+The CLI smoke starts the real connector and app with a randomized test database on a separate loopback MongoDB instance, reads the local pages/resources, stops both processes and drops only its fixture database. It is an HTTP smoke, not browser rendering or a production load benchmark.
 
-Real SSLCOMMERZ/provider transactions, inbox placement, actual carrier/cloud accounts, reverse/statement merchant connector deployment and public hosting/domain remain outside this localhost release. They are not an expanding feature backlog. Existing optional integrations and credentials remain intact.
+## Evidence limits
 
-See [shopping/admin guide](SHOPPING_AND_ADMIN_GUIDE.md), [local scope](LOCAL_FINAL_RELEASE.md), [run commands](../RUN_COMMANDS.md) and [source preservation](SOURCE_PRESERVATION.md).
+The earlier cloud-browser access/policy restriction was respected. **Visible desktop/mobile, keyboard-navigation observation and printed-PDF inspection were not completed.** Executing controlled DOM scripts and serving HTTP resources do not certify visible layout.
+
+The archived configuration contains no SMTP settings and no actual test recipient was supplied. **No actual inbox/spam receipt was obtained.** The new commands allow the owner to test with their retained laptop SMTP settings and record an observation. SMTP acceptance alone never appears as inbox confirmation.
+
+No actual reverse-pickup/settlement provider was selected. The shipped service is **local-demo**: no courier booking, provider PDF or real remittance is fabricated; demo financial imports are blocked. Actual provider integration still needs its approved API/account when selected.
+
+Actual SSLCOMMERZ acceptance, public domain/deployment and courier/cloud/remote-backup activation remain the owner's three [reserved integrations](reserved/README.md). These are explicitly deferred, not newly added features. See [local acceptance](LOCAL_ACCEPTANCE.md), [connector instructions](LOCAL_CONNECTOR.md) and [source preservation](SOURCE_PRESERVATION.md).

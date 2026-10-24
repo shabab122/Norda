@@ -1,13 +1,15 @@
-# NORDA 2.14.2 — storefront and shopping-flow update
+# NORDA 2.14.3 — local acceptance update
 
-Starts directly from delivered **2.14.1 Local Final**. The update addresses the requested search box, password eye controls, guest order tracking and admin order processing.
+Baseline: delivered **Norda-Main-v2.14.2-Local-Final.zip**. Scope: the owner's selected customer/admin/mobile/printing, email delivery and reverse-pickup/settlement service areas, while reserving the three deferred integrations.
 
-Search has one complete border and a properly flexed input/button, stays inactive for empty text and matches category names. Password controls work independently on static/dynamic fields. Guest COD checkout opens its own history; full Order IDs, browser access/recovery guidance, refresh, stages and parcel details make the flow explicit. Signed-in users can still view private guest tracking/invoices without changing their account/cart identity.
+Added a runnable private localhost connector with durable idempotent booking, explicit demo tracking/cancellation, immutable balanced statement pages and cursor-safe acknowledgement. Demo/merchant job/feed identities are separated; background work avoids the other mode, actual parcel booking is disabled in explicit demo mode and demo statement financial imports are rejected. The existing real merchant HTTPS path and manual tools are retained.
 
-Admin Orders shows guest/account labels and real contacts, sends dispatch to the courier form and points warehouse orders to parcel fulfillment. Identity/filter guards prevent stale responses and delayed actions. The optional admin:ensure CLI safely prepares a missing configured admin while retaining existing accounts/passwords and all catalog data. A Bangla shopping/admin guide and run instructions explain the exact flow; no future-feature backlog or domain requirement is added.
+Added one-recipient SMTP probes with private receipts, clear file-preview diagnostics and separate operator-observed Inbox/Spam confirmation. Remote authenticated SMTP now requires TLS. Existing account/reset/guest-recovery and notification implementations/credentials are retained. The archived ZIP has no SMTP settings: no actual inbox delivery was performed or claimed.
 
-Measured: **337 syntax checks**, **590 default passes / 0 failures / 15 deliberate native skips**, **269 native passes per topology**, **0 audit vulnerabilities**, **61 pages / 146 HTTP targets**, plus a bounded browse smoke. See [verification](VERIFICATION_RESULTS.md) for methods and honest visible-browser/provider limits.
+Added mobile-menu Escape/focus, semantic progress-list CSS isolation and narrow invoice/print refinements. Full frontend/Express/native journeys pass, but the prior browser access restriction prevented visible desktop/mobile/keyboard/PDF inspection. A manual acceptance guide states exact expected behavior without marking those observations passed.
 
-All original files, credentials/config/seed bytes, 42 assets and dependency selections are retained. No owner database, actual provider account or money was used. Keep current laptop settings/uploads; no setup, seed or manual migration is needed.
+Measured: **345 syntax files**, **608 default passes / 0 failures / 15 deliberate native skips**, **274 native passes per topology**, **0 audit vulnerabilities** and actual CLI/HTTP smoke of **61 pages / 148 targets**, all 200. The connector is a functioning local demonstration; no actual reverse/statement provider was selected or connected.
 
-Suggested commit: `fix: improve search, password visibility and guest order workflows`
+All original source files, 42 assets and environment/config/seed bytes are retained; dependency selections remain unchanged. No owner database was connected, no external recipient was contacted and no real booking/payment/refund was performed. Preserve newer laptop settings/uploads; no setup/reseed/manual data migration or credential rotation is needed.
+
+Suggested commit: `feat: add local operations connector and email delivery checks`

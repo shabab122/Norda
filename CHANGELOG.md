@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.14.3 — 2026-10-24 · Local acceptance tools
+
+- Add a private, runnable localhost operations connector: durable idempotent demo reverse bookings, explicit stage control, immutable demo statement pages and cursor-safe preview acknowledgement.
+- Isolate demo/merchant jobs and feeds, retain existing merchant HTTPS requirements and reject demo financial imports/real parcel submission in explicit demo mode.
+- Add one-recipient SMTP probe, private acceptance/Inbox-Spam receipt recording, clear local-file diagnosis and TLS for remote authenticated SMTP. No message was sent to an actual inbox in this session.
+- Add Escape/focus handling to the mobile menu, isolate semantic order-progress CSS and refine narrow invoice/print rules. Visible browser acceptance remains unperformed.
+- Add actual local HTTP/SMTP, disk/restart/replay, cursor failure and native mode-isolation coverage; reserve the three deferred integrations in documentation folders. Preserve original credentials, dependencies and assets.
+
 ## 2.14.2 — 2026-10-24 · Storefront and order-flow fixes
 
 - Unify header search borders/input sizing, keep empty/whitespace search inactive and add literal category-name matching to existing catalog search.

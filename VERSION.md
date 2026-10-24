@@ -1,15 +1,13 @@
-# Norda 2.14.2 · Local Final
+# Norda 2.14.3 · Local Acceptance
 
-Built directly from delivered `Norda-Main-v2.14.1-Local-Final.zip` for the requested storefront and shopping-flow corrections.
+Built directly from delivered `Norda-Main-v2.14.2-Local-Final.zip`.
 
-- One complete search border, correctly flexed input/button, inactive empty/whitespace search and category-name catalog matching.
-- Independent accessible password show/hide controls, including dynamic forms and page-exit remasking.
-- Clear guest order history, Order IDs, recovery guidance, refresh, delivery stages and individual parcel tracking; guest invoice/tracking stay private while a separate member is signed in.
-- Guest/account badges and real customer contacts in the admin queue; dispatch opens its courier form, warehouse orders lead to their parcels and stale account/filter responses are discarded.
-- Optional operator-only admin:ensure command creates a missing configured administrator without changing an existing administrator/customer/password/catalog. Public signup remains customer-only.
+- Runnable private local reverse-pickup/statement connector, durable booking identities, explicit demo tracking and immutable cursor pages.
+- Demo/merchant mode isolation and server-side blocking of demo settlement ledger imports.
+- Actual SMTP probe command, private acceptance/observed-receipt records and clear file-preview diagnosis; TLS for remote authenticated SMTP.
+- Mobile-menu Escape/focus, scoped semantic progress-list styling and narrow invoice/print refinements.
+- Dedicated documentation folders reserve actual SSLCOMMERZ, public deployment and courier/cloud/remote-backup activation.
 
-Verified **337 JS files**, **590 default passes / 0 failures / 15 deliberate native skips**, **269 native passes per topology**, **0 audit vulnerabilities**, and **61 pages / 146 local page-resource targets**, all 200. Nineteen new checks are included in the default count; three also run natively on each topology.
+Verified: **345 JS files**, **608 default passes / 0 failures / 15 native skips**, **274 native passes per topology**, **0 audit vulnerabilities**, and actual CLI/HTTP smoke of **61 pages / 148 targets**. Existing credentials/config/seed bytes, 42 media assets and dependency selections are retained. No owner database, actual SMTP account or real merchant action was used.
 
-Existing credentials, all environment/config/seed bytes, all 42 catalog/brand assets and dependency selections are retained. No owner database, real provider account or actual money was used. Preserve newer working laptop settings/uploads; no setup, reseed, credential rotation or manual data migration is required. Localhost:5000 remains the application target.
-
-Read [SHOPPING_AND_ADMIN_GUIDE.md](docs/SHOPPING_AND_ADMIN_GUIDE.md) for the complete customer/staff flow and [verification](docs/VERIFICATION_RESULTS.md) for actual evidence and limits. Real merchant activation/production hosting stay deferred. Visible browser/mobile/print inspection remains unperformed under the previously observed browser access restriction; static/VM/HTTP/native checks are not presented as visual acceptance.
+Visible browser/mobile/print acceptance and actual inbox receipt remain unconfirmed in this session. The local connector is a working demonstration, not an actual contracted courier/merchant service. See [local acceptance](docs/LOCAL_ACCEPTANCE.md) and [verification](docs/VERIFICATION_RESULTS.md). No setup, reseed, credential rotation or manual database migration is required for the update; preserve your newer laptop configuration/uploads.

@@ -1,4 +1,6 @@
-# NORDA 2.14.2 testing and acceptance
+# NORDA 2.14.3 testing and acceptance
+
+Current additions: [local acceptance](LOCAL_ACCEPTANCE.md) and [runnable local connector](LOCAL_CONNECTOR.md). Actual HTTP tests cover booking/query/control, durable replay, statement preview/import blocking, cursor retry and demo/merchant isolation. SMTP tests cover explicit probe acceptance/rejection, observed receipt recording and remote TLS. Visible browser and actual inbox acceptance remain unconfirmed in this environment.
 
 Current UI/flow scenarios are described in [the shopping and admin guide](SHOPPING_AND_ADMIN_GUIDE.md). Coverage includes empty/typed search, password controls, explicit guest/member separation, admin dispatch handoff and safe operator setup.
 

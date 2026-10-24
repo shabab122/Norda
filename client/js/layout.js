@@ -124,6 +124,14 @@ function renderHeader(activePage = "") {
     const open = menu.classList.toggle("open");
     toggle.setAttribute("aria-expanded", String(open));
   });
+  const closeMenuOnEscape = (event) => {
+    if (event.key !== "Escape" || toggle?.getAttribute("aria-expanded") !== "true") return;
+    menu.classList.remove("open");
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.focus();
+  };
+  menu?.addEventListener("keydown", closeMenuOnEscape);
+  toggle?.addEventListener("keydown", closeMenuOnEscape);
 
   document.getElementById("logout-link")?.addEventListener("click", async () => {
     try { await Api.post("/auth/logout"); Api.logout(); window.location.href = "index.html"; }

@@ -1,6 +1,6 @@
 {
   "name": "norda-commerce-api",
-  "version": "2.14.2",
+  "version": "2.14.3",
   "description": "Norda commerce API with catalog, payments, fulfillment, reporting and production tools",
   "main": "server.js",
   "type": "commonjs",
@@ -27,7 +27,13 @@
     "backup:retention": "node scripts/offsite-backup.js retention",
     "backup:drill": "node scripts/offsite-backup.js drill",
     "monitor:once": "node ../ops/uptime.js --once",
-    "admin:ensure": "node scripts/ensure-admin.js"
+    "admin:ensure": "node scripts/ensure-admin.js",
+    "mail:diagnose": "node scripts/mail-acceptance.js",
+    "mail:send-test": "node scripts/mail-acceptance.js",
+    "mail:confirm": "node scripts/mail-acceptance.js",
+    "connector:demo": "node scripts/connector-demo.js",
+    "dev:operations-demo": "node --watch scripts/start-operations-demo.js",
+    "connector:control": "node scripts/connector-control.js"
   },
   "engines": {
     "node": ">=22"
